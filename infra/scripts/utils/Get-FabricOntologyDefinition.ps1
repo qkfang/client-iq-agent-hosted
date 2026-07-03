@@ -26,22 +26,6 @@
 .PARAMETER Format
     Optional format parameter for the ontology definition (as supported by the API)
 
-.PARAMETER SanitizeItemIds
-    When $true (default), replaces any non-zero Lakehouse itemId GUID in the decoded
-    DataBindings/Contextualizations with the -ItemIdPlaceholder value. This prevents
-    source-environment Lakehouse IDs from being committed to source control and
-    aligns with the fabric_solution_installer.ipynb deployment logic that rewrites
-    the placeholder to the target lakehouse GUID via SOURCE_LAKEHOUSE_ID.
-    The zero GUID (returned by the API for workspaceId) is never modified.
-    Set to $false only for one-off diagnostics where the real GUID is needed.
-
-.PARAMETER ItemIdPlaceholder
-    Sentinel string used to replace real Lakehouse itemId GUIDs when
-    -SanitizeItemIds is $true. Defaults to "PLACEHOLDER-LAKEHOUSE-ID", which
-    matches the default SOURCE_LAKEHOUSE_ID in
-    infra/fabric/deploy/fabric_solution_installer.ipynb. If you change this,
-    update the notebook's SOURCE_LAKEHOUSE_ID accordingly.
-
 .EXAMPLE
     .\Get-FabricOntologyDefinition.ps1 -WorkspaceId "aaaabbbb-0000-cccc-1111-dddd2222eeee" -OntologyId "bbbbcccc-1111-dddd-2222-eeee3333ffff"
     
@@ -103,22 +87,7 @@ param(
     [string]$Format,
 
     [Parameter(Mandatory = $false)]
-    [int]$TimeoutSeconds = 240,
-
-    # Replace real workspaceId and Lakehouse itemId GUIDs in DataBindings/Contextualizations
-    # so committed source files never contain source-environment IDs. The Fabric getDefinition
-    # API preserves both fields as real GUIDs, so both must be sanitized client-side:
-    #   - workspaceId  → 00000000-0000-0000-0000-000000000000 (zero GUID; the installer
-    #                    notebook rewrites this to the target workspace at deploy time)
-    #   - itemId       → -ItemIdPlaceholder value (default: PLACEHOLDER-LAKEHOUSE-ID; the
-    #                    installer notebook rewrites this via SOURCE_LAKEHOUSE_ID)
-    # Values that are already the zero GUID are left untouched.
-    # Set -SanitizeItemIds:$false to keep the raw GUIDs (e.g., for one-off diagnostics).
-    [Parameter(Mandatory = $false)]
-    [bool]$SanitizeItemIds = $true,
-
-    [Parameter(Mandatory = $false)]
-    [string]$ItemIdPlaceholder = "PLACEHOLDER-LAKEHOUSE-ID"
+    [int]$TimeoutSeconds = 240
 )
 
 # Global variables
@@ -382,53 +351,6 @@ function Invoke-FabricApiRequest {
     throw "Maximum retries ($MaxRetries) exceeded"
 }
 
-function ConvertTo-SanitizedOntologyPart {
-    <#
-    .SYNOPSIS
-        Replace real workspaceId and Lakehouse itemId GUIDs with sanitized values.
-
-    .DESCRIPTION
-        The Fabric getDefinition API preserves the real workspaceId and itemId
-        GUIDs inside DataBindings/*.json and Contextualizations/*.json.
-        Committing those raw GUIDs leaks source-environment IDs and prevents
-        redeployment to a different workspace/lakehouse.
-
-        This function does field-scoped text-level replacements:
-          - "workspaceId": "<real-guid>" → "00000000-0000-0000-0000-000000000000"
-          - "itemId":      "<real-guid>" → "<Placeholder>"
-
-        Values that are already the zero GUID are left untouched (negative
-        lookahead). Only values of the specific JSON keys are affected — other
-        GUIDs in the payload are not modified.
-
-        The Fabric solution installer notebook picks up these sanitized values
-        at deploy time and rewrites them to the real target IDs:
-          - zero GUID          → target workspace_id
-          - SOURCE_LAKEHOUSE_ID → target lakehouse item ID
-    #>
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$Content,
-
-        [Parameter(Mandatory = $true)]
-        [string]$Placeholder
-    )
-
-    $guid = '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}'
-    $zeroGuid = '00000000-0000-0000-0000-000000000000'
-    $notZero = '(?!00000000-0000-0000-0000-000000000000)'
-
-    # "workspaceId": "<non-zero GUID>" → zero GUID
-    $wsPattern = "(`"workspaceId`"\s*:\s*`")$notZero$guid(`")"
-    $Content = [System.Text.RegularExpressions.Regex]::Replace($Content, $wsPattern, "`${1}$zeroGuid`${2}")
-
-    # "itemId": "<non-zero GUID>" → placeholder
-    $itemPattern = "(`"itemId`"\s*:\s*`")$notZero$guid(`")"
-    $Content = [System.Text.RegularExpressions.Regex]::Replace($Content, $itemPattern, "`${1}$Placeholder`${2}")
-
-    return $Content
-}
-
 function ConvertFrom-Base64 {
     <#
     .SYNOPSIS
@@ -541,24 +463,11 @@ function Get-OntologyDefinition {
 
         # Decode all parts
         $decodedParts = @{}
-        $sanitizedCount = 0
 
         foreach ($part in $responseData.definition.parts) {
             if ($part.payloadType -eq "InlineBase64") {
-                $decoded = ConvertFrom-Base64 -Base64String $part.payload
-
-                if ($SanitizeItemIds) {
-                    $before = $decoded
-                    $decoded = ConvertTo-SanitizedOntologyPart -Content $decoded -Placeholder $ItemIdPlaceholder
-                    if ($decoded -ne $before) { $sanitizedCount++ }
-                }
-
-                $decodedParts[$part.path] = $decoded
+                $decodedParts[$part.path] = ConvertFrom-Base64 -Base64String $part.payload
             }
-        }
-
-        if ($SanitizeItemIds) {
-            Write-Log "Sanitized workspaceId (-> zero GUID) and itemId (-> '$ItemIdPlaceholder') in $sanitizedCount part(s)"
         }
 
         Write-Log "Successfully decoded ontology definition"
