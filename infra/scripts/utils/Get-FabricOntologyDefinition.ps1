@@ -408,48 +408,43 @@ function Get-OntologyDefinition {
             $uri += "?format=$Format"
         }
 
-        # Make initial API request. The Fabric getDefinition endpoint may return
-        # either 200 (definition inline in body) or 202 (long-running operation
-        # that must be polled). Both are valid per Microsoft LRO conventions.
+        # Make initial API request
         $response = Invoke-FabricApiRequest -Uri $uri -Method "POST"
 
-        if ($response.StatusCode -eq 200) {
-            Write-Log "Definition returned synchronously (200)"
-        }
-        elseif ($response.StatusCode -eq 202) {
-            # Poll for completion
-            $location = [string]$response.Headers['Location']
-            $retryAfter = if ($response.Headers['Retry-After']) { [int]([string]$response.Headers['Retry-After']) } else { 20 }
-
-            Write-Log "Polling every $retryAfter seconds (typical operation completes in 20-60 seconds)"
-
-            do {
-                Start-Sleep -Seconds $retryAfter
-
-                $statusResponse = Invoke-WebRequest -Uri $location -Headers @{
-                    'Authorization' = "Bearer $(Get-AuthToken)"
-                } -UseBasicParsing
-
-                $operationStatus = $statusResponse.Content | ConvertFrom-Json
-
-                if ($operationStatus.status -eq "Succeeded") {
-                    # Retrieve result from Location header
-                    $resultLocation = [string]$statusResponse.Headers['Location']
-
-                    $response = Invoke-WebRequest -Uri $resultLocation -Headers @{
-                        'Authorization' = "Bearer $(Get-AuthToken)"
-                    } -UseBasicParsing
-
-                    break
-                }
-                elseif ($operationStatus.status -eq "Failed") {
-                    throw "Operation failed: $($operationStatus.error | ConvertTo-Json -Compress)"
-                }
-            } while ($true)
-        }
-        else {
+        # Always expect 202 for long-running operation
+        if ($response.StatusCode -ne 202) {
             throw "Unexpected response status: $($response.StatusCode)"
         }
+
+        # Poll for completion
+        $location = [string]$response.Headers['Location']
+        $retryAfter = if ($response.Headers['Retry-After']) { [int]([string]$response.Headers['Retry-After']) } else { 20 }
+        
+        Write-Log "Polling every $retryAfter seconds (typical operation completes in 20-60 seconds)"
+        
+        do {
+            Start-Sleep -Seconds $retryAfter
+            
+            $statusResponse = Invoke-WebRequest -Uri $location -Headers @{
+                'Authorization' = "Bearer $(Get-AuthToken)"
+            } -UseBasicParsing
+            
+            $operationStatus = $statusResponse.Content | ConvertFrom-Json
+            
+            if ($operationStatus.status -eq "Succeeded") {
+                # Retrieve result from Location header
+                $resultLocation = [string]$statusResponse.Headers['Location']
+                
+                $response = Invoke-WebRequest -Uri $resultLocation -Headers @{
+                    'Authorization' = "Bearer $(Get-AuthToken)"
+                } -UseBasicParsing
+                
+                break
+            }
+            elseif ($operationStatus.status -eq "Failed") {
+                throw "Operation failed: $($operationStatus.error | ConvertTo-Json -Compress)"
+            }
+        } while ($true)
 
 
         # Parse and validate response
