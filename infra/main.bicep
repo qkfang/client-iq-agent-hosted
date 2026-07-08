@@ -85,7 +85,7 @@ param searchServiceLocation string = resourceGroup().location
   azd: {
     type: 'location'
     usageName: [
-      'OpenAI.GlobalStandard.gpt4.1-mini,100'
+      'OpenAI.GlobalStandard.gpt-5-mini,150'
       'OpenAI.GlobalStandard.text-embedding-3-small,80'
     ]
   }
@@ -238,7 +238,7 @@ output AZURE_FABRIC_CAPACITY_ADMINISTRATORS array = fabricTotalAdminMembers
 
 // AI Foundry Outputs
 
-@description('GPT model deployment name (e.g., gpt-4o-mini)')
+@description('GPT model deployment name (e.g., gpt-5-mini)')
 output AZURE_OPENAI_DEPLOYMENT_MODEL string = gptModelName
 
 @description('Azure OpenAI service endpoint URL')
