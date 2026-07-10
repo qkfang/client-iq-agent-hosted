@@ -131,7 +131,7 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = if
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: storageName
   location: location
-  tags: tags
+  tags: union(tags, { SecurityControl: 'Ignore' })
   kind: 'StorageV2'
   sku: { name: 'Standard_LRS' }
   properties: {
@@ -140,6 +140,11 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
     allowSharedKeyAccess: true
     minimumTlsVersion: 'TLS1_2'
     supportsHttpsTrafficOnly: true
+    publicNetworkAccess: 'Enabled'
+    networkAcls: {
+      defaultAction: 'Allow'
+      bypass: 'AzureServices'
+    }
   }
 }
 
@@ -202,6 +207,7 @@ resource aiServicesDeployments 'Microsoft.CognitiveServices/accounts/deployments
 resource aiSearch 'Microsoft.Search/searchServices@2024-06-01-preview' = {
   name: aiSearchName
   location: searchServiceLocation
+  tags: union(tags, { SecurityControl: 'Ignore' })
   sku: {
     name: 'basic'
   }
