@@ -18,11 +18,13 @@ logger = logging.getLogger(__name__)
 CHAT_AGENT_NAME = "ChatAgent"
 
 
-def create_agent_client(endpoint: str):
+def create_agent_client(endpoint: str, allow_preview: bool = False):
     """Create an Azure AI Project client authenticated via DefaultAzureCredential.
 
     Args:
         endpoint: Azure AI Project endpoint URL.
+        allow_preview: Enable preview features (required for hosted agent
+            definitions). Defaults to False.
 
     Returns:
         Authenticated ``AIProjectClient`` instance.
@@ -31,7 +33,9 @@ def create_agent_client(endpoint: str):
     from azure.identity import DefaultAzureCredential
 
     credential = DefaultAzureCredential()
-    return AIProjectClient(endpoint=endpoint, credential=credential)
+    return AIProjectClient(
+        endpoint=endpoint, credential=credential, allow_preview=allow_preview
+    )
 
 
 def build_agent_instructions(scenario_name: str, scenario_desc: str = "") -> str:

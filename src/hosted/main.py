@@ -1,0 +1,36 @@
+# Copyright (c) Microsoft. All rights reserved.
+
+"""Hosted agent entry point — Foundry IQ knowledge base (hosted).
+
+Uses the Microsoft Agent Framework SDK. The Knowledge Base MCP tool is
+declared in agent.manifest.yaml and wired in by the deployment script in
+infra/scripts/hosted.
+
+Hosted via ResponsesHostServer from agent-framework-foundry-hosting, which
+provides the readiness endpoint required by the Foundry platform.
+
+Required environment variables:
+    FOUNDRY_PROJECT_ENDPOINT: Foundry project endpoint
+    FOUNDRY_MODEL:            Model deployment name (e.g., gpt-5-mini)
+"""
+
+from pathlib import Path
+
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(dotenv_path=Path(__file__).with_name(".env"))
+except ImportError:
+    pass  # dotenv not needed in hosted deployment
+
+from agent_framework_foundry_hosting import ResponsesHostServer
+from agent import agent
+
+
+def main():
+    server = ResponsesHostServer(agent)
+    server.run()
+
+
+if __name__ == "__main__":
+    main()
