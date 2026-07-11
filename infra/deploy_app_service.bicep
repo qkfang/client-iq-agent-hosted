@@ -66,7 +66,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
 resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
   name: functionAppName
   location: location
-  tags: tags
+  tags: union(tags, { 'azd-service-name': 'func' })
   kind: 'functionapp'
   identity: {
     type: 'SystemAssigned'
@@ -94,7 +94,7 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
 resource webApp 'Microsoft.Web/sites@2023-12-01' = {
   name: webAppName
   location: location
-  tags: tags
+  tags: union(tags, { 'azd-service-name': 'web' })
   kind: 'app'
   identity: {
     type: 'SystemAssigned'

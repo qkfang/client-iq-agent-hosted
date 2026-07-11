@@ -10,8 +10,8 @@
   },
   "sourceKeyRefBindings": [
     {
-      "sourceColumnName": "CustomerRelationshipTypeID",
-      "targetPropertyId": "85361851546376"
+      "sourceColumnName": "CustomerID",
+      "targetPropertyId": "46445338878906"
     }
   ],
   "targetKeyRefBindings": [

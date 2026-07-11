@@ -10,8 +10,8 @@
   },
   "sourceKeyRefBindings": [
     {
-      "sourceColumnName": "CaseID",
-      "targetPropertyId": "11356213764637"
+      "sourceColumnName": "KYCID",
+      "targetPropertyId": "55953628107615"
     }
   ],
   "targetKeyRefBindings": [

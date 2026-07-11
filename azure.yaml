@@ -10,7 +10,17 @@ environment:
 
 requiredVersions:
   azd: ">=1.23.11"
-  
+
+services:
+  web:
+    project: ./src/web
+    host: appservice
+    language: dotnet
+  func:
+    project: ./src/func
+    host: function
+    language: dotnet
+
 hooks:
   postprovision:
     windows:

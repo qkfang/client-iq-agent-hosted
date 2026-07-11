@@ -221,6 +221,7 @@ module containerRegistry 'br/public:avm/res/container-registry/registry:0.12.1' 
     enableTelemetry: enableTelemetry
     acrSku: 'Standard'
     publicNetworkAccess: 'Enabled'
+    networkRuleSetDefaultAction: 'Allow'
     roleAssignments: [
       {
         roleDefinitionIdOrName: 'AcrPull'

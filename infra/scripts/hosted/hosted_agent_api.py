@@ -8,6 +8,8 @@ Provides functions for:
 """
 
 import logging
+import os
+import shutil
 import subprocess
 
 # Module-level logger — inherits configuration from the root logger set up
@@ -36,19 +38,39 @@ def build_and_push_image(
     """
     image_ref = f"{image_name}:{image_tag}"
     logger.info(f"   Building and pushing image '{image_ref}' to '{registry_name}'…")
-    subprocess.run(
+    az_cmd = shutil.which("az") or "az"
+    # Force UTF-8 I/O so the Azure CLI can stream build logs on Windows
+    # consoles that default to a non-UTF-8 code page (e.g. cp1252).
+    az_env = {**os.environ, "PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"}
+    # Capture the output through a pipe (not the console) and decode as UTF-8.
+    # ``--no-logs`` skips streaming the remote build log, which the Azure CLI
+    # renders through colorama and crashes on Windows when the log contains
+    # characters outside the console code page. The command still waits for the
+    # build to finish and returns a non-zero exit code on failure.
+    process = subprocess.Popen(
         [
-            "az",
+            az_cmd,
             "acr",
             "build",
             "--registry",
             registry_name,
             "--image",
             image_ref,
+            "--no-logs",
             source_dir,
         ],
-        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        env=az_env,
     )
+    for line in process.stdout:
+        logger.info("      %s", line.rstrip())
+    return_code = process.wait()
+    if return_code != 0:
+        raise subprocess.CalledProcessError(return_code, process.args)
     return f"{registry_name}.azurecr.io/{image_ref}"
 
 
@@ -108,7 +130,7 @@ def create_or_update_hosted_agent(
         cpu=cpu,
         memory=memory,
         container_configuration=ContainerConfiguration(image=image),
-        container_protocol_versions=[
+        protocol_versions=[
             ProtocolVersionRecord(protocol="responses", version="v1")
         ],
         tools=[mcp_tool],

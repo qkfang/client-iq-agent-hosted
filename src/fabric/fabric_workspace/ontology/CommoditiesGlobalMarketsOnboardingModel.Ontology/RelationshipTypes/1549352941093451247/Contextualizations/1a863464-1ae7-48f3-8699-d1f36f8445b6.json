@@ -10,8 +10,8 @@
   },
   "sourceKeyRefBindings": [
     {
-      "sourceColumnName": "CaseID",
-      "targetPropertyId": "40038801862480"
+      "sourceColumnName": "TradingAccountID",
+      "targetPropertyId": "84167537696844"
     }
   ],
   "targetKeyRefBindings": [
