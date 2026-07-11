@@ -56,7 +56,7 @@ def deploy_hosted_agent(
         cpu: CPU allocation for the hosted agent.
         memory: Memory allocation for the hosted agent.
     """
-    logger.info("   Creating KB MCP project connection…")
+    logger.info("   Creating KB MCP project connection...")
     _mcp_ep = (
         f"{search_endpoint.rstrip('/')}/knowledgebases/{knowledge_base_name}"
         f"/mcp?api-version=2025-11-01-preview"
@@ -76,7 +76,7 @@ def deploy_hosted_agent(
             "create it manually in the Foundry portal if needed"
         )
 
-    logger.info(f"   Building container image from '{source_dir}'…")
+    logger.info(f"   Building container image from '{source_dir}'...")
     _image = build_and_push_image(
         registry_name=container_registry_name,
         image_name=HOSTED_AGENT_NAME,
@@ -85,10 +85,10 @@ def deploy_hosted_agent(
     )
     logger.info(f"      Image: {_image}")
 
-    logger.info("   Initialising AI Project client (preview features enabled)…")
+    logger.info("   Initialising AI Project client (preview features enabled)...")
     _agent_client = create_agent_client(agent_endpoint, allow_preview=True)
 
-    logger.info(f"   Deploying hosted agent '{HOSTED_AGENT_NAME}'…")
+    logger.info(f"   Deploying hosted agent '{HOSTED_AGENT_NAME}'...")
     with _agent_client:
         _agent = create_or_update_hosted_agent(
             project_client=_agent_client,

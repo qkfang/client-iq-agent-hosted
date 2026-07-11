@@ -33,7 +33,7 @@
       "sourceType": "LakehouseTable",
       "workspaceId": "00000000-0000-0000-0000-000000000000",
       "itemId": "PLACEHOLDER-LAKEHOUSE-ID",
-      "sourceTableName": "RelationshipManager",
+      "sourceTableName": "relationshipmanager",
       "sourceSchema": "onboarding"
     }
   }
