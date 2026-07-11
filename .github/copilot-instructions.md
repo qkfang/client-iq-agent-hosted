@@ -19,3 +19,7 @@ https://github.com/microsoft/microsoft-iq-solution-accelerator/blob/main/docs/De
 
 add SecurityControl=Ignore to AI Seach and also enable public access
 add SecurityControl=Ignore to storage account and also enable public access
+
+hosted agent samples:
+
+ttps://github.com/microsoft-foundry/foundry-samples/blob/main/samples/python/hosted-agents/agent-framework/responses/
