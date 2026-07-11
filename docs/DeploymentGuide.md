@@ -308,11 +308,12 @@ The deployment follows a **two-phase automated workflow**, both phases triggered
 | — | | | AI Search service & Storage account | Provision the indexer + blob storage backing the knowledge base. |
 | — | | | [OpenAI model deployments](https://learn.microsoft.com/azure/ai-services/openai/how-to/create-resource) | Deploy the chat completion and embedding models. |
 | 1 | **Phase 2: Solution Bootstrap** | [`install_microsoft_iq_solution.py`](../infra/scripts/install_microsoft_iq_solution.py) (Python, `postprovision` hook) | `setup_knowledge_base` ([`step_knowledge_base.py`](../infra/scripts/foundry/step_knowledge_base.py)) | Create the Azure AI Search index, upload PDFs from [`src/foundry/data/documents/`](../src/foundry/data/documents/), and provision the Foundry IQ knowledge source and knowledge base. |
-| 2 | | | `setup_agent` ([`step_agent_setup.py`](../infra/scripts/foundry/step_agent_setup.py)) | Create the AI Foundry chat agent wired to the Knowledge Base via [MCP](https://modelcontextprotocol.io/introduction). **Best-effort**: transient platform errors are logged as warnings and the deployment continues. |
-| 3 | | | `setup_workspace` ([`step_workspace_setup.py`](../infra/scripts/fabric/step_workspace_setup.py)) | Create or find the Fabric workspace, assign it to the capacity, and resume the capacity if paused. |
-| 4 | | | `setup_administrators` ([`step_workspace_admins.py`](../infra/scripts/fabric/step_workspace_admins.py)) | Add [workspace administrators](https://learn.microsoft.com/fabric/get-started/roles-workspaces) using [Graph API](https://learn.microsoft.com/graph/overview) resolution with fallback. |
-| 5 | | | `upload_installer` ([`step_notebook_installer.py`](../infra/scripts/fabric/step_notebook_installer.py)) | Upload [`fabric_solution_installer.ipynb`](../infra/fabric/deploy/fabric_solution_installer.ipynb), patched in-memory with the current git branch. |
-| 6 | | | `run_installer` ([`step_notebook_installer.py`](../infra/scripts/fabric/step_notebook_installer.py)) | Execute the installer notebook as a Fabric job. The notebook uses [`fabric-launcher`](https://github.com/microsoft/fabric-launcher) to deploy items from [`src/fabric/fabric_workspace/`](../src/fabric/fabric_workspace/), then runs `pipeline_main` for data ingestion, deploys ontologies, and organizes folders. |
+| 2 | | | `setup_agent` ([`step_agent_setup.py`](../infra/scripts/foundry/step_agent_setup.py)) | Create the AI Foundry `ChatAgent` wired to the Knowledge Base via [MCP](https://modelcontextprotocol.io/introduction). **Best-effort**: transient platform errors are logged as warnings and the deployment continues. |
+| 3 | | | `setup_onboarding_agent` ([`step_onboarding_agent_setup.py`](../infra/scripts/foundry/step_onboarding_agent_setup.py)) | Create the AI Foundry `OnboardingAgent` wired to the Knowledge Base via [MCP](https://modelcontextprotocol.io/introduction). **Best-effort**: transient platform errors are logged as warnings and the deployment continues. |
+| 4 | | | `setup_workspace` ([`step_workspace_setup.py`](../infra/scripts/fabric/step_workspace_setup.py)) | Create or find the Fabric workspace, assign it to the capacity, and resume the capacity if paused. |
+| 5 | | | `setup_administrators` ([`step_workspace_admins.py`](../infra/scripts/fabric/step_workspace_admins.py)) | Add [workspace administrators](https://learn.microsoft.com/fabric/get-started/roles-workspaces) using [Graph API](https://learn.microsoft.com/graph/overview) resolution with fallback. |
+| 6 | | | `upload_installer` ([`step_notebook_installer.py`](../infra/scripts/fabric/step_notebook_installer.py)) | Upload [`fabric_solution_installer.ipynb`](../infra/fabric/deploy/fabric_solution_installer.ipynb), patched in-memory with the current git branch. |
+| 7 | | | `run_installer` ([`step_notebook_installer.py`](../infra/scripts/fabric/step_notebook_installer.py)) | Execute the installer notebook as a Fabric job. The notebook uses [`fabric-launcher`](https://github.com/microsoft/fabric-launcher) to deploy items from [`src/fabric/fabric_workspace/`](../src/fabric/fabric_workspace/), then runs `pipeline_main` for data ingestion, deploys ontologies, and organizes folders. |
 
 ---
 
@@ -369,25 +370,26 @@ Access your workspace:
 
 ### Microsoft Foundry Components
 
-Sourced and named by [`install_microsoft_iq_solution.py`](../infra/scripts/install_microsoft_iq_solution.py) (steps `setup_knowledge_base` and `setup_agent`).
+Sourced and named by [`install_microsoft_iq_solution.py`](../infra/scripts/install_microsoft_iq_solution.py) (steps `setup_knowledge_base`, `setup_agent`, and `setup_onboarding_agent`).
 
 | Component | Default name | Purpose |
 |---|---|---|
 | **Search Index** | `{solution_suffix}-documents` | Azure AI Search index containing chunked PDFs from [`src/foundry/data/documents/`](../src/foundry/data/documents/) with embeddings for hybrid (vector + keyword) retrieval. Override with `AZURE_AI_SEARCH_INDEX`. |
 | **Knowledge Source** | `{solution_suffix}-ks` | Foundry IQ pointer to the AI Search index. |
-| **Knowledge Base** | `{solution_suffix}-kb` | Foundry IQ knowledge base with automatic query planning over the knowledge source. Used by the agent for grounded answers with citations. |
-| **KB MCP project connection** | `{solution_suffix}-kb-mcp-connection` | Foundry connection that exposes the Knowledge Base to the agent through the [Model Context Protocol](https://modelcontextprotocol.io/introduction). Override with `KB_MCP_CONNECTION_NAME`. |
+| **Knowledge Base** | `{solution_suffix}-kb` | Foundry IQ knowledge base with automatic query planning over the knowledge source. Used by the agents for grounded answers with citations. |
+| **KB MCP project connection** | `{solution_suffix}-kb-mcp-connection` | Foundry connection that exposes the Knowledge Base to the agents through the [Model Context Protocol](https://modelcontextprotocol.io/introduction). Override with `KB_MCP_CONNECTION_NAME`. |
 | **Chat Agent** | `ChatAgent` | AI Foundry agent wired to the Knowledge Base via the MCP tool above. Answers questions with document citations. |
+| **Onboarding Agent** | `OnboardingAgent` | AI Foundry agent wired to the same Knowledge Base MCP tool. Helps new users find onboarding and reference documentation. |
 
 #### Verify in the Foundry portal
 
 Open [ai.azure.com](https://ai.azure.com) and sign in with the same account used for `azd auth login`. From the landing page, select your hub and then your project (the project name is stored as `AZURE_AI_PROJECT_NAME` in your `azd` environment; the endpoint is `AZURE_AI_AGENT_ENDPOINT`). Once inside the project, confirm:
 
 1. **Knowledge Bases** → `{solution_suffix}-kb` exists, status is *Ready*, and it lists `{solution_suffix}-ks` as its source.
-2. **Agents** → an agent named `ChatAgent` exists, its model matches `AZURE_AI_AGENT_MODEL_DEPLOYMENT_NAME` / `AZURE_CHAT_MODEL` (default `gpt-5-mini`), and the **Tools** panel shows the `{solution_suffix}-kb-mcp-connection` MCP tool attached.
+2. **Agents** → agents named `ChatAgent` and `OnboardingAgent` exist, their model matches `AZURE_AI_AGENT_MODEL_DEPLOYMENT_NAME` / `AZURE_CHAT_MODEL` (default `gpt-5-mini`), and the **Tools** panel shows the `{solution_suffix}-kb-mcp-connection` MCP tool attached.
 3. **Connections** → the AI Search, Blob Storage, and KB MCP connections are all *Connected*.
 
-> If `setup_agent` finished with a warning during deployment, this verification is the recommended way to check whether the agent was actually created. If `ChatAgent` is missing, simply re-run `azd up`.
+> If `setup_agent` or `setup_onboarding_agent` finished with a warning during deployment, this verification is the recommended way to check whether the agent was actually created. If `ChatAgent` or `OnboardingAgent` is missing, simply re-run `azd up`.
 
 **Test the agent from the CLI**:
 ```bash

@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
 """
-AI Foundry agent setup step for the Microsoft IQ deployment.
+OnboardingAgent setup step for the Microsoft IQ deployment.
 
-Extracts step 2 (``setup_agent``) of the deployment flow into a single
-top-level function callable from the entry-point script.
+Creates an AI Foundry agent focused on helping new users find onboarding
+and reference documentation. It follows the same pattern as
+``step_agent_setup.py`` (ChatAgent) and currently wires up the Foundry IQ
+Knowledge Base MCP tool only — Fabric IQ, Work IQ, and Web IQ do not yet
+expose a Python/MCP integration surface in this repository. Once their MCP
+endpoints are confirmed, add the corresponding tool(s) to the ``tools`` list
+built in ``setup_onboarding_agent()`` below.
 """
 
-import json
 import logging
-from pathlib import Path
 
-from common.config import DATA_DIR
 from foundry.agent_api import (
-    CHAT_AGENT_NAME,
-    build_agent_instructions,
+    ONBOARDING_AGENT_NAME,
     build_kb_mcp_tool,
+    build_onboarding_agent_instructions,
     create_agent_client,
     create_kb_mcp_connection,
     create_or_update_agent,
@@ -25,13 +27,12 @@ from foundry.agent_api import (
 logger = logging.getLogger(__name__)
 
 
-def setup_agent(
+def setup_onboarding_agent(
     *,
     solution_name: str,
     agent_endpoint: str,
     agent_model: str,
     search_endpoint: str,
-    search_index_name: str,
     knowledge_base_name: str,
     kb_mcp_connection_name: str,
     subscription_id: str,
@@ -39,14 +40,13 @@ def setup_agent(
     ai_service_name: str | None,
     ai_project_name: str | None,
 ) -> None:
-    """Create or update an AI Foundry agent wired up to the Knowledge Base MCP tool.
+    """Create or update an AI Foundry OnboardingAgent wired up to the Knowledge Base MCP tool.
 
     Args:
-        solution_name: Overall generic name for the project/solution
+        solution_name: Overall generic name for the project/solution.
         agent_endpoint: Azure AI Project endpoint URL.
         agent_model: Chat model deployment name for the agent.
         search_endpoint: Azure AI Search service endpoint URL.
-        search_index_name: Name of the search index that backs the KB.
         knowledge_base_name: KB name to use for the MCP connection.
         kb_mcp_connection_name: Project connection name for the KB MCP tool.
         subscription_id: Azure subscription ID.
@@ -54,17 +54,9 @@ def setup_agent(
         ai_service_name: Azure AI Services account name (required for MCP connection).
         ai_project_name: Azure AI Project name (required for MCP connection).
     """
-    # Default scenario info
-    _data_path = Path(DATA_DIR)
-    _config_dir = _data_path / "config" if (_data_path / "config").exists() else _data_path
-    _scenario_name = solution_name
-    _scenario_desc = "Managing delivery operations, inventory logistics, and supplier relationships."
-
-    # Build agent instructions
-    _instructions = build_agent_instructions(_scenario_name, _scenario_desc)
+    _instructions = build_onboarding_agent_instructions(solution_name)
     logger.debug(f"      Built instructions ({len(_instructions)} chars)")
 
-    # Create agent client and MCP connection
     logger.info("   Initialising AI Project client…")
     _agent_client = create_agent_client(agent_endpoint)
 
@@ -94,15 +86,17 @@ def setup_agent(
             "AZURE_AI_PROJECT_NAME must both be set"
         )
 
-    # Create / replace agent
-    logger.info(f"   Creating agent '{CHAT_AGENT_NAME}'…")
-    _kb_tool = build_kb_mcp_tool(_mcp_ep, kb_mcp_connection_name)
+    # Tools attached to the agent. Fabric IQ / Work IQ / Web IQ tools should
+    # be appended here once their MCP endpoints are confirmed.
+    _tools = [build_kb_mcp_tool(_mcp_ep, kb_mcp_connection_name)]
+
+    logger.info(f"   Creating agent '{ONBOARDING_AGENT_NAME}'…")
     with _agent_client:
         _agent = create_or_update_agent(
             project_client=_agent_client,
-            agent_name=CHAT_AGENT_NAME,
+            agent_name=ONBOARDING_AGENT_NAME,
             model=agent_model,
             instructions=_instructions,
-            tools=[_kb_tool],
+            tools=_tools,
         )
     logger.info(f"   Agent '{_agent.name}' ready (id: {_agent.id})")
