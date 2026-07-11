@@ -1,0 +1,41 @@
+[
+  {
+    "organizationId": "ORG-1001",
+    "customerId": "CUST-1001",
+    "organizationName": "Sample Trading Pty Ltd",
+    "parentOrganization": "",
+    "businessUnit": "Commodities Desk",
+    "addressLine1": "12 Harbour Street",
+    "city": "Sydney",
+    "state": "NSW",
+    "postalCode": "2000",
+    "country": "Australia",
+    "taxId": "AU-ABN-00000001"
+  },
+  {
+    "organizationId": "ORG-1002",
+    "customerId": "CUST-1002",
+    "organizationName": "Example Holdings Inc",
+    "parentOrganization": "Example Global Group",
+    "businessUnit": "Wealth Management",
+    "addressLine1": "500 Market Avenue",
+    "city": "San Francisco",
+    "state": "CA",
+    "postalCode": "94105",
+    "country": "United States",
+    "taxId": "US-EIN-00000002"
+  },
+  {
+    "organizationId": "ORG-1003",
+    "customerId": "CUST-1003",
+    "organizationName": "Northwind Logistics Group",
+    "parentOrganization": "",
+    "businessUnit": "Freight Operations",
+    "addressLine1": "88 Dockside Lane",
+    "city": "Toronto",
+    "state": "ON",
+    "postalCode": "M5V 2T6",
+    "country": "Canada",
+    "taxId": "CA-BN-00000003"
+  }
+]

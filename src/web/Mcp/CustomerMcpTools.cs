@@ -8,35 +8,38 @@ namespace Onboarding.Web.Mcp;
 
 /// <summary>
 /// MCP tools that let the Foundry onboarding agent read and update the mock
-/// Dynamics 365 CRM records as it works through an onboarding case.
+/// Dynamics 365 CRM customer (account) records.
 /// </summary>
 [McpServerToolType]
-public class CrmMcpTools
+public class CustomerMcpTools
 {
     private readonly CrmService _crmService;
 
-    public CrmMcpTools(CrmService crmService)
+    public CustomerMcpTools(CrmService crmService)
     {
         _crmService = crmService;
     }
 
-    [McpServerTool(Name = "get_crm_record"), Description("Get the current CRM record for a customer by customerId.")]
-    public string GetCrmRecord([Description("The CRM customer id, e.g. CUST-1001.")] string customerId)
+    [McpServerTool(Name = "list_crm_customers"), Description("List all CRM customer records.")]
+    public string ListCustomers() => JsonSerializer.Serialize(_crmService.GetCustomers());
+
+    [McpServerTool(Name = "get_crm_customer"), Description("Get the current CRM record for a customer by customerId.")]
+    public string GetCustomer([Description("The CRM customer id, e.g. CUST-1001.")] string customerId)
     {
-        var record = _crmService.Get(customerId);
+        var record = _crmService.GetCustomer(customerId);
         return record is null
             ? JsonSerializer.Serialize(new { error = $"No CRM record found for {customerId}." })
             : JsonSerializer.Serialize(record);
     }
 
-    [McpServerTool(Name = "update_crm_onboarding_status"), Description("Update the onboarding status, KYC risk rating and notes on a customer's CRM record.")]
-    public string UpdateCrmOnboardingStatus(
+    [McpServerTool(Name = "update_crm_customer"), Description("Update the onboarding status, KYC risk rating and notes on a customer's CRM record.")]
+    public string UpdateCustomer(
         [Description("The CRM customer id, e.g. CUST-1001.")] string customerId,
         [Description("New onboarding status, e.g. In progress, Ready to trade, Escalated.")] string onboardingStatus,
         [Description("KYC/AML risk rating, e.g. Low, Medium, High.")] string? kycRiskRating = null,
         [Description("Free-text notes describing the update.")] string? notes = null)
     {
-        var record = _crmService.Get(customerId) ?? new CrmRecord { CustomerId = customerId, CustomerName = customerId };
+        var record = _crmService.GetCustomer(customerId) ?? new CrmRecord { CustomerId = customerId, CustomerName = customerId };
 
         record.OnboardingStatus = onboardingStatus;
         if (!string.IsNullOrWhiteSpace(kycRiskRating))
@@ -49,7 +52,7 @@ public class CrmMcpTools
         }
         record.LastUpdatedBy = "Foundry onboarding agent";
 
-        _crmService.Upsert(record);
+        _crmService.UpsertCustomer(record);
 
         return JsonSerializer.Serialize(record);
     }

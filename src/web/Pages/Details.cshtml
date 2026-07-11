@@ -1,0 +1,107 @@
+@page "{customerId}"
+@model DetailsModel
+@{
+    ViewData["Title"] = Model.Customer?.CustomerName ?? "Customer";
+}
+
+<p><a asp-page="/Index">&larr; Back to customers</a></p>
+
+<h1>@Model.Customer!.CustomerName</h1>
+<p class="badge">@Model.Customer.OnboardingStatus</p>
+
+<section class="entity-section">
+    <h2>Account details</h2>
+    <dl class="detail-grid">
+        <dt>Customer Id</dt><dd>@Model.Customer.CustomerId</dd>
+        <dt>Legal Entity Type</dt><dd>@Model.Customer.LegalEntityType</dd>
+        <dt>Industry</dt><dd>@Model.Customer.Industry</dd>
+        <dt>Country</dt><dd>@Model.Customer.Country</dd>
+        <dt>Account Owner</dt><dd>@Model.Customer.AccountOwner</dd>
+        <dt>Primary Contact</dt><dd>@Model.Customer.PrimaryContactName (@Model.Customer.PrimaryContactEmail)</dd>
+        <dt>Phone</dt><dd>@Model.Customer.Phone</dd>
+        <dt>Website</dt><dd>@Model.Customer.Website</dd>
+        <dt>Annual Revenue</dt><dd>@Model.Customer.AnnualRevenue.ToString("C0")</dd>
+        <dt>Employees</dt><dd>@Model.Customer.EmployeeCount</dd>
+        <dt>KYC Risk Rating</dt><dd>@Model.Customer.KycRiskRating</dd>
+        <dt>Notes</dt><dd>@Model.Customer.Notes</dd>
+    </dl>
+</section>
+
+<section class="entity-section">
+    <h2>Organization / entity</h2>
+    @foreach (var org in Model.Organizations)
+    {
+        <dl class="detail-grid">
+            <dt>Organization Name</dt><dd>@org.OrganizationName</dd>
+            <dt>Parent Organization</dt><dd>@org.ParentOrganization</dd>
+            <dt>Business Unit</dt><dd>@org.BusinessUnit</dd>
+            <dt>Address</dt><dd>@org.AddressLine1, @org.City, @org.State @org.PostalCode, @org.Country</dd>
+            <dt>Tax Id</dt><dd>@org.TaxId</dd>
+        </dl>
+    }
+</section>
+
+<section class="entity-section">
+    <h2>Opportunities</h2>
+    <table class="entity-table">
+        <thead>
+            <tr><th>Name</th><th>Stage</th><th>Value</th><th>Probability</th><th>Est. Close</th><th>Owner</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var opp in Model.Opportunities)
+            {
+                <tr>
+                    <td>@opp.Name</td>
+                    <td>@opp.Stage</td>
+                    <td>@opp.EstimatedValue.ToString("N0") @opp.Currency</td>
+                    <td>@opp.Probability%</td>
+                    <td>@opp.EstimatedCloseUtc.ToString("d")</td>
+                    <td>@opp.Owner</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</section>
+
+<section class="entity-section">
+    <h2>History</h2>
+    <table class="entity-table">
+        <thead>
+            <tr><th>Date</th><th>Type</th><th>Subject</th><th>Performed By</th><th>Outcome</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var entry in Model.History)
+            {
+                <tr>
+                    <td>@entry.ActivityDate.ToString("u")</td>
+                    <td>@entry.ActivityType</td>
+                    <td>@entry.Subject</td>
+                    <td>@entry.PerformedBy</td>
+                    <td>@entry.Outcome</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</section>
+
+<section class="entity-section">
+    <h2>Email trace</h2>
+    <table class="entity-table">
+        <thead>
+            <tr><th>Date</th><th>Direction</th><th>Subject</th><th>From</th><th>To</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var email in Model.Emails)
+            {
+                <tr>
+                    <td>@email.SentUtc.ToString("u")</td>
+                    <td>@email.Direction</td>
+                    <td>@email.Subject</td>
+                    <td>@email.From</td>
+                    <td>@email.To</td>
+                    <td>@email.Status</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</section>
