@@ -206,3 +206,10 @@ __marimo__/
 
 # Deployment-specific configuration files
 infra/preflight-*.bicepparam
+
+# .NET build output
+/src/func/bin/
+/src/func/obj/
+/src/web/bin/
+/src/web/obj/
+
