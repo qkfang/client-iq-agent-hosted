@@ -42,11 +42,10 @@ def build_and_push_image(
     # Force UTF-8 I/O so the Azure CLI can stream build logs on Windows
     # consoles that default to a non-UTF-8 code page (e.g. cp1252).
     az_env = {**os.environ, "PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"}
-    # Capture the output through a pipe (not the console) and decode as UTF-8.
     # ``--no-logs`` skips streaming the remote build log, which the Azure CLI
     # renders through colorama and crashes on Windows when the log contains
-    # characters outside the console code page. The command still waits for the
-    # build to finish and returns a non-zero exit code on failure.
+    # characters outside the console code page (cp1252). The command still
+    # waits for the build to finish and returns a non-zero exit code on failure.
     process = subprocess.Popen(
         [
             az_cmd,
@@ -131,7 +130,7 @@ def create_or_update_hosted_agent(
         memory=memory,
         container_configuration=ContainerConfiguration(image=image),
         protocol_versions=[
-            ProtocolVersionRecord(protocol="responses", version="v1")
+            ProtocolVersionRecord(protocol="responses", version="2.0.0")
         ],
         tools=[mcp_tool],
         environment_variables=environment_variables,

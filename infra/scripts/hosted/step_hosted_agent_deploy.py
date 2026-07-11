@@ -98,9 +98,11 @@ def deploy_hosted_agent(
             memory=memory,
             mcp_endpoint=_mcp_ep,
             connection_name=kb_mcp_connection_name,
+            # Only non-reserved env vars may be set. The platform injects
+            # FOUNDRY_PROJECT_ENDPOINT (and all FOUNDRY_*/AGENT_* vars) itself,
+            # so the model deployment name is passed via a non-reserved var.
             environment_variables={
-                "FOUNDRY_MODEL": agent_model,
-                "FOUNDRY_PROJECT_ENDPOINT": agent_endpoint,
+                "AZURE_AI_MODEL_DEPLOYMENT_NAME": agent_model,
             },
         )
     logger.info(f"   Hosted agent '{_agent.name}' ready (id: {_agent.id})")

@@ -10,8 +10,8 @@ Hosted via ResponsesHostServer from agent-framework-foundry-hosting, which
 provides the readiness endpoint required by the Foundry platform.
 
 Required environment variables:
-    FOUNDRY_PROJECT_ENDPOINT: Foundry project endpoint
-    FOUNDRY_MODEL:            Model deployment name (e.g., gpt-5-mini)
+    FOUNDRY_PROJECT_ENDPOINT:          Foundry project endpoint (injected by the platform)
+    AZURE_AI_MODEL_DEPLOYMENT_NAME:    Model deployment name (e.g., gpt-5-mini)
 """
 
 from pathlib import Path
