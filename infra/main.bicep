@@ -263,6 +263,7 @@ module appServices 'deploy_app_service.bicep' = {
     serviceBusQueueName: serviceBus.outputs.serviceBusQueueName
     foundryProjectEndpoint: aifoundry.outputs.projectEndpoint
     aiServicesName: aifoundry.outputs.aiServicesName
+    applicationInsightsConnectionString: aifoundry.outputs.applicationInsightsConnectionString
   }
   scope: resourceGroup(resourceGroup().name)
 }
@@ -347,6 +348,9 @@ output AZURE_AI_PROJECT_NAME string = aifoundry.outputs.aiProjectName
 
 @description('Azure AI Services resource name')
 output AI_SERVICE_NAME string = aifoundry.outputs.aiServicesName
+
+@description('Application Insights resource name for monitoring')
+output AZURE_APPLICATION_INSIGHTS_NAME string = aifoundry.outputs.applicationInsightsName
 
 @description('Azure Container Registry name used to build and host the agent container image')
 output AZURE_CONTAINER_REGISTRY_NAME string = containerRegistryResourceName

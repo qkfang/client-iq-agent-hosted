@@ -38,6 +38,9 @@ param foundryOnboardingAgentId string = ''
 @description('The name of the Azure AI Services account to grant the Function App access to.')
 param aiServicesName string
 
+@description('The Application Insights connection string used for monitoring the Function App and Web App.')
+param applicationInsightsConnectionString string = ''
+
 @description('Tags to apply to the deployed resources.')
 param tags object = {}
 
@@ -86,6 +89,7 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
         { name: 'ServiceBus__QueueName', value: serviceBusQueueName }
         { name: 'Foundry__ProjectEndpoint', value: foundryProjectEndpoint }
         { name: 'Foundry__OnboardingAgentId', value: foundryOnboardingAgentId }
+        { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: applicationInsightsConnectionString }
       ]
     }
   }
@@ -107,6 +111,7 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
       use32BitWorkerProcess: false
       appSettings: [
         { name: 'Foundry__ProjectEndpoint', value: foundryProjectEndpoint }
+        { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: applicationInsightsConnectionString }
       ]
     }
   }

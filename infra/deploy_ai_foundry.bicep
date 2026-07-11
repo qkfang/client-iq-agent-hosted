@@ -68,6 +68,7 @@ var solutionSuffix = toLower(trim(replace(
 
 var aiServicesName = '${abbrs.ai.aiServices}${solutionSuffix}'
 var workspaceName = '${abbrs.managementGovernance.logAnalyticsWorkspace}${solutionSuffix}'
+var applicationInsightsName = '${abbrs.managementGovernance.applicationInsights}${solutionSuffix}'
 var location = solutionLocation
 var aiProjectName = '${abbrs.ai.aiFoundryProject}${solutionSuffix}'
 var aiSearchName = '${abbrs.ai.aiSearch}${solutionSuffix}'
@@ -124,6 +125,18 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = if
     sku: {
       name: 'PerGB2018'
     }
+  }
+}
+
+resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
+  name: applicationInsightsName
+  location: location
+  kind: 'web'
+  properties: {
+    Application_Type: 'web'
+    WorkspaceResourceId: useExisting ? existingLogAnalyticsWorkspace.id : logAnalytics.id
+    publicNetworkAccessForIngestion: 'Enabled'
+    publicNetworkAccessForQuery: 'Enabled'
   }
 }
 
@@ -618,6 +631,12 @@ output logAnalyticsWorkspaceResourceGroup string = useExisting ? existingLawReso
 
 @description('The subscription ID of the Log Analytics workspace.')
 output logAnalyticsWorkspaceSubscription string = useExisting ? existingLawSubscription : subscription().subscriptionId
+
+@description('The name of the Application Insights resource.')
+output applicationInsightsName string = applicationInsights.name
+
+@description('The connection string of the Application Insights resource.')
+output applicationInsightsConnectionString string = applicationInsights.properties.ConnectionString
 
 @description('The endpoint URL for the AI Foundry project.')
 output projectEndpoint string = !empty(existingProjEndpoint) ? existingProjEndpoint : aiProject.properties.endpoints['AI Foundry API']
