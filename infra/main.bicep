@@ -211,6 +211,35 @@ module aifoundry 'deploy_ai_foundry.bicep' = {
   scope: resourceGroup(resourceGroup().name)
 }
 
+// ========== Service Bus ========== //
+module serviceBus 'deploy_service_bus.bicep' = {
+  name: 'deploy_service_bus'
+  params: {
+    serviceBusNamespaceName: '${abbrs.integration.serviceBusNamespace}${solutionSuffix}'
+    serviceBusQueueName: '${abbrs.integration.serviceBusQueue}onboarding-requests'
+    location: location
+  }
+  scope: resourceGroup(resourceGroup().name)
+}
+
+// ========== Onboarding Function App and CRM Web App ========== //
+module appServices 'deploy_app_service.bicep' = {
+  name: 'deploy_app_service'
+  params: {
+    appServicePlanName: '${abbrs.compute.appServicePlan}${solutionSuffix}'
+    functionAppName: '${abbrs.compute.functionApp}${solutionSuffix}'
+    webAppName: '${abbrs.compute.webApp}${solutionSuffix}'
+    location: location
+    storageAccountName: aifoundry.outputs.storageAccountName
+    serviceBusNamespaceName: serviceBus.outputs.serviceBusNamespaceName
+    serviceBusFullyQualifiedNamespace: serviceBus.outputs.serviceBusFullyQualifiedNamespace
+    serviceBusQueueName: serviceBus.outputs.serviceBusQueueName
+    foundryProjectEndpoint: aifoundry.outputs.projectEndpoint
+    aiServicesName: aifoundry.outputs.aiServicesName
+  }
+  scope: resourceGroup(resourceGroup().name)
+}
+
 // ========== Outputs ========== //
 
 // Common Outputs
@@ -291,3 +320,25 @@ output AZURE_AI_PROJECT_NAME string = aifoundry.outputs.aiProjectName
 
 @description('Azure AI Services resource name')
 output AI_SERVICE_NAME string = aifoundry.outputs.aiServicesName
+
+// Service Bus Outputs
+
+@description('Service Bus namespace fully qualified host name')
+output AZURE_SERVICE_BUS_NAMESPACE string = serviceBus.outputs.serviceBusFullyQualifiedNamespace
+
+@description('Service Bus queue used for onboarding requests')
+output AZURE_SERVICE_BUS_QUEUE_NAME string = serviceBus.outputs.serviceBusQueueName
+
+// Onboarding Function App and CRM Web App Outputs
+
+@description('Name of the onboarding Function App')
+output AZURE_FUNCTION_APP_NAME string = appServices.outputs.functionAppName
+
+@description('Blob container watched by the Function App for incoming onboarding forms')
+output AZURE_ONBOARDING_CONTAINER_NAME string = appServices.outputs.onboardingContainerName
+
+@description('Name of the CRM Web App')
+output AZURE_WEB_APP_NAME string = appServices.outputs.webAppName
+
+@description('MCP endpoint exposed by the CRM Web App for the Foundry onboarding agent')
+output AZURE_WEB_APP_MCP_ENDPOINT string = appServices.outputs.webAppMcpEndpoint

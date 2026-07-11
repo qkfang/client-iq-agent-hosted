@@ -1,0 +1,12 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+    "ONBOARDING_CONTAINER_NAME": "onboarding-forms",
+    "ServiceBus__FullyQualifiedNamespace": "",
+    "ServiceBus__QueueName": "sbq-onboarding-requests",
+    "Foundry__ProjectEndpoint": "",
+    "Foundry__OnboardingAgentId": ""
+  }
+}

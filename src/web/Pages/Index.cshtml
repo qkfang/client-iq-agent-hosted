@@ -1,0 +1,39 @@
+@page
+@using Onboarding.Web.Services
+@model IndexModel
+@{
+    ViewData["Title"] = "Mock D365 CRM";
+}
+
+<h1>@ViewData["Title"]</h1>
+<p>Customer onboarding records, updated by the Foundry onboarding agent via the <code>/mcp</code> endpoint.</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Customer Id</th>
+            <th>Name</th>
+            <th>Entity Type</th>
+            <th>Country</th>
+            <th>Onboarding Status</th>
+            <th>KYC Risk Rating</th>
+            <th>Last Updated</th>
+            <th>Notes</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var record in Model.Records)
+        {
+            <tr>
+                <td>@record.CustomerId</td>
+                <td>@record.CustomerName</td>
+                <td>@record.LegalEntityType</td>
+                <td>@record.Country</td>
+                <td>@record.OnboardingStatus</td>
+                <td>@record.KycRiskRating</td>
+                <td>@record.LastUpdatedUtc.ToString("u") (@record.LastUpdatedBy)</td>
+                <td>@record.Notes</td>
+            </tr>
+        }
+    </tbody>
+</table>
