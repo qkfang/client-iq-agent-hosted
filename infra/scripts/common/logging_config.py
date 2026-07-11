@@ -72,3 +72,8 @@ def setup_logging() -> None:
     # actionable messages, even when our own code runs at DEBUG.
     for noisy in ("azure", "urllib3", "requests", "msal"):
         logging.getLogger(noisy).setLevel(logging.WARNING)
+
+    # pypdf emits recoverable-parse WARNINGs ("incorrect startxref pointer",
+    # "parsing for Object Streams") for PDFs it can still read successfully.
+    # Pin it to ERROR so those benign notices don't clutter deployment output.
+    logging.getLogger("pypdf").setLevel(logging.ERROR)

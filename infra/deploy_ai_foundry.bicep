@@ -630,3 +630,6 @@ output storageBlobEndpoint string = storageAccount.properties.primaryEndpoints.b
 
 @description('The name of the storage account.')
 output storageAccountName string = storageAccount.name
+
+@description('The managed identity principal ID of the AI Foundry project (used for role assignments such as AcrPull).')
+output aiProjectPrincipalId string = empty(azureExistingAIProjectResourceId) ? aiProject.identity.principalId : existingOpenAiProject.outputs.aiProjectPrincipalId

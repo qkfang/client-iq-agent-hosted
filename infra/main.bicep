@@ -211,6 +211,32 @@ module aifoundry 'deploy_ai_foundry.bicep' = {
   scope: resourceGroup(resourceGroup().name)
 }
 
+// ========== Container Registry (hosted agent image) ========== //
+var containerRegistryResourceName = '${abbrs.containers.containerRegistry}${solutionSuffix}'
+module containerRegistry 'br/public:avm/res/container-registry/registry:0.12.1' = {
+  name: take('avm.res.container-registry.registry.${containerRegistryResourceName}', 64)
+  params: {
+    name: containerRegistryResourceName
+    location: location
+    enableTelemetry: enableTelemetry
+    acrSku: 'Standard'
+    publicNetworkAccess: 'Enabled'
+    roleAssignments: [
+      {
+        roleDefinitionIdOrName: 'AcrPull'
+        principalId: managedIdentityModule.outputs.managedIdentityOutput.objectId
+        principalType: 'ServicePrincipal'
+      }
+      {
+        roleDefinitionIdOrName: 'AcrPull'
+        principalId: aifoundry.outputs.aiProjectPrincipalId
+        principalType: 'ServicePrincipal'
+      }
+    ]
+  }
+  scope: resourceGroup(resourceGroup().name)
+}
+
 // ========== Service Bus ========== //
 module serviceBus 'deploy_service_bus.bicep' = {
   name: 'deploy_service_bus'
@@ -320,6 +346,9 @@ output AZURE_AI_PROJECT_NAME string = aifoundry.outputs.aiProjectName
 
 @description('Azure AI Services resource name')
 output AI_SERVICE_NAME string = aifoundry.outputs.aiServicesName
+
+@description('Azure Container Registry name used to build and host the agent container image')
+output AZURE_CONTAINER_REGISTRY_NAME string = containerRegistryResourceName
 
 // Service Bus Outputs
 

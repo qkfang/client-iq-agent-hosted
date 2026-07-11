@@ -15,6 +15,9 @@ It performs the following steps to bootstrap the solution:
     5. setup_administrators   - Add workspace administrators
     6. upload_installer       - Upload the installer notebook to the workspace
     7. run_installer          - Execute the installer notebook end-to-end
+    8. deploy_hosted_agent    - Build and deploy the hosted Foundry agent
+                                (optional; runs only when
+                                AZURE_CONTAINER_REGISTRY_NAME is set)
 
 The installer notebook (fabric_solution_installer.ipynb) handles the remaining
 solution-specific steps (lakehouse creation, data ingestion, notebook deployment,
@@ -68,6 +71,13 @@ Environment Variables:
                                                     Defaults to <SOLUTION_SUFFIX>-kb-mcp-connection.
     KB_ONBOARDING_MCP_CONNECTION_NAME    (optional) Project connection name for the onboarding Knowledge Base MCP tool.
                                                     Defaults to <SOLUTION_SUFFIX>-onboarding-kb-mcp-connection.
+    AZURE_CONTAINER_REGISTRY_NAME        (optional) Azure Container Registry name. When set, the
+                                                    hosted Foundry agent is built and deployed as a
+                                                    final step. When unset, that step is skipped.
+    HOSTED_AGENT_IMAGE_TAG               (optional) Tag applied to the hosted agent image.
+                                                    Defaults to "latest".
+    HOSTED_AGENT_CPU                     (optional) Hosted agent CPU allocation. Defaults to "0.5".
+    HOSTED_AGENT_MEMORY                  (optional) Hosted agent memory allocation. Defaults to "1.0Gi".
 """
 
 import logging
@@ -90,7 +100,7 @@ setup_logging()
 # use this logger; the level and handler are inherited from setup_logging().
 logger = logging.getLogger(__name__)
 
-from common.config import SOLUTION_NAME, default_workspace_name
+from common.config import REPO_ROOT, SOLUTION_NAME, default_workspace_name
 from common.env_utils import (
     get_required_env_var,
     parse_workspace_administrators,
@@ -111,6 +121,7 @@ from foundry.agent_api import ONBOARDING_AGENT_NAME
 from foundry.step_agent_setup import setup_agent
 from foundry.step_knowledge_base import setup_knowledge_base
 from foundry.step_onboarding_agent_setup import setup_onboarding_agent
+from hosted.step_hosted_agent_deploy import deploy_hosted_agent
 
 
 # ---------------------------------------------------------------------------
@@ -125,6 +136,7 @@ ALL_DEPLOYMENT_STEPS = [
     "setup_administrators",
     "upload_installer",
     "run_installer",
+    "deploy_hosted_agent",
 ]
 
 
@@ -282,7 +294,7 @@ def main() -> None:
     # ------------------------------------------------------------------
     # Step 1 – Set up AI Search knowledge base (Foundry IQ)
     # ------------------------------------------------------------------
-    print_step(1, 7, "Setting up AI Search knowledge base and Foundry IQ",
+    print_step(1, 8, "Setting up AI Search knowledge base and Foundry IQ",
                search_endpoint=search_endpoint,
                index=search_index_name,
                knowledge_base=knowledge_base_name)
@@ -327,7 +339,7 @@ def main() -> None:
     # exception as a warning, record it for the final summary, and continue
     # with the deployment.
     # ------------------------------------------------------------------
-    print_step(2, 7, "Creating AI Foundry agent with Knowledge Base MCP tool",
+    print_step(2, 8, "Creating AI Foundry agent with Knowledge Base MCP tool",
                agent_endpoint=agent_endpoint,
                knowledge_base=knowledge_base_name,
                connection=kb_mcp_connection_name)
@@ -381,7 +393,7 @@ def main() -> None:
     #
     # Best-effort, same rationale as setup_agent above.
     # ------------------------------------------------------------------
-    print_step(3, 7, "Creating OnboardingAgent with Knowledge Base MCP tool",
+    print_step(3, 8, "Creating OnboardingAgent with Knowledge Base MCP tool",
                agent_endpoint=agent_endpoint,
                knowledge_base=knowledge_base_name,
                connection=kb_mcp_connection_name)
@@ -416,7 +428,7 @@ def main() -> None:
     # ------------------------------------------------------------------
     # Step 4 – Set up Fabric workspace
     # ------------------------------------------------------------------
-    print_step(4, 7, "Setting up Fabric workspace and capacity assignment",
+    print_step(4, 8, "Setting up Fabric workspace and capacity assignment",
                capacity_name=capacity_name, workspace_name=workspace_name)
     try:
         workspace_id = setup_workspace(
@@ -446,7 +458,7 @@ def main() -> None:
     # Step 5 – Configure workspace administrators
     # ------------------------------------------------------------------
     admin_display = ", ".join(workspace_administrators) if workspace_administrators else "None"
-    print_step(5, 7, "Configuring workspace administrators",
+    print_step(5, 8, "Configuring workspace administrators",
                workspace_id=workspace_id, administrators=admin_display)
     try:
         setup_workspace_administrators(
@@ -462,7 +474,7 @@ def main() -> None:
     # ------------------------------------------------------------------
     # Step 6 – Upload installer notebook
     # ------------------------------------------------------------------
-    print_step(6, 7, "Uploading installer notebook",
+    print_step(6, 8, "Uploading installer notebook",
                notebook=INSTALLER_NOTEBOOK_NAME)
     try:
         notebook_id = upload_installer_notebook(workspace_client, notebook_path, github_token=github_token)
@@ -474,7 +486,7 @@ def main() -> None:
     # ------------------------------------------------------------------
     # Step 7 – Run installer notebook
     # ------------------------------------------------------------------
-    print_step(7, 7, "Running installer notebook",
+    print_step(7, 8, "Running installer notebook",
                notebook_id=notebook_id)
     try:
         run_installer_notebook(workspace_client, notebook_id)
@@ -482,6 +494,52 @@ def main() -> None:
         executed_steps.append("run_installer")
     except Exception as exc:
         _abort("run_installer", exc)
+
+    # ------------------------------------------------------------------
+    # Step 8 – Deploy hosted Foundry agent (optional)
+    #
+    # Requires an Azure Container Registry (AZURE_CONTAINER_REGISTRY_NAME),
+    # which is not a main.bicep output. When it is not set the step is
+    # skipped so azd up still succeeds. Best-effort otherwise: a failure is
+    # recorded as a warning and does not abort the deployment.
+    # ------------------------------------------------------------------
+    container_registry_name = os.getenv("AZURE_CONTAINER_REGISTRY_NAME")
+    print_step(8, 8, "Deploying hosted Foundry agent",
+               container_registry=container_registry_name or "Not set (skipped)")
+    if not container_registry_name:
+        logger.info(
+            "   AZURE_CONTAINER_REGISTRY_NAME not set — skipping hosted agent deploy."
+        )
+    else:
+        try:
+            deploy_hosted_agent(
+                agent_endpoint=agent_endpoint,
+                agent_model=agent_model,
+                search_endpoint=search_endpoint,
+                knowledge_base_name=knowledge_base_name,
+                kb_mcp_connection_name=kb_mcp_connection_name,
+                subscription_id=subscription_id,
+                resource_group=resource_group,
+                ai_service_name=ai_service_name,
+                ai_project_name=ai_project_name,
+                container_registry_name=container_registry_name,
+                image_tag=os.getenv("HOSTED_AGENT_IMAGE_TAG", "latest"),
+                source_dir=os.path.join(REPO_ROOT, "src", "hosted"),
+                cpu=os.getenv("HOSTED_AGENT_CPU", "0.5"),
+                memory=os.getenv("HOSTED_AGENT_MEMORY", "1.0Gi"),
+            )
+            logger.info("Successfully completed: deploy_hosted_agent")
+            executed_steps.append("deploy_hosted_agent")
+        except Exception as exc:
+            _warn_step(
+                "deploy_hosted_agent",
+                exc,
+                guidance=(
+                    "Verify the container registry exists and the image built "
+                    "successfully. You can re-run infra/scripts/hosted/"
+                    "deploy_hosted_agent.py to retry."
+                ),
+            )
 
     # ------------------------------------------------------------------
     # Success summary
