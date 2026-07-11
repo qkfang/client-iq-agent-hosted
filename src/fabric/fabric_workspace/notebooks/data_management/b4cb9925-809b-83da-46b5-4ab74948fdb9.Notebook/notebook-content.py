@@ -10,13 +10,13 @@
 # 
 # **⚠️ WARNING**: This operation removes ALL data from ALL tables. Use only in development/testing environments.
 # 
-# **Schemas**: customer, product, sales, finance, inventory, supplychain, shared
+# **Schemas**: customer, product, sales, finance, inventory, supplychain, onboarding, shared
 
 # CELL ********************
 
 # Display warning and confirm operation
 print("⚠️  WARNING: This operation will remove ALL DATA from ALL TABLES")
-print("📋 Schemas to be truncated: customer, product, sales, finance, inventory, supplychain, shared")
+print("📋 Schemas to be truncated: customer, product, sales, finance, inventory, supplychain, onboarding, shared")
 print("🔄 Table structures will be preserved")
 print("")
 
@@ -142,6 +142,26 @@ print("✅ Supply Chain schema truncation complete!")
 
 # MARKDOWN ********************
 
+# ### Truncate Onboarding Schema Tables
+
+# CELL ********************
+
+print("🤝 Truncating Onboarding schema tables...")
+
+# Onboarding schema tables
+onboarding_tables = ['RelationshipManager', 'OnboardingCase', 'KYCAssessment', 'TradingAccount']
+
+for table in onboarding_tables:
+    try:
+        spark.sql(f"TRUNCATE TABLE onboarding.{table}")
+        print(f"   ✅ onboarding.{table} truncated")
+    except Exception as e:
+        print(f"   ❌ Error truncating onboarding.{table}: {str(e)}")
+
+print("✅ Onboarding schema truncation complete!")
+
+# MARKDOWN ********************
+
 # ### Truncate Shared Schema Tables
 
 # CELL ********************
@@ -175,7 +195,8 @@ print("   • Sales: 3 tables truncated")
 print("   • Finance: 3 tables truncated")
 print("   • Inventory: 6 tables truncated")
 print("   • Supply Chain: 4 tables truncated")
+print("   • Onboarding: 4 tables truncated")
 print("   • Shared: 1 table truncated")
 print("")
-print("✅ Total: 25 tables truncated across 7 schemas")
+print("✅ Total: 29 tables truncated across 8 schemas")
 print("🚀 Ready for fresh data loading!")

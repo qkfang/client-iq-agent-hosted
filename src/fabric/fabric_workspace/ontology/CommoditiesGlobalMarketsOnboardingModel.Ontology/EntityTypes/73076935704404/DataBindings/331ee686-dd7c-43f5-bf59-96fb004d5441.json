@@ -1,0 +1,36 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/dataBinding/1.0.0/schema.json",
+  "id": "331ee686-dd7c-43f5-bf59-96fb004d5441",
+  "dataBindingConfiguration": {
+    "dataBindingType": "NonTimeSeries",
+    "propertyBindings": [
+      {
+        "sourceColumnName": "CustomerAccountID",
+        "targetPropertyId": "23572471356791"
+      },
+      {
+        "sourceColumnName": "CustomerAccountName",
+        "targetPropertyId": "63068807437491"
+      },
+      {
+        "sourceColumnName": "CustomerID",
+        "targetPropertyId": "59019522457802"
+      },
+      {
+        "sourceColumnName": "IsoCurrencyCode",
+        "targetPropertyId": "12438917860341"
+      },
+      {
+        "sourceColumnName": "ParentAccountID",
+        "targetPropertyId": "35067950625880"
+      }
+    ],
+    "sourceTableProperties": {
+      "sourceType": "LakehouseTable",
+      "workspaceId": "00000000-0000-0000-0000-000000000000",
+      "itemId": "PLACEHOLDER-LAKEHOUSE-ID",
+      "sourceTableName": "CustomerAccount",
+      "sourceSchema": "customer"
+    }
+  }
+}

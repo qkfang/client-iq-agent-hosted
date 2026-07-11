@@ -1,0 +1,5 @@
+"CaseID","CustomerID","RelationshipManagerID","BusinessLine","CaseStatus","Stage","OpenedDate","TargetGoLiveDate","ReadyToTradeDate"
+"CASE-001","CID-001","RM-001","Commodities","ReadyToTrade","Setup","2026-01-05","2026-01-26","2026-01-24"
+"CASE-002","CID-002","RM-002","Global Markets","InReview","Screening","2026-02-10","2026-03-03",""
+"CASE-003","CID-003","RM-003","Commodities","Open","Intake","2026-03-01","2026-03-22",""
+"CASE-004","CID-004","RM-004","Global Markets","Approved","Decision","2026-01-20","2026-02-10","2026-02-09"

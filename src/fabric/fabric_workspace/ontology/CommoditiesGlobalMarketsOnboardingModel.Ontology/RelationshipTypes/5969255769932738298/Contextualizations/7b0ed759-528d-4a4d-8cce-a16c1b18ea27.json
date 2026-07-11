@@ -1,0 +1,23 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/contextualization/1.0.0/schema.json",
+  "id": "7b0ed759-528d-4a4d-8cce-a16c1b18ea27",
+  "dataBindingTable": {
+    "workspaceId": "00000000-0000-0000-0000-000000000000",
+    "itemId": "PLACEHOLDER-LAKEHOUSE-ID",
+    "sourceTableName": "Customer",
+    "sourceSchema": "customer",
+    "sourceType": "LakehouseTable"
+  },
+  "sourceKeyRefBindings": [
+    {
+      "sourceColumnName": "CustomerRelationshipTypeID",
+      "targetPropertyId": "85361851546376"
+    }
+  ],
+  "targetKeyRefBindings": [
+    {
+      "sourceColumnName": "CustomerRelationshipTypeID",
+      "targetPropertyId": "91669479668626"
+    }
+  ]
+}

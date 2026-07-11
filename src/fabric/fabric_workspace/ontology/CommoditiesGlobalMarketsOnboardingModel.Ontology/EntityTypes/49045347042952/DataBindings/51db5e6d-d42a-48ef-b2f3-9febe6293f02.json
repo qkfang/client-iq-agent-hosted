@@ -1,0 +1,28 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/dataBinding/1.0.0/schema.json",
+  "id": "51db5e6d-d42a-48ef-b2f3-9febe6293f02",
+  "dataBindingConfiguration": {
+    "dataBindingType": "NonTimeSeries",
+    "propertyBindings": [
+      {
+        "sourceColumnName": "CustomerRelationshipTypeDescription",
+        "targetPropertyId": "39051361490751"
+      },
+      {
+        "sourceColumnName": "CustomerRelationshipTypeID",
+        "targetPropertyId": "91669479668626"
+      },
+      {
+        "sourceColumnName": "CustomerRelationshipTypeName",
+        "targetPropertyId": "99141346488058"
+      }
+    ],
+    "sourceTableProperties": {
+      "sourceType": "LakehouseTable",
+      "workspaceId": "00000000-0000-0000-0000-000000000000",
+      "itemId": "PLACEHOLDER-LAKEHOUSE-ID",
+      "sourceTableName": "CustomerRelationshipType",
+      "sourceSchema": "customer"
+    }
+  }
+}

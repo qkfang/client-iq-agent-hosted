@@ -10,13 +10,13 @@
 # 
 # **⚠️ WARNING**: This operation drops ALL tables and their structures. Use only in development/testing environments.
 # 
-# **Schemas**: customer, product, sales, finance, inventory, supplychain, shared
+# **Schemas**: customer, product, sales, finance, inventory, supplychain, onboarding, shared
 
 # CELL ********************
 
 # Display warning and confirm operation
 print("⚠️  WARNING: This operation will PERMANENTLY DROP ALL TABLES")
-print("📋 Schemas to be affected: customer, product, sales, finance, inventory, supplychain, shared")
+print("📋 Schemas to be affected: customer, product, sales, finance, inventory, supplychain, onboarding, shared")
 print("🗑️  Table structures and data will be completely removed")
 print("")
 
@@ -142,6 +142,26 @@ print("✅ Supply Chain schema table drop complete!")
 
 # MARKDOWN ********************
 
+# ### Drop Onboarding Schema Tables
+
+# CELL ********************
+
+print("🤝 Dropping Onboarding schema tables...")
+
+# Onboarding schema tables
+onboarding_tables = ['RelationshipManager', 'OnboardingCase', 'KYCAssessment', 'TradingAccount']
+
+for table in onboarding_tables:
+    try:
+        spark.sql(f"DROP TABLE IF EXISTS onboarding.{table}")
+        print(f"   ✅ onboarding.{table} dropped")
+    except Exception as e:
+        print(f"   ❌ Error dropping onboarding.{table}: {str(e)}")
+
+print("✅ Onboarding schema table drop complete!")
+
+# MARKDOWN ********************
+
 # ### Drop Shared Schema Tables
 
 # CELL ********************
@@ -175,7 +195,8 @@ print("   • Sales: 3 tables dropped")
 print("   • Finance: 3 tables dropped")
 print("   • Inventory: 6 tables dropped")
 print("   • Supply Chain: 4 tables dropped")
+print("   • Onboarding: 4 tables dropped")
 print("   • Shared: 1 table dropped")
 print("")
-print("✅ Total: 24 tables dropped across 7 schemas")
+print("✅ Total: 28 tables dropped across 8 schemas")
 print("🚀 Ready for complete fresh environment setup!")

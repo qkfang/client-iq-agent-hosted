@@ -1,0 +1,37 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/entityType/1.0.0/schema.json",
+  "id": "49045347042952",
+  "namespace": "usertypes",
+  "baseEntityTypeId": null,
+  "name": "customer_customerrelationshiptype",
+  "entityIdParts": [
+    "91669479668626"
+  ],
+  "displayNamePropertyId": null,
+  "namespaceType": "Imported",
+  "visibility": "Visible",
+  "properties": [
+    {
+      "id": "91669479668626",
+      "name": "CustomerRelationshipTypeID",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String"
+    },
+    {
+      "id": "99141346488058",
+      "name": "CustomerRelationshipTypeName",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String"
+    },
+    {
+      "id": "39051361490751",
+      "name": "CustomerRelationshipTypeDescription",
+      "redefines": null,
+      "baseTypeNamespaceType": null,
+      "valueType": "String"
+    }
+  ],
+  "timeseriesProperties": []
+}

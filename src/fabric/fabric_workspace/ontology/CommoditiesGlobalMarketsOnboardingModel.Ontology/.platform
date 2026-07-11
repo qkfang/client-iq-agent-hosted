@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Ontology",
+    "displayName": "CommoditiesGlobalMarketsOnboardingModel"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "311b4b89-ae88-4956-936e-d21e33ddb402"
+  }
+}
