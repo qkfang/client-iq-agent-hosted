@@ -1,0 +1,12 @@
+Onboarding Form
+
+Customer Name: Contoso Retail Group
+Customer Type: Existing Customer
+Request Type: Add New Division
+
+Details:
+Contoso Retail Group is an existing customer expanding into a new regional
+division. They need the new division onboarded under the existing master
+account with its own billing contact.
+
+Primary Contact: Dana Kowalski, Procurement Lead

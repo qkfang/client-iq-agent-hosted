@@ -1,0 +1,12 @@
+Onboarding Form
+
+Customer Name: Lamna Healthcare
+Customer Type: Existing Customer
+Request Type: CRM Correction
+
+Details:
+Lamna Healthcare's account was merged with a related entity earlier this
+year. Their CRM record still lists the old entity name and needs to be
+corrected to reflect the current legal name and contact.
+
+New Primary Contact: Robin Castillo, Vendor Relations

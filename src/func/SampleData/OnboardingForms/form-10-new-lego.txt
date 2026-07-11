@@ -1,0 +1,12 @@
+Onboarding Form
+
+Customer Name: Wingtip Toys
+Customer Type: New Customer
+Request Type: Workflow Reuse Request
+
+Details:
+Wingtip Toys would like their onboarding process assembled from existing
+building-block workflows (account setup, catalog import, and payment terms)
+rather than a fully custom process, to speed up go-live.
+
+Primary Contact: Casey Nguyen, Business Systems Lead

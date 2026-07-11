@@ -1,0 +1,11 @@
+Onboarding Form
+
+Customer Name: Fourth Coffee
+Customer Type: Existing Customer
+Request Type: Analytics Request
+
+Details:
+Fourth Coffee would like a dashboard summarizing order volume trends over
+the last six months to help plan inventory for the upcoming season.
+
+Primary Contact: Jamie Wu, Supply Chain Lead

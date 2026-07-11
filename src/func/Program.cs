@@ -10,6 +10,6 @@ builder.ConfigureFunctionsWebApplication();
 
 builder.Services.Configure<FoundryOptions>(builder.Configuration.GetSection("Foundry"));
 
-builder.Services.AddSingleton<FoundryOnboardingAgentService>();
+builder.Services.AddSingleton<FoundryOnboardingPipelineService>();
 
 builder.Build().Run();

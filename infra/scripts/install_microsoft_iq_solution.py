@@ -11,11 +11,14 @@ It performs the following steps to bootstrap the solution:
     2. setup_agent            - Create AI Foundry ChatAgents with Knowledge Base MCP tool
                                 (supply chain + customer onboarding scenarios)
     3. setup_onboarding_agent - Create AI Foundry OnboardingAgent with Knowledge Base MCP tool
-    4. setup_workspace        - Create and configure the Fabric workspace/capacity
-    5. setup_administrators   - Add workspace administrators
-    6. upload_installer       - Upload the installer notebook to the workspace
-    7. run_installer          - Execute the installer notebook end-to-end
-    8. deploy_hosted_agent    - Build and deploy the hosted Foundry agent
+    4. setup_pipeline_agents  - Create the onboarding-form pipeline agents (IntakeAgent,
+                                OrchestratorAgent, OpportunityAgent, InsightAgent, CrmAgent,
+                                LegoAgent) used by the onboarding Function App
+    5. setup_workspace        - Create and configure the Fabric workspace/capacity
+    6. setup_administrators   - Add workspace administrators
+    7. upload_installer       - Upload the installer notebook to the workspace
+    8. run_installer          - Execute the installer notebook end-to-end
+    9. deploy_hosted_agent    - Build and deploy the hosted Foundry agent
                                 (optional; runs only when
                                 AZURE_CONTAINER_REGISTRY_NAME is set)
 
@@ -121,6 +124,7 @@ from foundry.agent_api import ONBOARDING_AGENT_NAME
 from foundry.step_agent_setup import setup_agent
 from foundry.step_knowledge_base import setup_knowledge_base
 from foundry.step_onboarding_agent_setup import setup_onboarding_agent
+from foundry.step_pipeline_agents_setup import setup_pipeline_agents
 from hosted.step_hosted_agent_deploy import deploy_hosted_agent
 
 
@@ -132,6 +136,7 @@ ALL_DEPLOYMENT_STEPS = [
     "setup_knowledge_base",
     "setup_agent",
     "setup_onboarding_agent",
+    "setup_pipeline_agents",
     "setup_workspace",
     "setup_administrators",
     "upload_installer",
@@ -294,7 +299,7 @@ def main() -> None:
     # ------------------------------------------------------------------
     # Step 1 – Set up AI Search knowledge base (Foundry IQ)
     # ------------------------------------------------------------------
-    print_step(1, 8, "Setting up AI Search knowledge base and Foundry IQ",
+    print_step(1, 9, "Setting up AI Search knowledge base and Foundry IQ",
                search_endpoint=search_endpoint,
                index=search_index_name,
                knowledge_base=knowledge_base_name)
@@ -339,7 +344,7 @@ def main() -> None:
     # exception as a warning, record it for the final summary, and continue
     # with the deployment.
     # ------------------------------------------------------------------
-    print_step(2, 8, "Creating AI Foundry agent with Knowledge Base MCP tool",
+    print_step(2, 9, "Creating AI Foundry agent with Knowledge Base MCP tool",
                agent_endpoint=agent_endpoint,
                knowledge_base=knowledge_base_name,
                connection=kb_mcp_connection_name)
@@ -393,7 +398,7 @@ def main() -> None:
     #
     # Best-effort, same rationale as setup_agent above.
     # ------------------------------------------------------------------
-    print_step(3, 8, "Creating OnboardingAgent with Knowledge Base MCP tool",
+    print_step(3, 9, "Creating OnboardingAgent with Knowledge Base MCP tool",
                agent_endpoint=agent_endpoint,
                knowledge_base=knowledge_base_name,
                connection=kb_mcp_connection_name)
@@ -426,9 +431,37 @@ def main() -> None:
         )
 
     # ------------------------------------------------------------------
-    # Step 4 – Set up Fabric workspace
+    # Step 4 – Create onboarding-form pipeline agents (Intake, Orchestrator,
+    # Opportunity, Insight, Crm, Lego)
+    #
+    # Best-effort, same rationale as setup_agent above.
     # ------------------------------------------------------------------
-    print_step(4, 8, "Setting up Fabric workspace and capacity assignment",
+    print_step(4, 9, "Creating onboarding-form pipeline agents", agent_endpoint=agent_endpoint)
+    try:
+        setup_pipeline_agents(
+            solution_name=SOLUTION_NAME,
+            agent_endpoint=agent_endpoint,
+            agent_model=agent_model,
+        )
+        logger.info("Successfully completed: setup_pipeline_agents")
+        executed_steps.append("setup_pipeline_agents")
+    except Exception as exc:
+        _warn_step(
+            "setup_pipeline_agents",
+            exc,
+            guidance=(
+                "This is often caused by a transient platform-level issue "
+                "with the AI Foundry agents API and may not indicate a real "
+                "failure. Please open the AI Foundry project and verify "
+                "whether the agents were created. If not, re-run the "
+                "deployment."
+            ),
+        )
+
+    # ------------------------------------------------------------------
+    # Step 5 – Set up Fabric workspace
+    # ------------------------------------------------------------------
+    print_step(5, 9, "Setting up Fabric workspace and capacity assignment",
                capacity_name=capacity_name, workspace_name=workspace_name)
     try:
         workspace_id = setup_workspace(
@@ -458,7 +491,7 @@ def main() -> None:
     # Step 5 – Configure workspace administrators
     # ------------------------------------------------------------------
     admin_display = ", ".join(workspace_administrators) if workspace_administrators else "None"
-    print_step(5, 8, "Configuring workspace administrators",
+    print_step(6, 9, "Configuring workspace administrators",
                workspace_id=workspace_id, administrators=admin_display)
     try:
         setup_workspace_administrators(
@@ -474,7 +507,7 @@ def main() -> None:
     # ------------------------------------------------------------------
     # Step 6 – Upload installer notebook
     # ------------------------------------------------------------------
-    print_step(6, 8, "Uploading installer notebook",
+    print_step(7, 9, "Uploading installer notebook",
                notebook=INSTALLER_NOTEBOOK_NAME)
     try:
         notebook_id = upload_installer_notebook(workspace_client, notebook_path, github_token=github_token)
@@ -486,7 +519,7 @@ def main() -> None:
     # ------------------------------------------------------------------
     # Step 7 – Run installer notebook
     # ------------------------------------------------------------------
-    print_step(7, 8, "Running installer notebook",
+    print_step(8, 9, "Running installer notebook",
                notebook_id=notebook_id)
     try:
         run_installer_notebook(workspace_client, notebook_id)
@@ -504,7 +537,7 @@ def main() -> None:
     # recorded as a warning and does not abort the deployment.
     # ------------------------------------------------------------------
     container_registry_name = os.getenv("AZURE_CONTAINER_REGISTRY_NAME")
-    print_step(8, 8, "Deploying hosted Foundry agent",
+    print_step(9, 9, "Deploying hosted Foundry agent",
                container_registry=container_registry_name or "Not set (skipped)")
     if not container_registry_name:
         logger.info(

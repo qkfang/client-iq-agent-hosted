@@ -1,0 +1,12 @@
+Onboarding Form
+
+Customer Name: Fabrikam Inc
+Customer Type: Existing Customer
+Request Type: Renewal and Upsell Opportunity
+
+Details:
+Fabrikam Inc's account renewal is approaching. Their account manager has
+identified an opportunity to upsell an additional product line and would
+like this reviewed and qualified before the renewal conversation.
+
+Primary Contact: Alex Tran, Account Manager

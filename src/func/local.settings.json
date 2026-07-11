@@ -7,6 +7,12 @@
     "ServiceBus__FullyQualifiedNamespace": "",
     "ServiceBus__QueueName": "sbq-onboarding-requests",
     "Foundry__ProjectEndpoint": "",
-    "Foundry__OnboardingAgentId": ""
+    "Foundry__IntakeAgentId": "",
+    "Foundry__OrchestratorAgentId": "",
+    "Foundry__OnboardingAgentId": "",
+    "Foundry__OpportunityAgentId": "",
+    "Foundry__InsightAgentId": "",
+    "Foundry__CrmAgentId": "",
+    "Foundry__LegoAgentId": ""
   }
 }

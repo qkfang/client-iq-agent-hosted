@@ -7,16 +7,17 @@ namespace Onboarding.FunctionApp.Functions;
 
 /// <summary>
 /// Watches the onboarding-forms blob container for new customer onboarding
-/// forms and hands each one to the Foundry onboarding agent for processing.
+/// forms and runs each one through the Foundry onboarding agent pipeline
+/// (intake → orchestrator → sub agent).
 /// </summary>
 public class OnboardingFormBlobTrigger
 {
-    private readonly FoundryOnboardingAgentService _agentService;
+    private readonly FoundryOnboardingPipelineService _pipelineService;
     private readonly ILogger<OnboardingFormBlobTrigger> _logger;
 
-    public OnboardingFormBlobTrigger(FoundryOnboardingAgentService agentService, ILogger<OnboardingFormBlobTrigger> logger)
+    public OnboardingFormBlobTrigger(FoundryOnboardingPipelineService pipelineService, ILogger<OnboardingFormBlobTrigger> logger)
     {
-        _agentService = agentService;
+        _pipelineService = pipelineService;
         _logger = logger;
     }
 
@@ -30,8 +31,8 @@ public class OnboardingFormBlobTrigger
         using var reader = new StreamReader(formStream, Encoding.UTF8);
         var formContent = await reader.ReadToEndAsync();
 
-        var result = await _agentService.ProcessOnboardingFormAsync(name, formContent);
+        var result = await _pipelineService.ProcessOnboardingFormAsync(name, formContent);
 
-        _logger.LogInformation("Onboarding agent response for {FileName}: {Response}", result.FileName, result.AgentResponse);
+        _logger.LogInformation("Onboarding pipeline result for {FileName}: route={Route}, response={Response}", result.FileName, result.Route, result.AgentResponse);
     }
 }
