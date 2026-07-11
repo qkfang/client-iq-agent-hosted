@@ -9,7 +9,7 @@ applyTo: "infra/scripts/common/**/*.py, infra/scripts/fabric/**/*.py, infra/scri
 
 ```text
 infra/scripts/
-├── install_microsoft_iq_solution.py  # Entry-point: azd postprovision hook (6-step bootstrap)
+├── install_microsoft_iq_solution.py  # Entry-point: azd postprovision hook (7-step bootstrap)
 ├── remove_microsoft_iq_solution.py   # Entry-point: azd predown hook (workspace removal)
 ├── common/                           # Package: cross-cutting helpers (azd, repo paths, env vars, PDFs)
 │   ├── __init__.py
@@ -32,9 +32,10 @@ infra/scripts/
     ├── __init__.py
     ├── search_api.py                 # Azure AI Search: index, knowledge source, knowledge base
     ├── blob_api.py                   # Azure Blob Storage upload helpers
-    ├── agent_api.py                  # AI Foundry agent + KB MCP project connection
-    ├── knowledge_base.py             # setup_knowledge_base() — search index + KS + KB
-    └── agent_setup.py                # setup_agent() — agent + KB MCP connection
+    ├── agent_api.py                  # AI Foundry agent + KB MCP project connection (multi-tool create_or_update_agent)
+    ├── step_knowledge_base.py        # setup_knowledge_base() — search index + KS + KB
+    ├── step_agent_setup.py           # setup_agent() — ChatAgent + KB MCP connection
+    └── step_onboarding_agent_setup.py # setup_onboarding_agent() — OnboardingAgent + KB MCP connection
 ```
 
 ### Entry-point vs library modules
@@ -68,12 +69,21 @@ clients.
 
 ### Foundry-side step orchestration
 
-`foundry/step_knowledge_base.py` (`setup_knowledge_base()`) and `foundry/step_agent_setup.py`
-(`setup_agent()`) follow the same pattern as the Fabric-side `fabric/step_workspace_setup.py`
+`foundry/step_knowledge_base.py` (`setup_knowledge_base()`), `foundry/step_agent_setup.py`
+(`setup_agent()`), and `foundry/step_onboarding_agent_setup.py` (`setup_onboarding_agent()`)
+follow the same pattern as the Fabric-side `fabric/step_workspace_setup.py`
 (`setup_workspace()`) and `fabric/step_workspace_admins.py`
 (`setup_workspace_administrators()`): each is a single top-level function that the
 entry-point script calls once, takes the config values it needs as parameters, and
 raises on hard errors. Skip-when-not-configured logic stays in the entry point.
+
+`agent_api.create_or_update_agent()` accepts a list of tool definitions, so an agent
+can be wired up with multiple MCP tools. `build_kb_mcp_tool()` builds the Foundry IQ
+Knowledge Base MCP tool; both `setup_agent()` and `setup_onboarding_agent()` use it
+today. Fabric IQ, Work IQ, and Web IQ do not currently expose a Python/MCP
+integration surface in this repository — add the corresponding tool builder(s) to
+`agent_api.py` and append them to the `tools` list once their MCP endpoints are
+confirmed.
 
 ### Key constants and environment variables
 
@@ -91,15 +101,16 @@ Optional env vars (user-configurable):
 
 ### Deployment flow
 
-[`install_microsoft_iq_solution.py`](../../infra/scripts/install_microsoft_iq_solution.py) runs 6 steps unconditionally (matching `ALL_DEPLOYMENT_STEPS`). All required env vars are sourced from `main.bicep` outputs via `azd`; the script aborts on the first step that raises:
+[`install_microsoft_iq_solution.py`](../../infra/scripts/install_microsoft_iq_solution.py) runs 7 steps unconditionally (matching `ALL_DEPLOYMENT_STEPS`). All required env vars are sourced from `main.bicep` outputs via `azd`; the script aborts on the first step that raises:
 1. `setup_knowledge_base` — create AI Search index, upload PDFs, create Foundry IQ knowledge source and knowledge base (via [`foundry/step_knowledge_base.py`](../../infra/scripts/foundry/step_knowledge_base.py))
-2. `setup_agent` — create AI Foundry agent with Knowledge Base MCP tool (via [`foundry/step_agent_setup.py`](../../infra/scripts/foundry/step_agent_setup.py))
-3. `setup_workspace` — create/find workspace, assign capacity, resume if paused (via [`fabric/step_workspace_setup.py`](../../infra/scripts/fabric/step_workspace_setup.py))
-4. `setup_administrators` — add admins with Graph API resolution + fallback (via [`fabric/step_workspace_admins.py`](../../infra/scripts/fabric/step_workspace_admins.py))
-5. `upload_installer` — upload [`fabric_solution_installer.ipynb`](../../infra/fabric/deploy/fabric_solution_installer.ipynb) (create or update; via [`fabric/step_notebook_installer.py`](../../infra/scripts/fabric/step_notebook_installer.py)). The notebook is automatically patched before upload to:
+2. `setup_agent` — create AI Foundry ChatAgent with Knowledge Base MCP tool (via [`foundry/step_agent_setup.py`](../../infra/scripts/foundry/step_agent_setup.py))
+3. `setup_onboarding_agent` — create AI Foundry OnboardingAgent with Knowledge Base MCP tool (via [`foundry/step_onboarding_agent_setup.py`](../../infra/scripts/foundry/step_onboarding_agent_setup.py))
+4. `setup_workspace` — create/find workspace, assign capacity, resume if paused (via [`fabric/step_workspace_setup.py`](../../infra/scripts/fabric/step_workspace_setup.py))
+5. `setup_administrators` — add admins with Graph API resolution + fallback (via [`fabric/step_workspace_admins.py`](../../infra/scripts/fabric/step_workspace_admins.py))
+6. `upload_installer` — upload [`fabric_solution_installer.ipynb`](../../infra/fabric/deploy/fabric_solution_installer.ipynb) (create or update; via [`fabric/step_notebook_installer.py`](../../infra/scripts/fabric/step_notebook_installer.py)). The notebook is automatically patched before upload to:
    - Set `GITHUB_BRANCH` to the currently checked out git branch (detected via `git branch --show-current`)
    - Inject `GITHUB_TOKEN` if the environment variable is set (for private repository access)
-6. `run_installer` — execute notebook as Fabric job (via [`fabric/step_notebook_installer.py`](../../infra/scripts/fabric/step_notebook_installer.py)); notebook uses [fabric-launcher](https://github.com/microsoft/fabric-launcher) to deploy items from [`src/fabric/fabric_workspace/`](../../src/fabric/fabric_workspace/) via [Fabric Git integration](https://learn.microsoft.com/fabric/cicd/git-integration/intro-to-git-integration)
+7. `run_installer` — execute notebook as Fabric job (via [`fabric/step_notebook_installer.py`](../../infra/scripts/fabric/step_notebook_installer.py)); notebook uses [fabric-launcher](https://github.com/microsoft/fabric-launcher) to deploy items from [`src/fabric/fabric_workspace/`](../../src/fabric/fabric_workspace/) via [Fabric Git integration](https://learn.microsoft.com/fabric/cicd/git-integration/intro-to-git-integration)
 
 [`remove_microsoft_iq_solution.py`](../../infra/scripts/remove_microsoft_iq_solution.py) runs as `azd down` predown hook: looks up workspace by name or `FABRIC_WORKSPACE_ID`, deletes it unattended, exits 0 on all errors.
 
@@ -143,7 +154,7 @@ When modifying scripts in this folder, check and update **both** the deployment 
 
 ### Deployment guides
 
-- [`docs/DeploymentGuide.md`](../../docs/DeploymentGuide.md) — **Top-level entry-point guide** (single `azd up` walkthrough). Sections: Introduction, Deployment Environment Setup, Deployment Commands, Post-Deployment Steps — Work IQ, Optional Configuration Variables, Deployment Overview (Phases 1–2 with the 6 `step_*` modules listed in order), Deployment Results (Fabric IQ + Foundry components), Environment Cleanup, Additional Resources.
+- [`docs/DeploymentGuide.md`](../../docs/DeploymentGuide.md) — **Top-level entry-point guide** (single `azd up` walkthrough). Sections: Introduction, Deployment Environment Setup, Deployment Commands, Post-Deployment Steps — Work IQ, Optional Configuration Variables, Deployment Overview (Phases 1–2 with the 7 `step_*` modules listed in order), Deployment Results (Fabric IQ + Foundry components), Environment Cleanup, Additional Resources.
 - [`docs/fabric/DeploymentGuideFabricManual.md`](../../docs/fabric/DeploymentGuideFabricManual.md) — Manual portal-only guide. Import and run [`fabric_solution_installer.ipynb`](../../infra/fabric/deploy/fabric_solution_installer.ipynb) directly in Fabric. Sections: prerequisites, 3-step install, verification, troubleshooting, cleanup, next steps.
 - [`docs/copilot/DeploymentGuide.md`](../../docs/copilot/DeploymentGuide.md) — Manual Work IQ (Copilot Studio) post-deployment guide. Not driven by these scripts; cross-reference only when changes affect the `AZURE_AI_AGENT_ENDPOINT` connection consumed by the Copilot Studio Foundry Agent.
 
@@ -169,7 +180,7 @@ After any change to `infra/scripts/common/`, `infra/scripts/fabric/`, `infra/scr
 
 - Entry-point scripts: `../../infra/scripts/install_microsoft_iq_solution.py`, `../../infra/scripts/remove_microsoft_iq_solution.py`
 - Fabric helpers: `../../infra/scripts/fabric/step_workspace_setup.py`, `step_workspace_admins.py`, `step_notebook_installer.py`
-- Foundry helpers: `../../infra/scripts/foundry/step_knowledge_base.py`, `step_agent_setup.py`, `search_api.py`, `blob_api.py`, `agent_api.py`
+- Foundry helpers: `../../infra/scripts/foundry/step_knowledge_base.py`, `step_agent_setup.py`, `step_onboarding_agent_setup.py`, `search_api.py`, `blob_api.py`, `agent_api.py`
 - Cross-cutting helpers: `../../infra/scripts/common/config.py`, `logging_config.py`, `env_utils.py`, `env.py`, `pdf_utils.py`, `step_printer.py`
 - Installer notebook: `../../infra/fabric/deploy/fabric_solution_installer.ipynb`
 - Workspace items: `../../src/fabric/fabric_workspace/`

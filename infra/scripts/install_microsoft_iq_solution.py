@@ -8,12 +8,13 @@ It performs the following steps to bootstrap the solution:
     1. setup_knowledge_base   - Create Azure AI Search indexes, upload documents,
                                 create Foundry IQ Knowledge Sources and Knowledge Bases
                                 (supply chain + customer onboarding document sets)
-    2. setup_agent            - Create AI Foundry agents with Knowledge Base MCP tool
-                                (ChatAgent + OnboardingAgent)
-    3. setup_workspace        - Create and configure the Fabric workspace/capacity
-    4. setup_administrators   - Add workspace administrators
-    5. upload_installer       - Upload the installer notebook to the workspace
-    6. run_installer          - Execute the installer notebook end-to-end
+    2. setup_agent            - Create AI Foundry ChatAgents with Knowledge Base MCP tool
+                                (supply chain + customer onboarding scenarios)
+    3. setup_onboarding_agent - Create AI Foundry OnboardingAgent with Knowledge Base MCP tool
+    4. setup_workspace        - Create and configure the Fabric workspace/capacity
+    5. setup_administrators   - Add workspace administrators
+    6. upload_installer       - Upload the installer notebook to the workspace
+    7. run_installer          - Execute the installer notebook end-to-end
 
 The installer notebook (fabric_solution_installer.ipynb) handles the remaining
 solution-specific steps (lakehouse creation, data ingestion, notebook deployment,
@@ -109,6 +110,7 @@ from fabric.step_workspace_admins import setup_workspace_administrators
 from foundry.agent_api import ONBOARDING_AGENT_NAME
 from foundry.step_agent_setup import setup_agent
 from foundry.step_knowledge_base import setup_knowledge_base
+from foundry.step_onboarding_agent_setup import setup_onboarding_agent
 
 
 # ---------------------------------------------------------------------------
@@ -118,6 +120,7 @@ from foundry.step_knowledge_base import setup_knowledge_base
 ALL_DEPLOYMENT_STEPS = [
     "setup_knowledge_base",
     "setup_agent",
+    "setup_onboarding_agent",
     "setup_workspace",
     "setup_administrators",
     "upload_installer",
@@ -279,7 +282,7 @@ def main() -> None:
     # ------------------------------------------------------------------
     # Step 1 – Set up AI Search knowledge base (Foundry IQ)
     # ------------------------------------------------------------------
-    print_step(1, 6, "Setting up AI Search knowledge base and Foundry IQ",
+    print_step(1, 7, "Setting up AI Search knowledge base and Foundry IQ",
                search_endpoint=search_endpoint,
                index=search_index_name,
                knowledge_base=knowledge_base_name)
@@ -324,7 +327,7 @@ def main() -> None:
     # exception as a warning, record it for the final summary, and continue
     # with the deployment.
     # ------------------------------------------------------------------
-    print_step(2, 6, "Creating AI Foundry agent with Knowledge Base MCP tool",
+    print_step(2, 7, "Creating AI Foundry agent with Knowledge Base MCP tool",
                agent_endpoint=agent_endpoint,
                knowledge_base=knowledge_base_name,
                connection=kb_mcp_connection_name)
@@ -374,9 +377,46 @@ def main() -> None:
         )
 
     # ------------------------------------------------------------------
-    # Step 3 – Set up Fabric workspace
+    # Step 3 – Create OnboardingAgent (Knowledge Base MCP tool)
+    #
+    # Best-effort, same rationale as setup_agent above.
     # ------------------------------------------------------------------
-    print_step(3, 6, "Setting up Fabric workspace and capacity assignment",
+    print_step(3, 7, "Creating OnboardingAgent with Knowledge Base MCP tool",
+               agent_endpoint=agent_endpoint,
+               knowledge_base=knowledge_base_name,
+               connection=kb_mcp_connection_name)
+    try:
+        setup_onboarding_agent(
+            solution_name=SOLUTION_NAME,
+            agent_endpoint=agent_endpoint,
+            agent_model=agent_model,
+            search_endpoint=search_endpoint,
+            knowledge_base_name=knowledge_base_name,
+            kb_mcp_connection_name=kb_mcp_connection_name,
+            subscription_id=subscription_id,
+            resource_group=resource_group,
+            ai_service_name=ai_service_name,
+            ai_project_name=ai_project_name,
+        )
+        logger.info("Successfully completed: setup_onboarding_agent")
+        executed_steps.append("setup_onboarding_agent")
+    except Exception as exc:
+        _warn_step(
+            "setup_onboarding_agent",
+            exc,
+            guidance=(
+                "This is often caused by a transient platform-level issue "
+                "with the AI Foundry agents API and may not indicate a real "
+                "failure. Please open the AI Foundry project and verify "
+                "whether the agent was created. If it was not, re-run the "
+                "deployment."
+            ),
+        )
+
+    # ------------------------------------------------------------------
+    # Step 4 – Set up Fabric workspace
+    # ------------------------------------------------------------------
+    print_step(4, 7, "Setting up Fabric workspace and capacity assignment",
                capacity_name=capacity_name, workspace_name=workspace_name)
     try:
         workspace_id = setup_workspace(
@@ -403,10 +443,10 @@ def main() -> None:
         _abort("create_workspace_client", exc)
 
     # ------------------------------------------------------------------
-    # Step 4 – Configure workspace administrators
+    # Step 5 – Configure workspace administrators
     # ------------------------------------------------------------------
     admin_display = ", ".join(workspace_administrators) if workspace_administrators else "None"
-    print_step(4, 6, "Configuring workspace administrators",
+    print_step(5, 7, "Configuring workspace administrators",
                workspace_id=workspace_id, administrators=admin_display)
     try:
         setup_workspace_administrators(
@@ -420,9 +460,9 @@ def main() -> None:
         _abort("setup_administrators", exc)
 
     # ------------------------------------------------------------------
-    # Step 5 – Upload installer notebook
+    # Step 6 – Upload installer notebook
     # ------------------------------------------------------------------
-    print_step(5, 6, "Uploading installer notebook",
+    print_step(6, 7, "Uploading installer notebook",
                notebook=INSTALLER_NOTEBOOK_NAME)
     try:
         notebook_id = upload_installer_notebook(workspace_client, notebook_path, github_token=github_token)
@@ -432,9 +472,9 @@ def main() -> None:
         _abort("upload_installer", exc)
 
     # ------------------------------------------------------------------
-    # Step 6 – Run installer notebook
+    # Step 7 – Run installer notebook
     # ------------------------------------------------------------------
-    print_step(6, 6, "Running installer notebook",
+    print_step(7, 7, "Running installer notebook",
                notebook_id=notebook_id)
     try:
         run_installer_notebook(workspace_client, notebook_id)
