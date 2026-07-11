@@ -13,7 +13,7 @@ _PACKAGE_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(_PACKAGE_DIR)))
 
 # Foundry data directory containing PDFs / config files used by setup_knowledge_base.
-DATA_DIR = os.path.join(REPO_ROOT, "src", "foundry", "data")
+DATA_DIR = os.path.join(REPO_ROOT, "src", "foundry", "data_supplier")
 
 
 def default_workspace_name(suffix: str) -> str:

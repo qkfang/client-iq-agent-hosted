@@ -70,7 +70,7 @@ Phase 1 (Bicep) creates the following Foundry-related resources in a single reso
 
 | Step | Module | What it does |
 |---|---|---|
-| 1 · `setup_knowledge_base` | [`foundry/step_knowledge_base.py`](../../infra/scripts/foundry/step_knowledge_base.py) | Creates the Azure AI Search index, uploads PDFs from [`src/foundry/data/documents/`](../../src/foundry/data/documents/) to blob storage, generates vector embeddings, and provisions the Foundry IQ knowledge source and knowledge base. |
+| 1 · `setup_knowledge_base` | [`foundry/step_knowledge_base.py`](../../infra/scripts/foundry/step_knowledge_base.py) | Creates the Azure AI Search index, uploads PDFs from [`src/foundry/data_supplier/documents/`](../../src/foundry/data_supplier/documents/) to blob storage, generates vector embeddings, and provisions the Foundry IQ knowledge source and knowledge base. |
 | 2 · `setup_agent` | [`foundry/step_agent_setup.py`](../../infra/scripts/foundry/step_agent_setup.py) | Creates the `ChatAgent` in the Foundry project, wires it to the Knowledge Base via an [MCP](https://modelcontextprotocol.io/introduction) tool connection. **Best-effort**: transient platform errors are logged as warnings and the deployment continues. |
 
 ---
@@ -109,7 +109,7 @@ PDF documents → Blob Storage upload → Page-aware chunking → Vector embeddi
 
 ### Document processing
 
-1. **Upload**: PDFs from `src/foundry/data/documents/` are uploaded to Azure Blob Storage.
+1. **Upload**: PDFs from `src/foundry/data_supplier/documents/` are uploaded to Azure Blob Storage.
 2. **Chunking**: Documents are split into page-aware chunks for precise citations (page numbers preserved).
 3. **Embedding**: Each chunk is vectorized using `text-embedding-3-small` for semantic search.
 4. **Indexing**: Chunks are indexed in Azure AI Search with both vector embeddings and full-text content for hybrid retrieval.
@@ -235,7 +235,7 @@ azd up
 
 **Symptom**: The agent responds with generic answers and no citations.
 
-**Why**: No PDF documents were present in `src/foundry/data/documents/` at deployment time, or the upload/indexing step failed silently.
+**Why**: No PDF documents were present in `src/foundry/data_supplier/documents/` at deployment time, or the upload/indexing step failed silently.
 
 **Fix**: Add PDFs to the documents folder and re-run `azd up` to rebuild the index.
 

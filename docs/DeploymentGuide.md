@@ -307,7 +307,7 @@ The deployment follows a **two-phase automated workflow**, both phases triggered
 | — | | | [Microsoft Foundry hub](https://learn.microsoft.com/azure/ai-studio/concepts/ai-resources), [project](https://learn.microsoft.com/azure/ai-studio/how-to/create-projects) & [connections](https://learn.microsoft.com/azure/ai-studio/how-to/connections-add) | Create the Foundry hub/project and the AI Search + Storage connections. |
 | — | | | AI Search service & Storage account | Provision the indexer + blob storage backing the knowledge base. |
 | — | | | [OpenAI model deployments](https://learn.microsoft.com/azure/ai-services/openai/how-to/create-resource) | Deploy the chat completion and embedding models. |
-| 1 | **Phase 2: Solution Bootstrap** | [`install_microsoft_iq_solution.py`](../infra/scripts/install_microsoft_iq_solution.py) (Python, `postprovision` hook) | `setup_knowledge_base` ([`step_knowledge_base.py`](../infra/scripts/foundry/step_knowledge_base.py)) | Create the Azure AI Search index, upload PDFs from [`src/foundry/data/documents/`](../src/foundry/data/documents/), and provision the Foundry IQ knowledge source and knowledge base. |
+| 1 | **Phase 2: Solution Bootstrap** | [`install_microsoft_iq_solution.py`](../infra/scripts/install_microsoft_iq_solution.py) (Python, `postprovision` hook) | `setup_knowledge_base` ([`step_knowledge_base.py`](../infra/scripts/foundry/step_knowledge_base.py)) | Create the Azure AI Search index, upload PDFs from [`src/foundry/data_supplier/documents/`](../src/foundry/data_supplier/documents/), and provision the Foundry IQ knowledge source and knowledge base. |
 | 2 | | | `setup_agent` ([`step_agent_setup.py`](../infra/scripts/foundry/step_agent_setup.py)) | Create the AI Foundry `ChatAgent` wired to the Knowledge Base via [MCP](https://modelcontextprotocol.io/introduction). **Best-effort**: transient platform errors are logged as warnings and the deployment continues. |
 | 3 | | | `setup_onboarding_agent` ([`step_onboarding_agent_setup.py`](../infra/scripts/foundry/step_onboarding_agent_setup.py)) | Create the AI Foundry `OnboardingAgent` wired to the Knowledge Base via [MCP](https://modelcontextprotocol.io/introduction). **Best-effort**: transient platform errors are logged as warnings and the deployment continues. |
 | 4 | | | `setup_workspace` ([`step_workspace_setup.py`](../infra/scripts/fabric/step_workspace_setup.py)) | Create or find the Fabric workspace, assign it to the capacity, and resume the capacity if paused. |
@@ -374,7 +374,7 @@ Sourced and named by [`install_microsoft_iq_solution.py`](../infra/scripts/insta
 
 | Component | Default name | Purpose |
 |---|---|---|
-| **Search Index** | `{solution_suffix}-documents` | Azure AI Search index containing chunked PDFs from [`src/foundry/data/documents/`](../src/foundry/data/documents/) with embeddings for hybrid (vector + keyword) retrieval. Override with `AZURE_AI_SEARCH_INDEX`. |
+| **Search Index** | `{solution_suffix}-documents` | Azure AI Search index containing chunked PDFs from [`src/foundry/data_supplier/documents/`](../src/foundry/data_supplier/documents/) with embeddings for hybrid (vector + keyword) retrieval. Override with `AZURE_AI_SEARCH_INDEX`. |
 | **Knowledge Source** | `{solution_suffix}-ks` | Foundry IQ pointer to the AI Search index. |
 | **Knowledge Base** | `{solution_suffix}-kb` | Foundry IQ knowledge base with automatic query planning over the knowledge source. Used by the agents for grounded answers with citations. |
 | **KB MCP project connection** | `{solution_suffix}-kb-mcp-connection` | Foundry connection that exposes the Knowledge Base to the agents through the [Model Context Protocol](https://modelcontextprotocol.io/introduction). Override with `KB_MCP_CONNECTION_NAME`. |
@@ -413,7 +413,7 @@ Key outputs:
 
 ### Next Steps
 
-1. **Add your documents**: drop PDFs into [`src/foundry/data/documents/`](../src/foundry/data/documents/) and re-run the deployment to refresh the knowledge base:
+1. **Add your documents**: drop PDFs into [`src/foundry/data_supplier/documents/`](../src/foundry/data_supplier/documents/) and re-run the deployment to refresh the knowledge base:
    ```bash
    azd up
    ```

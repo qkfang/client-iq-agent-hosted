@@ -90,7 +90,7 @@ confirmed.
 From [`common/config.py`](../../infra/scripts/common/config.py):
 - `SOLUTION_NAME = "Microsoft IQ"`
 - `REPO_ROOT` — absolute path to the repository root
-- `DATA_DIR` — repo-relative path to `src/foundry/data`
+- `DATA_DIR` — repo-relative path to `src/foundry/data_supplier`
 - `default_workspace_name(suffix)` → `"Microsoft IQ - {suffix}"`
 
 Required env vars (set by azd/Bicep outputs — do not set manually):

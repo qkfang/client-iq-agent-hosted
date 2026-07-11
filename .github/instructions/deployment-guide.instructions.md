@@ -56,7 +56,7 @@ This doc lives at `docs/`. Relative paths from this location:
 | Test script | `../infra/scripts/foundry/test_agent.py` |
 | Installer notebook | `../infra/fabric/deploy/fabric_solution_installer.ipynb` |
 | Workspace items | `../src/fabric/fabric_workspace/` |
-| Foundry sample documents | `../src/foundry/data/documents/` |
+| Foundry sample documents | `../src/foundry/data_supplier/documents/` |
 | Copilot Studio solution package | `../src/copilot/sln/MicrosoftIQAccelerator` |
 | Bicep template | `../infra/main.bicep` |
 | Bicep parameters | `../infra/main.parameters.json` |
