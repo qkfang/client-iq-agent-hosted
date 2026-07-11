@@ -5,9 +5,11 @@ Microsoft IQ Solution Installer
 This script provides the deployment entry-point for the Microsoft IQ solution.
 It performs the following steps to bootstrap the solution:
 
-    1. setup_knowledge_base   - Create Azure AI Search index, upload documents,
-                                create Foundry IQ Knowledge Source and Knowledge Base
-    2. setup_agent            - Create AI Foundry agent with Knowledge Base MCP tool
+    1. setup_knowledge_base   - Create Azure AI Search indexes, upload documents,
+                                create Foundry IQ Knowledge Sources and Knowledge Bases
+                                (supply chain + customer onboarding document sets)
+    2. setup_agent            - Create AI Foundry agents with Knowledge Base MCP tool
+                                (ChatAgent + OnboardingAgent)
     3. setup_workspace        - Create and configure the Fabric workspace/capacity
     4. setup_administrators   - Add workspace administrators
     5. upload_installer       - Upload the installer notebook to the workspace
@@ -57,10 +59,14 @@ Environment Variables:
                                                     Defaults to gpt-5-mini.
     AZURE_AI_SEARCH_INDEX                (optional) Search index name.
                                                     Defaults to <SOLUTION_SUFFIX>-documents.
+    AZURE_AI_SEARCH_ONBOARDING_INDEX     (optional) Customer onboarding search index name.
+                                                    Defaults to <SOLUTION_SUFFIX>-onboarding-documents.
     AZURE_AI_AGENT_MODEL_DEPLOYMENT_NAME (optional) Chat model deployment name for the agent.
                                                     Falls back to AZURE_CHAT_MODEL, then gpt-5-mini.
     KB_MCP_CONNECTION_NAME               (optional) Project connection name for the Knowledge Base MCP tool.
                                                     Defaults to <SOLUTION_SUFFIX>-kb-mcp-connection.
+    KB_ONBOARDING_MCP_CONNECTION_NAME    (optional) Project connection name for the onboarding Knowledge Base MCP tool.
+                                                    Defaults to <SOLUTION_SUFFIX>-onboarding-kb-mcp-connection.
 """
 
 import logging
@@ -100,6 +106,7 @@ from fabric.step_notebook_installer import (
 )
 from fabric.step_workspace_setup import setup_workspace
 from fabric.step_workspace_admins import setup_workspace_administrators
+from foundry.agent_api import ONBOARDING_AGENT_NAME
 from foundry.step_agent_setup import setup_agent
 from foundry.step_knowledge_base import setup_knowledge_base
 
@@ -165,12 +172,23 @@ def main() -> None:
     knowledge_base_name = f"{solution_suffix}-kb"
     knowledge_source_name = f"{solution_suffix}-ks"
 
+    # Customer onboarding knowledge base (separate index/KB, own document set)
+    onboarding_search_index_name = os.getenv(
+        "AZURE_AI_SEARCH_ONBOARDING_INDEX", f"{solution_suffix}-onboarding-documents"
+    )
+    onboarding_blob_container_name = f"{solution_suffix}-onboarding-documents"
+    onboarding_knowledge_base_name = f"{solution_suffix}-onboarding-kb"
+    onboarding_knowledge_source_name = f"{solution_suffix}-onboarding-ks"
+
     # Agent model selection
     agent_model = (
         os.getenv("AZURE_CHAT_MODEL")
         or os.getenv("AZURE_AI_AGENT_MODEL_DEPLOYMENT_NAME", "gpt-5-mini")
     )
     kb_mcp_connection_name = os.getenv("KB_MCP_CONNECTION_NAME", f"{solution_suffix}-kb-mcp-connection")
+    onboarding_kb_mcp_connection_name = os.getenv(
+        "KB_ONBOARDING_MCP_CONNECTION_NAME", f"{solution_suffix}-onboarding-kb-mcp-connection"
+    )
 
     # ------------------------------------------------------------------
     # Startup banner
@@ -189,6 +207,8 @@ def main() -> None:
     logger.info(f"Search Endpoint:    {search_endpoint}")
     logger.info(f"Search Index:       {search_index_name}")
     logger.info(f"Knowledge Base:     {knowledge_base_name}")
+    logger.info(f"Onboarding Index:   {onboarding_search_index_name}")
+    logger.info(f"Onboarding KB:      {onboarding_knowledge_base_name}")
     logger.info(f"Agent Endpoint:     {agent_endpoint}")
     logger.info(f"Agent Model:        {agent_model}")
     logger.info(f"KB MCP Connection:  {kb_mcp_connection_name}")
@@ -276,6 +296,20 @@ def main() -> None:
             embedding_model=embedding_model,
             chat_model=chat_model,
         )
+        logger.info("   Setting up customer onboarding knowledge base…")
+        setup_knowledge_base(
+            solution_name=f"{SOLUTION_NAME} Onboarding",
+            search_endpoint=search_endpoint,
+            blob_endpoint=blob_endpoint,
+            ai_endpoint=ai_endpoint,
+            search_index_name=onboarding_search_index_name,
+            blob_container_name=onboarding_blob_container_name,
+            knowledge_source_name=onboarding_knowledge_source_name,
+            knowledge_base_name=onboarding_knowledge_base_name,
+            embedding_model=embedding_model,
+            chat_model=chat_model,
+            docs_subdir="documents_onboarding",
+        )
         logger.info("Successfully completed: setup_knowledge_base")
         executed_steps.append("setup_knowledge_base")
     except Exception as exc:
@@ -307,6 +341,22 @@ def main() -> None:
             resource_group=resource_group,
             ai_service_name=ai_service_name,
             ai_project_name=ai_project_name,
+        )
+        logger.info("   Creating onboarding agent with Knowledge Base MCP tool…")
+        setup_agent(
+            solution_name=f"{SOLUTION_NAME} Onboarding",
+            agent_endpoint=agent_endpoint,
+            agent_model=agent_model,
+            search_endpoint=search_endpoint,
+            search_index_name=onboarding_search_index_name,
+            knowledge_base_name=onboarding_knowledge_base_name,
+            kb_mcp_connection_name=onboarding_kb_mcp_connection_name,
+            subscription_id=subscription_id,
+            resource_group=resource_group,
+            ai_service_name=ai_service_name,
+            ai_project_name=ai_project_name,
+            agent_name=ONBOARDING_AGENT_NAME,
+            scenario_desc="Guiding new-client onboarding: entity resolution, KYC/AML screening, document validation and account setup.",
         )
         logger.info("Successfully completed: setup_agent")
         executed_steps.append("setup_agent")

@@ -16,6 +16,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 CHAT_AGENT_NAME = "ChatAgent"
+ONBOARDING_AGENT_NAME = "OnboardingAgent"
 
 
 def create_agent_client(endpoint: str, allow_preview: bool = False):
