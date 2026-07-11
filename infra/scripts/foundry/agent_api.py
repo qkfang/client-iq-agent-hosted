@@ -18,6 +18,11 @@ logger = logging.getLogger(__name__)
 CHAT_AGENT_NAME = "ChatAgent"
 ONBOARDING_AGENT_NAME = "OnboardingAgent"
 
+# Work IQ MCP tool — hosted Microsoft service exposing workplace knowledge.
+WORKIQ_SERVER_LABEL = "WorkIQMCP"
+WORKIQ_SERVER_URL = "https://workiq.svc.cloud.microsoft/mcp"
+WORKIQ_CONNECTION_NAME = "WorkIQMCP"
+
 
 def create_agent_client(endpoint: str, allow_preview: bool = False):
     """Create an Azure AI Project client authenticated via DefaultAzureCredential.
@@ -244,10 +249,16 @@ def create_or_update_agent(
         project_connection_id=connection_name,
     )
 
+    workiq_tool = MCPTool(
+        server_label=WORKIQ_SERVER_LABEL,
+        server_url=WORKIQ_SERVER_URL,
+        project_connection_id=WORKIQ_CONNECTION_NAME,
+    )
+
     agent_definition = PromptAgentDefinition(
         model=model,
         instructions=instructions,
-        tools=[mcp_tool],
+        tools=[mcp_tool, workiq_tool],
     )
 
     return project_client.agents.create_version(

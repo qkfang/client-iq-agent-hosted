@@ -81,6 +81,97 @@ def _get_current_git_branch() -> str | None:
         return None
 
 
+def _get_current_git_remote() -> tuple[str, str] | None:
+    """Get the ``owner`` and ``repo`` of the ``origin`` git remote.
+
+    Supports both HTTPS (``https://github.com/owner/repo.git``) and SSH
+    (``git@github.com:owner/repo.git``) remote URL forms.
+
+    Returns:
+        tuple[str, str]: ``(owner, repo)``, or ``None`` if not in a git
+        repository, the ``origin`` remote is missing, or detection fails.
+    """
+    try:
+        result = subprocess.run(
+            ["git", "remote", "get-url", "origin"],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError) as exc:
+        logger.debug(f"Could not detect git remote: {exc}")
+        return None
+
+    url = result.stdout.strip()
+    if not url:
+        return None
+
+    # Normalize: strip trailing ".git" and split on the last two path segments.
+    if url.endswith(".git"):
+        url = url[: -len(".git")]
+
+    # SSH form: git@github.com:owner/repo
+    if url.startswith("git@") and ":" in url:
+        path = url.split(":", 1)[1]
+    else:
+        # HTTPS form: https://github.com/owner/repo
+        path = url.split("github.com/", 1)[-1] if "github.com/" in url else url
+
+    parts = [p for p in path.split("/") if p]
+    if len(parts) < 2:
+        logger.debug(f"Could not parse owner/repo from remote URL: {url}")
+        return None
+
+    owner, repo = parts[-2], parts[-1]
+    return owner, repo
+
+
+def _patch_notebook_for_github_repo(notebook_json: dict, owner: str, repo: str) -> dict:
+    """Update the ``GITHUB_OWNER`` and ``GITHUB_REPO`` values in the installer notebook.
+
+    Modifies the notebook *in-place* to replace the ``GITHUB_OWNER`` and
+    ``GITHUB_REPO`` variable assignments so the notebook downloads the solution
+    from the repository the deployment is running against (the ``origin``
+    remote) instead of the hard-coded upstream defaults.
+
+    Args:
+        notebook_json: Parsed notebook dict (ipynb JSON).
+        owner: The GitHub owner/organization to set.
+        repo: The GitHub repository name to set.
+
+    Returns:
+        The mutated *notebook_json* dict.
+    """
+    replacements = {"GITHUB_OWNER": owner, "GITHUB_REPO": repo}
+
+    for cell in notebook_json.get("cells", []):
+        if cell.get("cell_type") != "code":
+            continue
+        source_lines = cell.get("source", [])
+
+        new_lines = []
+        for line in source_lines:
+            stripped = line.lstrip()
+            matched_var = next(
+                (var for var in replacements if stripped.startswith(var) and "=" in line),
+                None,
+            )
+            if matched_var:
+                # Preserve indentation and spacing style around '='.
+                indent = line[: len(line) - len(line.lstrip())]
+                before_eq = line.split("=")[0]
+                spaces_before = len(before_eq) - len(before_eq.rstrip())
+                new_lines.append(
+                    f'{indent}{matched_var}{" " * spaces_before}= "{replacements[matched_var]}"\n'
+                )
+            else:
+                new_lines.append(line)
+        cell["source"] = new_lines
+
+    return notebook_json
+
+
 def _patch_notebook_for_github_branch(notebook_json: dict, branch_name: str) -> dict:
     """Update the ``GITHUB_BRANCH`` value in the installer notebook.
 
@@ -172,6 +263,7 @@ def upload_installer_notebook(workspace_client, notebook_path: str, github_token
     otherwise a new notebook is created.
 
     The notebook is patched in-memory before upload to:
+    * Update GITHUB_OWNER/GITHUB_REPO to the origin remote's owner/repo
     * Update GITHUB_BRANCH to the currently checked out branch
     * Inject GITHUB_TOKEN if provided
 
@@ -193,6 +285,18 @@ def upload_installer_notebook(workspace_client, notebook_path: str, github_token
     content = read_file_content(notebook_path)
     notebook_json = json.loads(content)
     patched = False
+
+    # Detect and patch the origin repository (owner/repo) so the notebook
+    # downloads from the repo the deployment is running against rather than the
+    # hard-coded upstream defaults.
+    remote = _get_current_git_remote()
+    if remote:
+        owner, repo = remote
+        logger.info(f"   Patching notebook with GITHUB_OWNER = '{owner}', GITHUB_REPO = '{repo}'")
+        _patch_notebook_for_github_repo(notebook_json, owner, repo)
+        patched = True
+    else:
+        logger.info("   Could not detect git remote, using notebook default owner/repo")
 
     # Detect and patch current git branch
     current_branch = _get_current_git_branch()
