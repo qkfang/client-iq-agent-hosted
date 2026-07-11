@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/microsoft/AgentSchema/refs/heads/main/schemas/v1.0/AgentManifest.yaml
+name: agent-cps
+displayName: "AgentCps"
+description: >
+  A hosted agent that uses the Copilot SDK to invoke a Copilot Studio agent
+  via the Direct-to-Engine API.
+metadata:
+  tags:
+    - AI Agent Hosting
+    - Agent Framework
+    - Copilot Studio
+    - Python
+template:
+  name: agent-cps
+  kind: hosted
+  protocols:
+    - protocol: responses
+      version: 2.0.0
+  environment_variables:
+    - name: ENVIRONMENT_ID
+      value: "{{ENVIRONMENT_ID}}"
+    - name: AGENT_IDENTIFIER
+      value: "{{AGENT_IDENTIFIER}}"
