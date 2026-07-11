@@ -1,0 +1,13 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/relationshipType/1.0.0/schema.json",
+  "namespace": "usertypes",
+  "id": "4992511771087276222",
+  "name": "kycassessment_has_onboardingcase",
+  "namespaceType": "Imported",
+  "source": {
+    "entityTypeId": "16083094370446"
+  },
+  "target": {
+    "entityTypeId": "29818328877856"
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/dataBinding/1.0.0/schema.json",
+  "id": "683cc802-3169-480d-a637-ecdb92e56879",
+  "dataBindingConfiguration": {
+    "dataBindingType": "NonTimeSeries",
+    "propertyBindings": [
+      {
+        "sourceColumnName": "AddressLine1",
+        "targetPropertyId": "55355118652400"
+      },
+      {
+        "sourceColumnName": "AddressLine2",
+        "targetPropertyId": "91028414712832"
+      },
+      {
+        "sourceColumnName": "City",
+        "targetPropertyId": "88593778690843"
+      },
+      {
+        "sourceColumnName": "CountryID",
+        "targetPropertyId": "32391328918770"
+      },
+      {
+        "sourceColumnName": "CustomerID",
+        "targetPropertyId": "90171664309774"
+      },
+      {
+        "sourceColumnName": "IsActive",
+        "targetPropertyId": "89208068850711"
+      },
+      {
+        "sourceColumnName": "Latitude",
+        "targetPropertyId": "89462793388650"
+      },
+      {
+        "sourceColumnName": "LocationID",
+        "targetPropertyId": "68061479011339"
+      },
+      {
+        "sourceColumnName": "LocationName",
+        "targetPropertyId": "74749386075648"
+      },
+      {
+        "sourceColumnName": "Longitude",
+        "targetPropertyId": "71156928620815"
+      },
+      {
+        "sourceColumnName": "Note",
+        "targetPropertyId": "65443480108656"
+      },
+      {
+        "sourceColumnName": "Region",
+        "targetPropertyId": "40004478915999"
+      },
+      {
+        "sourceColumnName": "StateID",
+        "targetPropertyId": "78082379146157"
+      },
+      {
+        "sourceColumnName": "SubdivisionName",
+        "targetPropertyId": "63317049255513"
+      },
+      {
+        "sourceColumnName": "ZipCode",
+        "targetPropertyId": "25316600671095"
+      }
+    ],
+    "sourceTableProperties": {
+      "sourceType": "LakehouseTable",
+      "workspaceId": "00000000-0000-0000-0000-000000000000",
+      "itemId": "PLACEHOLDER-LAKEHOUSE-ID",
+      "sourceTableName": "Location",
+      "sourceSchema": "customer"
+    }
+  }
+}

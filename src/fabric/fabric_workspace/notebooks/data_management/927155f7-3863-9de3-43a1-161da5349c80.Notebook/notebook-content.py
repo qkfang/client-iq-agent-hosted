@@ -114,6 +114,21 @@
 
 # MARKDOWN ********************
 
+# ### Create schema and tables for onboarding domain
+
+# CELL ********************
+
+%run model_onboarding
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# MARKDOWN ********************
+
 # ### Create schema and tables for shared domain
 
 # CELL ********************

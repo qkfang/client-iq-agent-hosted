@@ -1,0 +1,3 @@
+"TradingAccountID","CustomerID","CaseID","ProductLine","AccountStatus","OpenedDate","IsoCurrencyCode"
+"TA-001","CID-001","CASE-001","Commodities","Active","2026-01-24","USD"
+"TA-002","CID-004","CASE-004","Global Markets","Active","2026-02-09","EUR"

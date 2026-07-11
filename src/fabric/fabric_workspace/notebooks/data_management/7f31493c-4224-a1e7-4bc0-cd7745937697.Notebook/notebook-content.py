@@ -76,6 +76,14 @@
 
 # MARKDOWN ********************
 
+# ### Load data for onboarding domain
+
+# CELL ********************
+
+%run load_onboarding
+
+# MARKDOWN ********************
+
 # ### Load data for shared domain
 
 # CELL ********************

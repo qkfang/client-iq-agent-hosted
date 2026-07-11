@@ -1,0 +1,5 @@
+"KYCID","CaseID","RiskRating","SanctionsScreeningResult","PepScreeningResult","AdverseMediaResult","ApprovalStatus","ReviewedBy","ReviewedDate"
+"KYC-001","CASE-001","Low","Clear","Clear","Clear","Approved","RM-001","2026-01-22"
+"KYC-002","CASE-002","Medium","PendingReview","Clear","Clear","Pending","RM-002",""
+"KYC-003","CASE-003","Medium","Clear","Clear","PendingReview","Pending","RM-003",""
+"KYC-004","CASE-004","Low","Clear","Clear","Clear","Approved","RM-004","2026-02-08"

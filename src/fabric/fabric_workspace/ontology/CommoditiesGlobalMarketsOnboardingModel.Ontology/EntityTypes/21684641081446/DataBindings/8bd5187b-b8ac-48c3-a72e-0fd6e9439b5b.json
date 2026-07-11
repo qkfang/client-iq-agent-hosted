@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/dataBinding/1.0.0/schema.json",
+  "id": "8bd5187b-b8ac-48c3-a72e-0fd6e9439b5b",
+  "dataBindingConfiguration": {
+    "dataBindingType": "NonTimeSeries",
+    "propertyBindings": [
+      {
+        "sourceColumnName": "Desk",
+        "targetPropertyId": "44985526949292"
+      },
+      {
+        "sourceColumnName": "Email",
+        "targetPropertyId": "50096598394678"
+      },
+      {
+        "sourceColumnName": "FirstName",
+        "targetPropertyId": "45840452043292"
+      },
+      {
+        "sourceColumnName": "LastName",
+        "targetPropertyId": "15168681687626"
+      },
+      {
+        "sourceColumnName": "Region",
+        "targetPropertyId": "64110486521102"
+      },
+      {
+        "sourceColumnName": "RelationshipManagerID",
+        "targetPropertyId": "69008428343554"
+      }
+    ],
+    "sourceTableProperties": {
+      "sourceType": "LakehouseTable",
+      "workspaceId": "00000000-0000-0000-0000-000000000000",
+      "itemId": "PLACEHOLDER-LAKEHOUSE-ID",
+      "sourceTableName": "RelationshipManager",
+      "sourceSchema": "onboarding"
+    }
+  }
+}

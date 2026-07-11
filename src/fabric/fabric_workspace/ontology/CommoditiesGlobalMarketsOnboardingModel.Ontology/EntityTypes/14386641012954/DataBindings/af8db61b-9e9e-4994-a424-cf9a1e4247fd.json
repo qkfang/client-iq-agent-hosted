@@ -1,0 +1,44 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/dataBinding/1.0.0/schema.json",
+  "id": "af8db61b-9e9e-4994-a424-cf9a1e4247fd",
+  "dataBindingConfiguration": {
+    "dataBindingType": "NonTimeSeries",
+    "propertyBindings": [
+      {
+        "sourceColumnName": "AccountStatus",
+        "targetPropertyId": "49420152734274"
+      },
+      {
+        "sourceColumnName": "CaseID",
+        "targetPropertyId": "40038801862480"
+      },
+      {
+        "sourceColumnName": "CustomerID",
+        "targetPropertyId": "15450887271391"
+      },
+      {
+        "sourceColumnName": "IsoCurrencyCode",
+        "targetPropertyId": "42895633136892"
+      },
+      {
+        "sourceColumnName": "OpenedDate",
+        "targetPropertyId": "35401380639457"
+      },
+      {
+        "sourceColumnName": "ProductLine",
+        "targetPropertyId": "91582746251722"
+      },
+      {
+        "sourceColumnName": "TradingAccountID",
+        "targetPropertyId": "84167537696844"
+      }
+    ],
+    "sourceTableProperties": {
+      "sourceType": "LakehouseTable",
+      "workspaceId": "00000000-0000-0000-0000-000000000000",
+      "itemId": "PLACEHOLDER-LAKEHOUSE-ID",
+      "sourceTableName": "TradingAccount",
+      "sourceSchema": "onboarding"
+    }
+  }
+}

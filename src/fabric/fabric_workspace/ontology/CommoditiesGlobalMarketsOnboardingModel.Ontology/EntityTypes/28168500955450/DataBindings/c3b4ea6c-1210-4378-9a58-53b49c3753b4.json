@@ -1,0 +1,44 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/dataBinding/1.0.0/schema.json",
+  "id": "c3b4ea6c-1210-4378-9a58-53b49c3753b4",
+  "dataBindingConfiguration": {
+    "dataBindingType": "NonTimeSeries",
+    "propertyBindings": [
+      {
+        "sourceColumnName": "CustomerID",
+        "targetPropertyId": "34490904724420"
+      },
+      {
+        "sourceColumnName": "CustomerTradeNameNote",
+        "targetPropertyId": "92640297804912"
+      },
+      {
+        "sourceColumnName": "CustomerTypeID",
+        "targetPropertyId": "22862114274418"
+      },
+      {
+        "sourceColumnName": "PeriodEndDate",
+        "targetPropertyId": "68374907658582"
+      },
+      {
+        "sourceColumnName": "PeriodStartDate",
+        "targetPropertyId": "93738781831658"
+      },
+      {
+        "sourceColumnName": "TradeName",
+        "targetPropertyId": "32439295617212"
+      },
+      {
+        "sourceColumnName": "TradeNameID",
+        "targetPropertyId": "24480191796036"
+      }
+    ],
+    "sourceTableProperties": {
+      "sourceType": "LakehouseTable",
+      "workspaceId": "00000000-0000-0000-0000-000000000000",
+      "itemId": "PLACEHOLDER-LAKEHOUSE-ID",
+      "sourceTableName": "CustomerTradeName",
+      "sourceSchema": "customer"
+    }
+  }
+}
