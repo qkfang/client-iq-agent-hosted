@@ -38,6 +38,7 @@ def setup_knowledge_base(
     knowledge_base_name: str,
     embedding_model: str,
     chat_model: str,
+    docs_subdir: str = "documents",
 ) -> None:
     """Create Azure AI Search index, upload PDFs, and create the Knowledge Base.
 
@@ -52,10 +53,14 @@ def setup_knowledge_base(
         knowledge_base_name: Name of the Foundry IQ knowledge base.
         embedding_model: OpenAI embedding model deployment name.
         chat_model: OpenAI chat model deployment name (for KB query planning).
+        docs_subdir: Subfolder of ``DATA_DIR`` containing the PDFs to index.
+            Falls back to ``DATA_DIR`` itself when the subfolder does not
+            exist. Allows separate calls to build independent indexes/KBs
+            from different document sets (e.g. supply chain vs. onboarding).
     """
     # Locate PDFs
     data_path = Path(DATA_DIR)
-    docs_dir = data_path / "documents" if (data_path / "documents").exists() else data_path
+    docs_dir = data_path / docs_subdir if (data_path / docs_subdir).exists() else data_path
     pdf_files = list(docs_dir.glob("*.pdf"))
     if not pdf_files:
         logger.warning(f"   No PDF files found in {docs_dir} — knowledge base will be empty")
