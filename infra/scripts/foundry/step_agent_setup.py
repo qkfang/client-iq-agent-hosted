@@ -12,6 +12,7 @@ from foundry.agent_api import (
     CHAT_AGENT_NAME,
     build_agent_instructions,
     build_kb_mcp_tool,
+    build_workiq_mcp_tool,
     create_agent_client,
     create_kb_mcp_connection,
     create_or_update_agent,
@@ -98,6 +99,6 @@ def setup_agent(
             agent_name=agent_name,
             model=agent_model,
             instructions=_instructions,
-            tools=[_kb_tool],
+            tools=[_kb_tool, build_workiq_mcp_tool()],
         )
     logger.info(f"   Agent '{_agent.name}' ready (id: {_agent.id})")

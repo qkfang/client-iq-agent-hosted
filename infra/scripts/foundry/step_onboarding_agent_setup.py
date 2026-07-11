@@ -4,11 +4,11 @@ OnboardingAgent setup step for the Microsoft IQ deployment.
 
 Creates an AI Foundry agent focused on helping new users find onboarding
 and reference documentation. It follows the same pattern as
-``step_agent_setup.py`` (ChatAgent) and currently wires up the Foundry IQ
-Knowledge Base MCP tool only — Fabric IQ, Work IQ, and Web IQ do not yet
-expose a Python/MCP integration surface in this repository. Once their MCP
-endpoints are confirmed, add the corresponding tool(s) to the ``tools`` list
-built in ``setup_onboarding_agent()`` below.
+``step_agent_setup.py`` (ChatAgent) and wires up the Foundry IQ Knowledge
+Base MCP tool plus the hosted Work IQ MCP tool — Fabric IQ and Web IQ do
+not yet expose a Python/MCP integration surface in this repository. Once
+their MCP endpoints are confirmed, add the corresponding tool(s) to the
+``tools`` list built in ``setup_onboarding_agent()`` below.
 """
 
 import logging
@@ -17,6 +17,7 @@ from foundry.agent_api import (
     ONBOARDING_AGENT_NAME,
     build_kb_mcp_tool,
     build_onboarding_agent_instructions,
+    build_workiq_mcp_tool,
     create_agent_client,
     create_kb_mcp_connection,
     create_or_update_agent,
@@ -86,9 +87,9 @@ def setup_onboarding_agent(
             "AZURE_AI_PROJECT_NAME must both be set"
         )
 
-    # Tools attached to the agent. Fabric IQ / Work IQ / Web IQ tools should
-    # be appended here once their MCP endpoints are confirmed.
-    _tools = [build_kb_mcp_tool(_mcp_ep, kb_mcp_connection_name)]
+    # Tools attached to the agent. Fabric IQ / Web IQ tools should be
+    # appended here once their MCP endpoints are confirmed.
+    _tools = [build_kb_mcp_tool(_mcp_ep, kb_mcp_connection_name), build_workiq_mcp_tool()]
 
     logger.info(f"   Creating agent '{ONBOARDING_AGENT_NAME}'…")
     with _agent_client:
