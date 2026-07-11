@@ -1,0 +1,13 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/relationshipType/1.0.0/schema.json",
+  "namespace": "usertypes",
+  "id": "4274076378426680519",
+  "name": "onboardingcase_has_relationshipmanager",
+  "namespaceType": "Imported",
+  "source": {
+    "entityTypeId": "29818328877856"
+  },
+  "target": {
+    "entityTypeId": "21684641081446"
+  }
+}

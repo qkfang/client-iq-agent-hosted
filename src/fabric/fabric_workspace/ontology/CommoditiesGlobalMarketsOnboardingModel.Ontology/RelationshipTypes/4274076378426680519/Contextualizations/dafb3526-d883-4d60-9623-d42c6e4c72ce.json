@@ -1,0 +1,23 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/contextualization/1.0.0/schema.json",
+  "id": "dafb3526-d883-4d60-9623-d42c6e4c72ce",
+  "dataBindingTable": {
+    "workspaceId": "00000000-0000-0000-0000-000000000000",
+    "itemId": "PLACEHOLDER-LAKEHOUSE-ID",
+    "sourceTableName": "OnboardingCase",
+    "sourceSchema": "onboarding",
+    "sourceType": "LakehouseTable"
+  },
+  "sourceKeyRefBindings": [
+    {
+      "sourceColumnName": "RelationshipManagerID",
+      "targetPropertyId": "17087029009142"
+    }
+  ],
+  "targetKeyRefBindings": [
+    {
+      "sourceColumnName": "RelationshipManagerID",
+      "targetPropertyId": "69008428343554"
+    }
+  ]
+}

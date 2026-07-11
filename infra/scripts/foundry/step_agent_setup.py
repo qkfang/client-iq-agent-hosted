@@ -6,11 +6,8 @@ Extracts step 2 (``setup_agent``) of the deployment flow into a single
 top-level function callable from the entry-point script.
 """
 
-import json
 import logging
-from pathlib import Path
 
-from common.config import DATA_DIR
 from foundry.agent_api import (
     CHAT_AGENT_NAME,
     build_agent_instructions,
@@ -38,6 +35,8 @@ def setup_agent(
     resource_group: str,
     ai_service_name: str | None,
     ai_project_name: str | None,
+    agent_name: str = CHAT_AGENT_NAME,
+    scenario_desc: str = "Managing delivery operations, inventory logistics, and supplier relationships.",
 ) -> None:
     """Create or update an AI Foundry agent wired up to the Knowledge Base MCP tool.
 
@@ -53,15 +52,11 @@ def setup_agent(
         resource_group: Azure resource group name.
         ai_service_name: Azure AI Services account name (required for MCP connection).
         ai_project_name: Azure AI Project name (required for MCP connection).
+        agent_name: Name for the agent resource. Defaults to ``CHAT_AGENT_NAME``.
+        scenario_desc: Persona description injected into the agent instructions.
     """
-    # Default scenario info
-    _data_path = Path(DATA_DIR)
-    _config_dir = _data_path / "config" if (_data_path / "config").exists() else _data_path
-    _scenario_name = solution_name
-    _scenario_desc = "Managing delivery operations, inventory logistics, and supplier relationships."
-
     # Build agent instructions
-    _instructions = build_agent_instructions(_scenario_name, _scenario_desc)
+    _instructions = build_agent_instructions(solution_name, scenario_desc)
     logger.debug(f"      Built instructions ({len(_instructions)} chars)")
 
     # Create agent client and MCP connection
@@ -95,12 +90,12 @@ def setup_agent(
         )
 
     # Create / replace agent
-    logger.info(f"   Creating agent '{CHAT_AGENT_NAME}'…")
+    logger.info(f"   Creating agent '{agent_name}'…")
     _kb_tool = build_kb_mcp_tool(_mcp_ep, kb_mcp_connection_name)
     with _agent_client:
         _agent = create_or_update_agent(
             project_client=_agent_client,
-            agent_name=CHAT_AGENT_NAME,
+            agent_name=agent_name,
             model=agent_model,
             instructions=_instructions,
             tools=[_kb_tool],

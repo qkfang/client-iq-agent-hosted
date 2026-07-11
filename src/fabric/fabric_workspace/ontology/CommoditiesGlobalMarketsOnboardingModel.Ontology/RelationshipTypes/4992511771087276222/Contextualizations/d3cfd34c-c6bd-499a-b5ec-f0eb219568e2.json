@@ -1,0 +1,23 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/contextualization/1.0.0/schema.json",
+  "id": "d3cfd34c-c6bd-499a-b5ec-f0eb219568e2",
+  "dataBindingTable": {
+    "workspaceId": "00000000-0000-0000-0000-000000000000",
+    "itemId": "PLACEHOLDER-LAKEHOUSE-ID",
+    "sourceTableName": "KYCAssessment",
+    "sourceSchema": "onboarding",
+    "sourceType": "LakehouseTable"
+  },
+  "sourceKeyRefBindings": [
+    {
+      "sourceColumnName": "CaseID",
+      "targetPropertyId": "11356213764637"
+    }
+  ],
+  "targetKeyRefBindings": [
+    {
+      "sourceColumnName": "CaseID",
+      "targetPropertyId": "19937507862248"
+    }
+  ]
+}

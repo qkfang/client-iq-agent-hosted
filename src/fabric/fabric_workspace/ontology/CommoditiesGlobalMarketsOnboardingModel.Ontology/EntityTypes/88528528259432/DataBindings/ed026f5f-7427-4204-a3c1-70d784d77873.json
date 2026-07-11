@@ -1,0 +1,72 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/ontology/dataBinding/1.0.0/schema.json",
+  "id": "ed026f5f-7427-4204-a3c1-70d784d77873",
+  "dataBindingConfiguration": {
+    "dataBindingType": "NonTimeSeries",
+    "propertyBindings": [
+      {
+        "sourceColumnName": "CreatedBy",
+        "targetPropertyId": "63674272659159"
+      },
+      {
+        "sourceColumnName": "CustomerEstablishedDate",
+        "targetPropertyId": "34438369717209"
+      },
+      {
+        "sourceColumnName": "CustomerID",
+        "targetPropertyId": "46445338878906"
+      },
+      {
+        "sourceColumnName": "CustomerRelationshipTypeID",
+        "targetPropertyId": "85361851546376"
+      },
+      {
+        "sourceColumnName": "CustomerTypeID",
+        "targetPropertyId": "68187542632412"
+      },
+      {
+        "sourceColumnName": "DateOfBirth",
+        "targetPropertyId": "42483157400546"
+      },
+      {
+        "sourceColumnName": "FirstName",
+        "targetPropertyId": "49335592456532"
+      },
+      {
+        "sourceColumnName": "Gender",
+        "targetPropertyId": "29380279033707"
+      },
+      {
+        "sourceColumnName": "IsActive",
+        "targetPropertyId": "77116224228251"
+      },
+      {
+        "sourceColumnName": "LastName",
+        "targetPropertyId": "27660627640621"
+      },
+      {
+        "sourceColumnName": "PrimaryEmail",
+        "targetPropertyId": "68065090370954"
+      },
+      {
+        "sourceColumnName": "PrimaryPhone",
+        "targetPropertyId": "41202554027655"
+      },
+      {
+        "sourceColumnName": "SecondaryEmail",
+        "targetPropertyId": "33339100585914"
+      },
+      {
+        "sourceColumnName": "SecondaryPhone",
+        "targetPropertyId": "21827301189467"
+      }
+    ],
+    "sourceTableProperties": {
+      "sourceType": "LakehouseTable",
+      "workspaceId": "00000000-0000-0000-0000-000000000000",
+      "itemId": "PLACEHOLDER-LAKEHOUSE-ID",
+      "sourceTableName": "Customer",
+      "sourceSchema": "customer"
+    }
+  }
+}
