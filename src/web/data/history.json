@@ -1,0 +1,52 @@
+[
+  {
+    "historyId": "HIST-1001-01",
+    "customerId": "CUST-1001",
+    "activityType": "Call",
+    "subject": "Introductory onboarding call",
+    "description": "Discussed required KYC documents and onboarding timeline.",
+    "activityDate": "2024-01-08T05:00:00Z",
+    "performedBy": "Alex Morgan",
+    "outcome": "Client to submit documents by end of week."
+  },
+  {
+    "historyId": "HIST-1001-02",
+    "customerId": "CUST-1001",
+    "activityType": "Task",
+    "subject": "Review submitted incorporation documents",
+    "description": "Verified certificate of incorporation and director register.",
+    "activityDate": "2024-01-10T02:00:00Z",
+    "performedBy": "Compliance Team",
+    "outcome": "Documents accepted, KYC review in progress."
+  },
+  {
+    "historyId": "HIST-1002-01",
+    "customerId": "CUST-1002",
+    "activityType": "Meeting",
+    "subject": "Kickoff meeting with wealth management team",
+    "description": "Reviewed account structure and reporting requirements.",
+    "activityDate": "2024-01-12T09:00:00Z",
+    "performedBy": "Taylor Brooks",
+    "outcome": "Follow-up documents requested."
+  },
+  {
+    "historyId": "HIST-1003-01",
+    "customerId": "CUST-1003",
+    "activityType": "Note",
+    "subject": "KYC checks completed",
+    "description": "All required due diligence checks passed with low risk rating.",
+    "activityDate": "2024-01-17T11:30:00Z",
+    "performedBy": "Compliance Team",
+    "outcome": "Cleared for trading."
+  },
+  {
+    "historyId": "HIST-1003-02",
+    "customerId": "CUST-1003",
+    "activityType": "Call",
+    "subject": "Onboarding completion call",
+    "description": "Confirmed account is ready to trade and reviewed next steps.",
+    "activityDate": "2024-01-18T14:00:00Z",
+    "performedBy": "Alex Morgan",
+    "outcome": "Client confirmed readiness to begin trading."
+  }
+]

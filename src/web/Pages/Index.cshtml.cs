@@ -17,6 +17,6 @@ public class IndexModel : PageModel
 
     public void OnGet()
     {
-        Records = _crmService.GetAll();
+        Records = _crmService.GetCustomers();
     }
 }

@@ -1,0 +1,46 @@
+[
+  {
+    "emailId": "EMAIL-1001-01",
+    "customerId": "CUST-1001",
+    "subject": "Welcome to onboarding - documents required",
+    "from": "onboarding@contoso-bank.example",
+    "to": "jordan.lee@sample-trading.example",
+    "direction": "Outbound",
+    "sentUtc": "2024-01-08T06:00:00Z",
+    "summary": "Sent list of required KYC documents and onboarding checklist.",
+    "status": "Read"
+  },
+  {
+    "emailId": "EMAIL-1001-02",
+    "customerId": "CUST-1001",
+    "subject": "RE: Welcome to onboarding - documents required",
+    "from": "jordan.lee@sample-trading.example",
+    "to": "onboarding@contoso-bank.example",
+    "direction": "Inbound",
+    "sentUtc": "2024-01-09T22:15:00Z",
+    "summary": "Attached certificate of incorporation and director register.",
+    "status": "Read"
+  },
+  {
+    "emailId": "EMAIL-1002-01",
+    "customerId": "CUST-1002",
+    "subject": "Wealth management onboarding kickoff",
+    "from": "taylor.brooks@contoso-bank.example",
+    "to": "casey.rivera@example-holdings.example",
+    "direction": "Outbound",
+    "sentUtc": "2024-01-12T13:00:00Z",
+    "summary": "Scheduled kickoff meeting and shared reporting template.",
+    "status": "Unread"
+  },
+  {
+    "emailId": "EMAIL-1003-01",
+    "customerId": "CUST-1003",
+    "subject": "Onboarding complete - ready to trade",
+    "from": "onboarding@contoso-bank.example",
+    "to": "riley.chen@northwind-logistics.example",
+    "direction": "Outbound",
+    "sentUtc": "2024-01-18T14:30:00Z",
+    "summary": "Confirmed account activation and shared trading desk contacts.",
+    "status": "Read"
+  }
+]

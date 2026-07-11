@@ -1,0 +1,38 @@
+[
+  {
+    "opportunityId": "OPP-1001-01",
+    "customerId": "CUST-1001",
+    "name": "FX hedging facility",
+    "estimatedValue": 250000,
+    "currency": "AUD",
+    "stage": "Qualify",
+    "probability": 25,
+    "estimatedCloseUtc": "2024-03-01T00:00:00Z",
+    "owner": "Alex Morgan",
+    "description": "Potential FX hedging facility once onboarding completes."
+  },
+  {
+    "opportunityId": "OPP-1002-01",
+    "customerId": "CUST-1002",
+    "name": "Managed portfolio expansion",
+    "estimatedValue": 1200000,
+    "currency": "USD",
+    "stage": "Develop",
+    "probability": 40,
+    "estimatedCloseUtc": "2024-04-15T00:00:00Z",
+    "owner": "Taylor Brooks",
+    "description": "Expansion of managed portfolio services for the group's US entities."
+  },
+  {
+    "opportunityId": "OPP-1003-01",
+    "customerId": "CUST-1003",
+    "name": "Trade finance credit line",
+    "estimatedValue": 500000,
+    "currency": "CAD",
+    "stage": "Propose",
+    "probability": 60,
+    "estimatedCloseUtc": "2024-02-20T00:00:00Z",
+    "owner": "Alex Morgan",
+    "description": "Trade finance credit line to support freight operations growth."
+  }
+]

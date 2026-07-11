@@ -2,38 +2,42 @@
 @using Onboarding.Web.Services
 @model IndexModel
 @{
-    ViewData["Title"] = "Mock D365 CRM";
+    ViewData["Title"] = "Customers";
 }
 
 <h1>@ViewData["Title"]</h1>
-<p>Customer onboarding records, updated by the Foundry onboarding agent via the <code>/mcp</code> endpoint.</p>
+<p>Customer accounts, updated by the Foundry onboarding agent via the <code>/mcp</code> endpoint.</p>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Customer Id</th>
-            <th>Name</th>
-            <th>Entity Type</th>
-            <th>Country</th>
-            <th>Onboarding Status</th>
-            <th>KYC Risk Rating</th>
-            <th>Last Updated</th>
-            <th>Notes</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var record in Model.Records)
-        {
+<div class="entity-grid">
+    <table class="entity-table">
+        <thead>
             <tr>
-                <td>@record.CustomerId</td>
-                <td>@record.CustomerName</td>
-                <td>@record.LegalEntityType</td>
-                <td>@record.Country</td>
-                <td>@record.OnboardingStatus</td>
-                <td>@record.KycRiskRating</td>
-                <td>@record.LastUpdatedUtc.ToString("u") (@record.LastUpdatedBy)</td>
-                <td>@record.Notes</td>
+                <th>Customer Id</th>
+                <th>Name</th>
+                <th>Entity Type</th>
+                <th>Industry</th>
+                <th>Country</th>
+                <th>Account Owner</th>
+                <th>Onboarding Status</th>
+                <th>KYC Risk Rating</th>
+                <th>Last Updated</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var record in Model.Records)
+            {
+                <tr>
+                    <td><a asp-page="/Details" asp-route-customerId="@record.CustomerId">@record.CustomerId</a></td>
+                    <td>@record.CustomerName</td>
+                    <td>@record.LegalEntityType</td>
+                    <td>@record.Industry</td>
+                    <td>@record.Country</td>
+                    <td>@record.AccountOwner</td>
+                    <td><span class="badge">@record.OnboardingStatus</span></td>
+                    <td>@record.KycRiskRating</td>
+                    <td>@record.LastUpdatedUtc.ToString("u") (@record.LastUpdatedBy)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
