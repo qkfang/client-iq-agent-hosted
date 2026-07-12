@@ -114,7 +114,12 @@ def create_or_update_hosted_agent(
     except Exception:
         existing = None  # agent does not yet exist
     if existing:
-        project_client.agents.delete(agent_name)
+        try:
+            project_client.agents.delete(agent_name)
+        except Exception:
+            # The agent may still have active sessions, which blocks a plain
+            # delete. Cascade-delete the sessions so the version can be replaced.
+            project_client.agents.delete(agent_name, params={"force": "true"})
         logger.debug(f"      Deleted existing hosted agent '{agent_name}'")
 
     mcp_tool = MCPTool(
