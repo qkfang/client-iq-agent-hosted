@@ -32,8 +32,26 @@ param serviceBusQueueName string
 @description('The Azure AI Foundry project endpoint used by the Function App to call the onboarding agent.')
 param foundryProjectEndpoint string
 
+@description('The Azure AI Foundry agent id for the intake agent.')
+param foundryIntakeAgentId string = ''
+
+@description('The Azure AI Foundry agent id for the orchestrator agent.')
+param foundryOrchestratorAgentId string = ''
+
 @description('The Azure AI Foundry agent id for the onboarding agent.')
 param foundryOnboardingAgentId string = ''
+
+@description('The Azure AI Foundry agent id for the opportunity agent.')
+param foundryOpportunityAgentId string = ''
+
+@description('The Azure AI Foundry agent id for the insight agent.')
+param foundryInsightAgentId string = ''
+
+@description('The Azure AI Foundry agent id for the CRM agent.')
+param foundryCrmAgentId string = ''
+
+@description('The Azure AI Foundry agent id for the Lego agent.')
+param foundryLegoAgentId string = ''
 
 @description('The name of the Azure AI Services account to grant the Function App access to.')
 param aiServicesName string
@@ -88,7 +106,13 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
         { name: 'ServiceBus__FullyQualifiedNamespace', value: serviceBusFullyQualifiedNamespace }
         { name: 'ServiceBus__QueueName', value: serviceBusQueueName }
         { name: 'Foundry__ProjectEndpoint', value: foundryProjectEndpoint }
+        { name: 'Foundry__IntakeAgentId', value: foundryIntakeAgentId }
+        { name: 'Foundry__OrchestratorAgentId', value: foundryOrchestratorAgentId }
         { name: 'Foundry__OnboardingAgentId', value: foundryOnboardingAgentId }
+        { name: 'Foundry__OpportunityAgentId', value: foundryOpportunityAgentId }
+        { name: 'Foundry__InsightAgentId', value: foundryInsightAgentId }
+        { name: 'Foundry__CrmAgentId', value: foundryCrmAgentId }
+        { name: 'Foundry__LegoAgentId', value: foundryLegoAgentId }
         { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: applicationInsightsConnectionString }
       ]
     }

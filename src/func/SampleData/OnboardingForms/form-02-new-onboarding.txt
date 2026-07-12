@@ -1,0 +1,13 @@
+Onboarding Form
+
+Customer Name: Tailwind Traders
+Customer Type: New Customer
+Request Type: New Account Setup
+
+Details:
+Tailwind Traders is a new customer looking to open an account for their
+distribution division. They need their company profile, shipping locations,
+and payment terms configured before go-live.
+
+Primary Contact: Priya Shah, Operations Manager
+Preferred Region: East US

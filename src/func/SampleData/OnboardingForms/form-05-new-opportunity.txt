@@ -1,0 +1,12 @@
+Onboarding Form
+
+Customer Name: Proseware Inc
+Customer Type: New Customer
+Request Type: Opportunity Review
+
+Details:
+Proseware Inc reached out during onboarding interested in a bundled
+subscription tier beyond the standard starter package. Please review this
+as a potential opportunity alongside the account setup.
+
+Primary Contact: Morgan Lee, IT Director

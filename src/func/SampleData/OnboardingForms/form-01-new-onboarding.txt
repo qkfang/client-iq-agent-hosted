@@ -1,0 +1,13 @@
+Onboarding Form
+
+Customer Name: Contoso Retail Group
+Customer Type: New Customer
+Request Type: New Account Setup
+
+Details:
+Contoso Retail Group would like to onboard as a new customer. Please set up
+their account, primary contact, and initial billing profile so they can
+begin placing orders next quarter.
+
+Primary Contact: Dana Kowalski, Procurement Lead
+Preferred Region: West US

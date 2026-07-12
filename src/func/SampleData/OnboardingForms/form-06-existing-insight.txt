@@ -1,0 +1,11 @@
+Onboarding Form
+
+Customer Name: Northwind Traders
+Customer Type: Existing Customer
+Request Type: Reporting and Insight Request
+
+Details:
+Northwind Traders has requested a quarterly usage and spend summary report
+across all of their active accounts to support an internal budget review.
+
+Primary Contact: Sam Okafor, Finance Analyst

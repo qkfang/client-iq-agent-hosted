@@ -1,0 +1,12 @@
+Onboarding Form
+
+Customer Name: Adventure Works Cycles
+Customer Type: Existing Customer
+Request Type: CRM Data Update
+
+Details:
+Adventure Works Cycles has a new primary contact and updated billing
+address. Please update their CRM record to reflect the changes below.
+
+New Primary Contact: Taylor Brooks, Finance Manager
+New Billing Address: 400 Harbor Way, Suite 210
