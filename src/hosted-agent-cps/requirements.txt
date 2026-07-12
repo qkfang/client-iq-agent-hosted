@@ -1,0 +1,10 @@
+agent-framework-foundry-hosting==1.0.0a260709
+agent-framework-core==1.11.0
+agent-framework-copilotstudio==1.0.0b260709
+microsoft-agents-copilotstudio-client==0.3.1
+azure-ai-agentserver-core==2.0.0b7
+azure-ai-agentserver-responses==1.0.0b8
+azure-ai-agentserver-invocations==1.0.0b6
+msal==1.37.0
+mcp==1.27.1
+python-dotenv==1.2.2

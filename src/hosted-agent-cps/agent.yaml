@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/microsoft/AgentSchema/refs/heads/main/schemas/v1.0/ContainerAgent.yaml
+
+kind: hosted
+name: agent-cps
+description: |
+    A hosted agent that uses the Copilot SDK to invoke a Copilot Studio agent.
+    Built with the Agent Framework SDK.
+metadata:
+    tags:
+        - AI Agent Hosting
+        - Agent Framework
+        - Copilot Studio
+        - Python
+protocols:
+    - protocol: responses
+      version: 2.0.0
+resources:
+    cpu: '0.5'
+    memory: 1.0Gi
+environment_variables:
+    - name: ENVIRONMENT_ID
+      value: ''
+    - name: AGENT_IDENTIFIER
+      value: ''
