@@ -18,7 +18,7 @@ The key components of the Foundry IQ architecture are as follows:
 
 ### Document Foundation
 
-The solution implements a Knowledge Base pipeline that transforms PDF documents into a searchable, citation-ready index. Documents uploaded to [`src/foundry/data/documents/`](../../src/foundry/data/documents/) are stored in Azure Blob Storage and processed through page-aware chunking to preserve page numbers for precise citations. Each chunk is vectorized using the `text-embedding-3-small` embedding model and indexed in Azure AI Search, enabling both keyword matching and semantic retrieval.
+The solution implements a Knowledge Base pipeline that transforms PDF documents into a searchable, citation-ready index. Documents uploaded to [`src/foundry/data_supplier/documents/`](../../src/foundry/data_supplier/documents/) are stored in Azure Blob Storage and processed through page-aware chunking to preserve page numbers for precise citations. Each chunk is vectorized using the `text-embedding-3-small` embedding model and indexed in Azure AI Search, enabling both keyword matching and semantic retrieval.
 
 The accelerator ships with 11 sample PDFs covering supply chain management, inventory standards, delivery operations, quality control, and supplier processes. These can be replaced with custom documents to build a domain-specific knowledge base.
 
@@ -34,4 +34,4 @@ Sample questions to try with the agent are documented in [Sample Questions](./sa
 
 ### Document Management
 
-Document management is handled through the deployment workflow. New PDF documents are added to the [`src/foundry/data/documents/`](../../src/foundry/data/documents/) folder and the deployment is re-run using `azd up`, which re-uploads documents to Blob Storage, regenerates embeddings, rebuilds the search index, and updates the Knowledge Base. Each agent response includes page numbers referencing the exact source page, direct links to the original documents in Azure Storage, and source attribution showing which documents were used.
+Document management is handled through the deployment workflow. New PDF documents are added to the [`src/foundry/data_supplier/documents/`](../../src/foundry/data_supplier/documents/) folder and the deployment is re-run using `azd up`, which re-uploads documents to Blob Storage, regenerates embeddings, rebuilds the search index, and updates the Knowledge Base. Each agent response includes page numbers referencing the exact source page, direct links to the original documents in Azure Storage, and source attribution showing which documents were used.

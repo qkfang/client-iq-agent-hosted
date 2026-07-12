@@ -359,7 +359,7 @@ jobs:
           echo "- 📈 **Log Analytics workspace** and **Application Insights** for diagnostics" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Phase 2 — Solution bootstrap (\`install_microsoft_iq_solution.py\` postprovision hook)" >> $GITHUB_STEP_SUMMARY
-          echo "1. **Knowledge base** — AI Search index \`${SEARCH_INDEX_NAME}\`, knowledge source \`${KNOWLEDGE_SOURCE_NAME}\`, knowledge base \`${KNOWLEDGE_BASE_NAME}\` populated from \`src/foundry/data/documents/\`" >> $GITHUB_STEP_SUMMARY
+          echo "1. **Knowledge base** — AI Search index \`${SEARCH_INDEX_NAME}\`, knowledge source \`${KNOWLEDGE_SOURCE_NAME}\`, knowledge base \`${KNOWLEDGE_BASE_NAME}\` populated from \`src/foundry/data_supplier/documents/\`" >> $GITHUB_STEP_SUMMARY
           echo "2. **Foundry agent** — \`ChatAgent\` wired to the Knowledge Base via the \`${KB_MCP_CONNECTION_NAME}\` MCP project connection (best-effort; check Foundry portal if a warning was reported)" >> $GITHUB_STEP_SUMMARY
           echo "3. **Fabric workspace** — \`${FABRIC_WORKSPACE_NAME}\` created and assigned to the capacity" >> $GITHUB_STEP_SUMMARY
           echo "4. **Workspace administrators** — assigned from \`AZURE_FABRIC_CAPACITY_ADMINISTRATORS\` and \`FABRIC_WORKSPACE_ADMINISTRATORS\`" >> $GITHUB_STEP_SUMMARY
@@ -371,7 +371,7 @@ jobs:
           echo "1. 📁 **Open the Fabric workspace**: [\`${FABRIC_WORKSPACE_NAME}\`](${FABRIC_WORKSPACE_URL}) — explore the lakehouse, notebooks, semantic models, and data agents" >> $GITHUB_STEP_SUMMARY
           echo "2. 🤖 **Verify the Foundry agent**: open the [Foundry portal](${FOUNDRY_PORTAL_URL}), select project \`${AZURE_AI_PROJECT_NAME}\`, and confirm \`ChatAgent\` and \`${KNOWLEDGE_BASE_NAME}\` exist" >> $GITHUB_STEP_SUMMARY
           echo "3. 📖 **Follow post-deployment steps**: see the [Deployment Guide](https://github.com/${{ github.repository }}/blob/main/docs/DeploymentGuide.md) for Work IQ post-deployment configuration, verification, and cleanup steps" >> $GITHUB_STEP_SUMMARY
-          echo "4. 🔧 **Customize**: drop additional PDFs in \`src/foundry/data/documents/\` and re-run \`azd up\` to refresh the knowledge base" >> $GITHUB_STEP_SUMMARY
+          echo "4. 🔧 **Customize**: drop additional PDFs in \`src/foundry/data_supplier/documents/\` and re-run \`azd up\` to refresh the knowledge base" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           echo "## 🆘 Need Help?" >> $GITHUB_STEP_SUMMARY

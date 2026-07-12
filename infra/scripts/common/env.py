@@ -118,8 +118,8 @@ def get_required_env(var_name: str, description: Optional[str] = None) -> str:
 
 
 def get_data_folder() -> str:
-    """Return the absolute path to the Foundry data directory (``src/foundry/data``)."""
-    return str(_PROJECT_ROOT / "src" / "foundry" / "data")
+    """Return the absolute path to the Foundry data directory (``src/foundry/data_supplier``)."""
+    return str(_PROJECT_ROOT / "src" / "foundry" / "data_supplier")
 
 
 def print_env_status() -> None:
