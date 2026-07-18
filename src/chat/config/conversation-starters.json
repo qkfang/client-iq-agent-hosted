@@ -1,0 +1,153 @@
+{
+  "$schema": "./conversation-starters.schema.json",
+  "version": 1,
+  "updated": "2026-07-17",
+  "generalFallback": [
+    {
+      "id": "themes",
+      "label": "Summarize themes",
+      "prompt": "Summarize the key themes across the latest documents.",
+      "complexity": "Simple"
+    },
+    {
+      "id": "follow-up",
+      "label": "Suggest follow-up questions",
+      "prompt": "What follow-up questions should I ask next to close the biggest knowledge gaps?",
+      "complexity": "Moderate"
+    }
+  ],
+  "sets": [
+    {
+      "agentIds": [
+        "market-knowledge-base"
+      ],
+      "starters": [
+        {
+          "id": "market-outlook",
+          "label": "Market outlook",
+          "prompt": "Summarize the latest market outlook from the indexed research notes.",
+          "complexity": "Simple",
+          "tags": [
+            "finance"
+          ]
+        },
+        {
+          "id": "sector-compare",
+          "label": "Compare sectors",
+          "prompt": "Compare two sectors based on the documents and explain the strongest opportunities and risks.",
+          "complexity": "Moderate",
+          "tags": [
+            "finance",
+            "comparison"
+          ]
+        }
+      ]
+    },
+    {
+      "agentIds": [
+        "hr-knowledge-base"
+      ],
+      "starters": [
+        {
+          "id": "benefits-summary",
+          "label": "Benefits summary",
+          "prompt": "Summarize the differences between the standard and premium benefit options.",
+          "complexity": "Simple",
+          "tags": [
+            "hr",
+            "benefits"
+          ]
+        },
+        {
+          "id": "policy-review",
+          "label": "Policy review",
+          "prompt": "Explain the performance review process and list the main employee responsibilities.",
+          "complexity": "Moderate",
+          "tags": [
+            "hr",
+            "policy"
+          ]
+        }
+      ]
+    },
+    {
+      "agentIds": [
+        "healthcare-knowledge-base"
+      ],
+      "starters": [
+        {
+          "id": "medication-summary",
+          "label": "Medication summary",
+          "prompt": "List the most important contraindications and dosage warnings in the indexed medication guidance.",
+          "complexity": "Simple",
+          "tags": [
+            "healthcare"
+          ]
+        },
+        {
+          "id": "label-compare",
+          "label": "Compare label guidance",
+          "prompt": "Compare the dosage instructions from an uploaded label image with the indexed reference guidance and highlight differences.",
+          "complexity": "Advanced",
+          "tags": [
+            "healthcare",
+            "image-upload"
+          ]
+        }
+      ]
+    },
+    {
+      "agentIds": [
+        "manufacturing-knowledge-base"
+      ],
+      "starters": [
+        {
+          "id": "assembly-spec",
+          "label": "Assembly specification",
+          "prompt": "Find the assembly torque specification for the selected part and summarize nearby safety notes.",
+          "complexity": "Simple",
+          "tags": [
+            "manufacturing"
+          ]
+        },
+        {
+          "id": "directive-summary",
+          "label": "Directive summary",
+          "prompt": "Summarize the compliance actions that changed most recently across the indexed directives.",
+          "complexity": "Moderate",
+          "tags": [
+            "manufacturing",
+            "compliance"
+          ]
+        }
+      ]
+    },
+    {
+      "agentIds": [
+        "operations-knowledge-base"
+      ],
+      "starters": [
+        {
+          "id": "event-planning",
+          "label": "Event planning",
+          "prompt": "Using the indexed playbooks, outline queue, staffing, and emergency planning steps for a high-traffic event.",
+          "complexity": "Moderate",
+          "tags": [
+            "operations"
+          ]
+        },
+        {
+          "id": "map-analysis",
+          "label": "Map analysis with image",
+          "prompt": "Use an uploaded operations map together with the indexed guidance to explain the workflow and identify the biggest risk area.",
+          "complexity": "Advanced",
+          "tags": [
+            "operations",
+            "image-upload"
+          ],
+          "imageUrl": "/icons/ai-foundry.png"
+        }
+      ]
+    }
+  ]
+}
