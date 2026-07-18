@@ -23,3 +23,8 @@ add SecurityControl=Ignore to storage account and also enable public access
 hosted agent samples:
 
 ttps://github.com/microsoft-foundry/foundry-samples/blob/main/samples/python/hosted-agents/agent-framework/responses/
+
+
+iq:
+
+   https://github.com/isaru66/azure-ai-search-knowledge-retrieval-demo
