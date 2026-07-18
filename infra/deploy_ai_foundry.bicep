@@ -424,6 +424,19 @@ resource assignSearchIndexDataContributorToMI 'Microsoft.Authorization/roleAssig
   ]
 }
 
+resource assignSearchServiceContributorToMI 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (empty(azureExistingAIProjectResourceId)) {
+  name: guid(resourceGroup().id, managedIdentityObjectId, searchServiceContributor.id)
+  scope: aiSearch
+  properties: {
+    principalId: managedIdentityObjectId
+    roleDefinitionId: searchServiceContributor.id
+    principalType: 'ServicePrincipal'
+  }
+  dependsOn: [
+    aiSearch
+  ]
+}
+
 // Storage Role Definitions
 resource storageBlobDataContributor 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   scope: subscription()
