@@ -127,6 +127,12 @@ celerybeat.pid
 # SageMath
 *.sage.py
 
+# Node.js / Next.js
+node_modules/
+.next/
+npm-debug.log*
+.env.local
+
 # Environments
 .env
 .envrc
