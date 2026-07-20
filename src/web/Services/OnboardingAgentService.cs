@@ -43,9 +43,9 @@ public class OnboardingAgentService
                 credentialOptions.TenantId = _options.TenantId;
             }
 
-            // On Azure App Service use the managed identity; locally fall back to
-            // developer credentials (Azure CLI / Visual Studio) and skip the slow
-            // IMDS probe that fails on machines without a managed identity.
+            // Use the managed identity on Azure App Service; locally use developer
+            // credentials (Azure CLI / Visual Studio) and skip the managed identity
+            // probe, which otherwise fails against the unreachable IMDS endpoint.
             var onAppService = !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("WEBSITE_INSTANCE_ID"));
             credentialOptions.ExcludeManagedIdentityCredential = !onAppService;
 
