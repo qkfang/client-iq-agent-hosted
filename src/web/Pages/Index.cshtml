@@ -21,6 +21,7 @@
                 <th>Onboarding Status</th>
                 <th>KYC Risk Rating</th>
                 <th>Last Updated</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -36,6 +37,11 @@
                     <td><span class="badge">@record.OnboardingStatus</span></td>
                     <td>@record.KycRiskRating</td>
                     <td>@record.LastUpdatedUtc.ToString("u") (@record.LastUpdatedBy)</td>
+                    <td>
+                        <form method="post" asp-page-handler="Delete" asp-route-customerId="@record.CustomerId">
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                    </td>
                 </tr>
             }
         </tbody>

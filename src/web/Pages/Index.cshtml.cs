@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Onboarding.Web.Models;
 using Onboarding.Web.Services;
@@ -18,5 +19,11 @@ public class IndexModel : PageModel
     public void OnGet()
     {
         Records = _crmService.GetCustomers();
+    }
+
+    public IActionResult OnPostDelete(string customerId)
+    {
+        _crmService.DeleteCustomer(customerId);
+        return RedirectToPage();
     }
 }

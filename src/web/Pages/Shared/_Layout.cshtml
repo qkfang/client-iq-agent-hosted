@@ -8,8 +8,15 @@
 </head>
 <body>
     <header class="app-header">
-        <nav>
-            <a asp-page="/Index">Mock Dynamics 365 CRM</a>
+        @{
+            var currentPage = ViewContext.RouteData.Values["page"]?.ToString();
+        }
+        <nav class="top-nav">
+            <span class="brand">Onboarding CRM</span>
+            <ul class="nav-links">
+                <li><a asp-page="/Index" class="@(currentPage == "/Index" || currentPage == "/Details" ? "active" : "")">Customers</a></li>
+                <li><a asp-page="/Onboard" class="@(currentPage == "/Onboard" ? "active" : "")">Onboard Customers</a></li>
+            </ul>
         </nav>
     </header>
     <main role="main">

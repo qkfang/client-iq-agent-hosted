@@ -1,0 +1,58 @@
+@page
+@model OnboardModel
+@{
+    ViewData["Title"] = "Onboard Customers";
+}
+
+<h1>@ViewData["Title"]</h1>
+<p>Prospective customers queued for onboarding. Onboarding invokes the Foundry <code>SalesCRMOnboarding</code> agent, which researches the company and finalises the CRM record via the <code>/mcp</code> endpoint.</p>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <p class="badge">@Model.Message</p>
+}
+
+<div class="entity-grid">
+    <table class="entity-table">
+        <thead>
+            <tr>
+                <th>Candidate Id</th>
+                <th>Company</th>
+                <th>Entity Type</th>
+                <th>Industry</th>
+                <th>Country</th>
+                <th>Contact</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var candidate in Model.Candidates)
+            {
+                <tr>
+                    <td>@candidate.CandidateId</td>
+                    <td>@candidate.CompanyName</td>
+                    <td>@candidate.LegalEntityType</td>
+                    <td>@candidate.Industry</td>
+                    <td>@candidate.Country</td>
+                    <td>@candidate.ContactName (@candidate.ContactEmail)</td>
+                    <td>
+                        <span class="badge">@candidate.Status</span>
+                        @if (!string.IsNullOrEmpty(candidate.CreatedCustomerId))
+                        {
+                            <a asp-page="/Details" asp-route-customerId="@candidate.CreatedCustomerId">@candidate.CreatedCustomerId</a>
+                        }
+                    </td>
+                    <td>
+                        @if (candidate.Status != "Onboarded")
+                        {
+                            <form method="post" asp-page-handler="Onboard" asp-route-candidateId="@candidate.CandidateId">
+                                <button type="submit" class="btn btn-primary">Onboard</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

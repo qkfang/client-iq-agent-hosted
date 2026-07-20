@@ -56,4 +56,37 @@ public class CustomerMcpTools
 
         return JsonSerializer.Serialize(record);
     }
+
+    [McpServerTool(Name = "finalize_customer_onboarding"), Description("Create the finalized CRM customer record for an onboarding candidate once research is complete.")]
+    public string FinalizeOnboarding(
+        [Description("The onboarding candidate id, e.g. ONB-001.")] string candidateId,
+        [Description("Legal company name.")] string customerName,
+        [Description("Legal entity type, e.g. Private Company, Corporation.")] string legalEntityType,
+        [Description("Country of registration.")] string country,
+        [Description("Primary industry.")] string industry,
+        [Description("Primary contact full name.")] string primaryContactName,
+        [Description("Primary contact email.")] string primaryContactEmail,
+        [Description("Company website.")] string website,
+        [Description("KYC/AML risk rating, e.g. Low, Medium, High.")] string kycRiskRating,
+        [Description("Final onboarding status, e.g. Ready to trade.")] string onboardingStatus,
+        [Description("Research summary and onboarding notes.")] string notes)
+    {
+        var record = new CrmRecord
+        {
+            CustomerName = customerName,
+            LegalEntityType = legalEntityType,
+            Country = country,
+            Industry = industry,
+            PrimaryContactName = primaryContactName,
+            PrimaryContactEmail = primaryContactEmail,
+            Website = website,
+            KycRiskRating = kycRiskRating,
+            OnboardingStatus = onboardingStatus,
+            Notes = notes,
+            LastUpdatedBy = "SalesCRMOnboarding agent"
+        };
+
+        var finalized = _crmService.FinalizeOnboarding(candidateId, record);
+        return JsonSerializer.Serialize(finalized);
+    }
 }

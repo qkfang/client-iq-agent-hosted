@@ -18,6 +18,8 @@ public class CrmService
     private readonly ConcurrentDictionary<string, HistoryEntry> _history = new();
     private readonly ConcurrentDictionary<string, EmailMessage> _emails = new();
     private readonly ConcurrentDictionary<string, Opportunity> _opportunities = new();
+    private readonly ConcurrentDictionary<string, OnboardingCandidate> _candidates = new();
+    private int _customerSeq = 2000;
 
     public CrmService(IHostEnvironment environment)
     {
@@ -28,6 +30,11 @@ public class CrmService
         Load(dataFolder, "history.json", _history, r => r.HistoryId);
         Load(dataFolder, "emails.json", _emails, r => r.EmailId);
         Load(dataFolder, "opportunities.json", _opportunities, r => r.OpportunityId);
+
+        foreach (var candidate in SeedCandidates())
+        {
+            _candidates[candidate.CandidateId] = candidate;
+        }
     }
 
     // Customers
@@ -39,6 +46,44 @@ public class CrmService
     {
         record.LastUpdatedUtc = DateTimeOffset.UtcNow;
         _customers[record.CustomerId] = record;
+        return record;
+    }
+
+    public bool DeleteCustomer(string customerId) => _customers.TryRemove(customerId, out _);
+
+    // Onboarding candidates
+    public IReadOnlyCollection<OnboardingCandidate> GetOnboardingCandidates() =>
+        _candidates.Values.OrderBy(c => c.CandidateId).ToList();
+
+    public OnboardingCandidate? GetOnboardingCandidate(string candidateId) =>
+        _candidates.GetValueOrDefault(candidateId);
+
+    public void SetCandidateStatus(string candidateId, string status)
+    {
+        if (_candidates.TryGetValue(candidateId, out var candidate))
+        {
+            candidate.Status = status;
+        }
+    }
+
+    /// <summary>
+    /// Creates the CRM record produced by the onboarding agent and marks the
+    /// originating candidate as onboarded.
+    /// </summary>
+    public CrmRecord FinalizeOnboarding(string candidateId, CrmRecord record)
+    {
+        if (string.IsNullOrWhiteSpace(record.CustomerId))
+        {
+            record.CustomerId = $"CUST-{Interlocked.Increment(ref _customerSeq)}";
+        }
+        UpsertCustomer(record);
+
+        if (_candidates.TryGetValue(candidateId, out var candidate))
+        {
+            candidate.Status = "Onboarded";
+            candidate.CreatedCustomerId = record.CustomerId;
+        }
+
         return record;
     }
 
@@ -93,6 +138,20 @@ public class CrmService
         _opportunities[opportunity.OpportunityId] = opportunity;
         return opportunity;
     }
+
+    private static IEnumerable<OnboardingCandidate> SeedCandidates() =>
+    [
+        new() { CandidateId = "ONB-001", CompanyName = "Northwind Components", LegalEntityType = "Private Company", Country = "Australia", Industry = "Manufacturing", ContactName = "Riley Chen", ContactEmail = "riley.chen@northwind.example", Website = "https://northwind.example" },
+        new() { CandidateId = "ONB-002", CompanyName = "Contoso Logistics", LegalEntityType = "Corporation", Country = "United States", Industry = "Transportation", ContactName = "Sam Patel", ContactEmail = "sam.patel@contoso.example", Website = "https://contoso.example" },
+        new() { CandidateId = "ONB-003", CompanyName = "Fabrikam Foods", LegalEntityType = "Private Company", Country = "United Kingdom", Industry = "Food & Beverage", ContactName = "Jamie Reed", ContactEmail = "jamie.reed@fabrikam.example", Website = "https://fabrikam.example" },
+        new() { CandidateId = "ONB-004", CompanyName = "Tailwind Energy", LegalEntityType = "Corporation", Country = "Canada", Industry = "Utilities", ContactName = "Morgan Diaz", ContactEmail = "morgan.diaz@tailwind.example", Website = "https://tailwind.example" },
+        new() { CandidateId = "ONB-005", CompanyName = "Adventure Works Retail", LegalEntityType = "Private Company", Country = "New Zealand", Industry = "Retail", ContactName = "Quinn Foster", ContactEmail = "quinn.foster@adventure-works.example", Website = "https://adventure-works.example" },
+        new() { CandidateId = "ONB-006", CompanyName = "Proseware Analytics", LegalEntityType = "Corporation", Country = "Germany", Industry = "Technology", ContactName = "Avery Klein", ContactEmail = "avery.klein@proseware.example", Website = "https://proseware.example" },
+        new() { CandidateId = "ONB-007", CompanyName = "Wingtip Textiles", LegalEntityType = "Private Company", Country = "India", Industry = "Textiles", ContactName = "Priya Nair", ContactEmail = "priya.nair@wingtip.example", Website = "https://wingtip.example" },
+        new() { CandidateId = "ONB-008", CompanyName = "Coho Financial", LegalEntityType = "Corporation", Country = "Singapore", Industry = "Financial Services", ContactName = "Lee Tan", ContactEmail = "lee.tan@coho.example", Website = "https://coho.example" },
+        new() { CandidateId = "ONB-009", CompanyName = "Lucerne Publishing", LegalEntityType = "Private Company", Country = "France", Industry = "Media", ContactName = "Camille Dubois", ContactEmail = "camille.dubois@lucerne.example", Website = "https://lucerne.example" },
+        new() { CandidateId = "ONB-010", CompanyName = "Alpine Construction", LegalEntityType = "Corporation", Country = "Switzerland", Industry = "Construction", ContactName = "Noa Meier", ContactEmail = "noa.meier@alpine.example", Website = "https://alpine.example" },
+    ];
 
     private static void Load<T>(string dataFolder, string fileName, ConcurrentDictionary<string, T> target, Func<T, string> keySelector)
     {
