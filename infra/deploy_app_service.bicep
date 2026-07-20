@@ -135,6 +135,7 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
       use32BitWorkerProcess: false
       appSettings: [
         { name: 'Foundry__ProjectEndpoint', value: foundryProjectEndpoint }
+        { name: 'Foundry__SalesCrmOnboardingAgentId', value: foundryOnboardingAgentId }
         { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: applicationInsightsConnectionString }
       ]
     }

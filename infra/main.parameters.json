@@ -26,6 +26,9 @@
     "azureExistingAIProjectResourceId": {
       "value": "${AZURE_EXISTING_AI_PROJECT_RESOURCE_ID=}"
     },
+    "onboardingAgentId": {
+      "value": "${SALES_CRM_ONBOARDING_AGENT_ID=}"
+    },
     "useCase": {
       "value": "${AZURE_ENV_USE_CASE=Retail-sales-analysis}"
     },

@@ -59,6 +59,9 @@ param existingLogAnalyticsWorkspaceId string = ''
 @description('Optional. Use this parameter to use an existing AI project resource ID')
 param azureExistingAIProjectResourceId string = ''
 
+@description('Optional. The Azure AI Foundry agent id for the SalesCRMOnboarding agent used by the CRM Web App. When empty, the Web App onboards candidates locally.')
+param onboardingAgentId string = ''
+
 @minLength(1)
 @description('Industry use case for deployment')
 @allowed([
@@ -262,6 +265,7 @@ module appServices 'deploy_app_service.bicep' = {
     serviceBusFullyQualifiedNamespace: serviceBus.outputs.serviceBusFullyQualifiedNamespace
     serviceBusQueueName: serviceBus.outputs.serviceBusQueueName
     foundryProjectEndpoint: aifoundry.outputs.projectEndpoint
+    foundryOnboardingAgentId: onboardingAgentId
     aiServicesName: aifoundry.outputs.aiServicesName
     applicationInsightsConnectionString: aifoundry.outputs.applicationInsightsConnectionString
   }
