@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Onboarding.Web</RootNamespace>
     <UserSecretsId>onboarding-crm-web</UserSecretsId>
-    <NoWarn>$(NoWarn);OPENAI001;AZPROVISIONING001</NoWarn>
+    <NoWarn>$(NoWarn);OPENAI001;AZPROVISIONING001;SCME0001</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

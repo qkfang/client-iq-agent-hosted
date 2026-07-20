@@ -69,7 +69,7 @@ Environment Variables:
     AZURE_AI_SEARCH_ONBOARDING_INDEX     (optional) Customer onboarding search index name.
                                                     Defaults to <SOLUTION_SUFFIX>-onboarding-documents.
     AZURE_AI_AGENT_MODEL_DEPLOYMENT_NAME (optional) Chat model deployment name for the agent.
-                                                    Falls back to AZURE_CHAT_MODEL, then gpt-5-mini.
+                                                    Falls back to AZURE_CHAT_MODEL, then gpt-5.6-sol.
     KB_MCP_CONNECTION_NAME               (optional) Project connection name for the Knowledge Base MCP tool.
                                                     Defaults to <SOLUTION_SUFFIX>-kb-mcp-connection.
     KB_ONBOARDING_MCP_CONNECTION_NAME    (optional) Project connection name for the onboarding Knowledge Base MCP tool.
@@ -202,8 +202,8 @@ def main() -> None:
 
     # Agent model selection
     agent_model = (
-        os.getenv("AZURE_CHAT_MODEL")
-        or os.getenv("AZURE_AI_AGENT_MODEL_DEPLOYMENT_NAME", "gpt-5-mini")
+        os.getenv("AZURE_AI_AGENT_MODEL_DEPLOYMENT_NAME")
+        or os.getenv("AZURE_CHAT_MODEL", "gpt-5.6-sol")
     )
     kb_mcp_connection_name = os.getenv("KB_MCP_CONNECTION_NAME", f"{solution_suffix}-kb-mcp-connection")
     onboarding_kb_mcp_connection_name = os.getenv(

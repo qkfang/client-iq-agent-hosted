@@ -34,7 +34,7 @@ Environment Variables:
     The following variables are optional and may be overridden manually:
 
     AZURE_CHAT_MODEL                     (optional) Chat model deployment name for the
-                                                    agent container. Defaults to gpt-5-mini.
+                                                    agent container. Defaults to gpt-5.6-sol.
     KB_MCP_CONNECTION_NAME               (optional) Project connection name for the
                                                     Knowledge Base MCP tool.
                                                     Defaults to <SOLUTION_SUFFIX>-kb-mcp-connection.
@@ -77,7 +77,7 @@ def main() -> None:
     solution_suffix = get_required_env_var("SOLUTION_SUFFIX")
     container_registry_name = get_required_env_var("AZURE_CONTAINER_REGISTRY_NAME")
 
-    agent_model = os.getenv("AZURE_CHAT_MODEL", "gpt-5-mini")
+    agent_model = os.getenv("AZURE_AI_AGENT_MODEL_DEPLOYMENT_NAME") or os.getenv("AZURE_CHAT_MODEL", "gpt-5.6-sol")
     knowledge_base_name = f"{solution_suffix}-kb"
     kb_mcp_connection_name = os.getenv(
         "KB_MCP_CONNECTION_NAME", f"{solution_suffix}-kb-mcp-connection"

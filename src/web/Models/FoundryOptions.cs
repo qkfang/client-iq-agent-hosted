@@ -30,7 +30,34 @@ public class FoundryOptions
     public string WebAppMcpUrl { get; set; } = string.Empty;
 
     /// <summary>
+    /// Knowledge Base and Work IQ MCP tools reached through a Foundry project
+    /// connection (Azure AI Search knowledge bases, hosted Work IQ, etc.).
+    /// </summary>
+    public List<McpConnectedTool> ConnectedTools { get; set; } = new();
+
+    /// <summary>
+    /// When true, the built-in web search tool is attached to the agent.
+    /// </summary>
+    public bool EnableWebSearch { get; set; }
+
+    /// <summary>
     /// Optional Entra tenant id override for local development.
     /// </summary>
     public string? TenantId { get; set; }
+}
+
+/// <summary>
+/// A remote MCP tool that authenticates through a Foundry project connection,
+/// such as an Azure AI Search Knowledge Base or the hosted Work IQ service.
+/// </summary>
+public class McpConnectedTool
+{
+    /// <summary>Label the agent uses to identify the MCP server.</summary>
+    public string ServerLabel { get; set; } = string.Empty;
+
+    /// <summary>Full MCP endpoint URL for the tool.</summary>
+    public string ServerUrl { get; set; } = string.Empty;
+
+    /// <summary>Foundry project connection that holds the tool's credentials.</summary>
+    public string ProjectConnectionId { get; set; } = string.Empty;
 }

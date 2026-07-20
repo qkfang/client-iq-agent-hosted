@@ -69,9 +69,15 @@ public class OnboardingAgentService
         {
             var output = await RunAgentAsync(BuildPrompt(candidate), cancellationToken);
 
+            // The agent finalises the record by calling finalize_customer_onboarding
+            // on this app's /mcp endpoint. When that callback lands on a different
+            // instance (local development, or a scaled-out App Service where the
+            // in-memory CRM is not shared) this process won't observe the update, so
+            // finalise locally to keep the CRM view consistent and move the candidate
+            // into the Customers tab.
             if (_crmService.GetOnboardingCandidate(candidate.CandidateId)?.Status != "Onboarded")
             {
-                _crmService.SetCandidateStatus(candidate.CandidateId, "Awaiting agent");
+                _crmService.FinalizeOnboarding(candidate.CandidateId, BuildLocalRecord(candidate));
             }
 
             return output;
@@ -91,16 +97,36 @@ public class OnboardingAgentService
     /// </summary>
     private async Task<string> RunAgentAsync(string prompt, CancellationToken cancellationToken)
     {
-        var mcpTool = ResponseTool.CreateMcpTool(
-            serverLabel: McpServerLabel,
-            serverUri: new Uri(_options.WebAppMcpUrl),
-            toolCallApprovalPolicy: new McpToolCallApprovalPolicy(GlobalMcpToolCallApprovalPolicy.NeverRequireApproval));
+        var neverApprove = new McpToolCallApprovalPolicy(GlobalMcpToolCallApprovalPolicy.NeverRequireApproval);
 
         var definition = new DeclarativeAgentDefinition(model: _options.ModelDeploymentName)
         {
             Instructions = Instructions,
         };
-        definition.Tools.Add(mcpTool);
+
+        // This web app's own MCP endpoint used to finalise the CRM record.
+        definition.Tools.Add(ResponseTool.CreateMcpTool(
+            serverLabel: McpServerLabel,
+            serverUri: new Uri(_options.WebAppMcpUrl),
+            toolCallApprovalPolicy: neverApprove));
+
+        // Knowledge Base and Work IQ MCP tools reached via a Foundry project
+        // connection. The connection id is a Foundry extension not modelled by
+        // the OpenAI tool type, so it is set through the tool's JSON patch.
+        foreach (var tool in _options.ConnectedTools)
+        {
+            var mcpTool = ResponseTool.CreateMcpTool(
+                serverLabel: tool.ServerLabel,
+                serverUri: new Uri(tool.ServerUrl),
+                toolCallApprovalPolicy: neverApprove);
+            mcpTool.Patch.Set("$.project_connection_id"u8, tool.ProjectConnectionId);
+            definition.Tools.Add(mcpTool);
+        }
+
+        if (_options.EnableWebSearch)
+        {
+            definition.Tools.Add(ResponseTool.CreateWebSearchTool());
+        }
 
         var version = await _projectClient!.AgentAdministrationClient.CreateAgentVersionAsync(
             _options.SalesCrmOnboardingAgentId,

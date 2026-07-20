@@ -79,6 +79,10 @@ header.app-header {
     background: #a4262c;
 }
 
+.btn-secondary {
+    background: #605e5c;
+}
+
 main {
     padding: 24px;
     max-width: 1100px;
@@ -141,4 +145,51 @@ main {
     border-radius: 12px;
     padding: 2px 10px;
     font-size: 0.8rem;
+}
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-overlay[hidden] {
+    display: none;
+}
+
+.modal-card {
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    padding: 24px;
+    width: 460px;
+    max-width: calc(100% - 32px);
+}
+
+.modal-title {
+    margin: 0 0 12px;
+    font-size: 1.15rem;
+    color: var(--d365-blue);
+}
+
+.modal-message {
+    margin: 0 0 20px;
+    white-space: pre-wrap;
+    line-height: 1.4;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.modal-actions .btn {
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
 }

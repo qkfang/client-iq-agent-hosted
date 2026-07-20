@@ -7,10 +7,7 @@
 <h1>@ViewData["Title"]</h1>
 <p>Prospective customers queued for onboarding. Onboarding invokes the Foundry <code>SalesCRMOnboarding</code> agent, which researches the company and finalises the CRM record via the <code>/mcp</code> endpoint.</p>
 
-@if (!string.IsNullOrEmpty(Model.Message))
-{
-    <p class="badge">@Model.Message</p>
-}
+@Html.AntiForgeryToken()
 
 <div class="entity-grid">
     <table class="entity-table">
@@ -29,26 +26,24 @@
         <tbody>
             @foreach (var candidate in Model.Candidates)
             {
-                <tr>
+                <tr data-candidate-row="@candidate.CandidateId">
                     <td>@candidate.CandidateId</td>
                     <td>@candidate.CompanyName</td>
                     <td>@candidate.LegalEntityType</td>
                     <td>@candidate.Industry</td>
                     <td>@candidate.Country</td>
                     <td>@candidate.ContactName (@candidate.ContactEmail)</td>
-                    <td>
+                    <td data-status-cell>
                         <span class="badge">@candidate.Status</span>
                         @if (!string.IsNullOrEmpty(candidate.CreatedCustomerId))
                         {
                             <a asp-page="/Details" asp-route-customerId="@candidate.CreatedCustomerId">@candidate.CreatedCustomerId</a>
                         }
                     </td>
-                    <td>
+                    <td data-action-cell>
                         @if (candidate.Status != "Onboarded")
                         {
-                            <form method="post" asp-page-handler="Onboard" asp-route-candidateId="@candidate.CandidateId">
-                                <button type="submit" class="btn btn-primary">Onboard</button>
-                            </form>
+                            <button type="button" class="btn btn-primary" data-onboard="@candidate.CandidateId">Onboard</button>
                         }
                     </td>
                 </tr>
@@ -56,3 +51,80 @@
         </tbody>
     </table>
 </div>
+
+<div id="onboard-modal" class="modal-overlay" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="onboard-modal-title">
+        <h2 id="onboard-modal-title" class="modal-title">Onboarding</h2>
+        <p id="onboard-modal-message" class="modal-message"></p>
+        <div class="modal-actions">
+            <a id="onboard-modal-link" class="btn btn-primary" href="/" hidden>View in Customers</a>
+            <button type="button" class="btn btn-secondary" data-modal-close>Close</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            const modal = document.getElementById('onboard-modal');
+            const title = document.getElementById('onboard-modal-title');
+            const message = document.getElementById('onboard-modal-message');
+            const link = document.getElementById('onboard-modal-link');
+
+            function showModal(text, isSuccess, customerId) {
+                title.textContent = isSuccess ? 'Onboarding complete' : 'Onboarding';
+                message.textContent = text;
+                if (isSuccess && customerId) {
+                    link.href = '/Details?customerId=' + encodeURIComponent(customerId);
+                    link.hidden = false;
+                } else {
+                    link.hidden = true;
+                }
+                modal.hidden = false;
+            }
+
+            function closeModal() { modal.hidden = true; }
+
+            modal.querySelector('[data-modal-close]').addEventListener('click', closeModal);
+            modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+
+            document.querySelectorAll('[data-onboard]').forEach(function (btn) {
+                btn.addEventListener('click', async function () {
+                    const candidateId = btn.getAttribute('data-onboard');
+                    btn.disabled = true;
+                    btn.textContent = 'Onboarding…';
+
+                    try {
+                        const res = await fetch('?handler=Onboard', {
+                            method: 'POST',
+                            headers: { 'RequestVerificationToken': token },
+                            body: new URLSearchParams({ candidateId })
+                        });
+                        const data = await res.json();
+
+                        showModal(data.message, data.success, data.customerId);
+
+                        if (data.success) {
+                            const row = document.querySelector('[data-candidate-row="' + candidateId + '"]');
+                            if (row) {
+                                row.querySelector('[data-status-cell]').innerHTML =
+                                    '<span class="badge">Onboarded</span> ' +
+                                    '<a href="/Details?customerId=' + encodeURIComponent(data.customerId) + '">' +
+                                    data.customerId + '</a>';
+                                row.querySelector('[data-action-cell]').innerHTML = '';
+                            }
+                        } else {
+                            btn.disabled = false;
+                            btn.textContent = 'Onboard';
+                        }
+                    } catch (err) {
+                        showModal('Onboarding request failed: ' + err.message, false);
+                        btn.disabled = false;
+                        btn.textContent = 'Onboard';
+                    }
+                });
+            });
+        })();
+    </script>
+}

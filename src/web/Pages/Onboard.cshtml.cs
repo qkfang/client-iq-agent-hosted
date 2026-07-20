@@ -18,9 +18,6 @@ public class OnboardModel : PageModel
 
     public IReadOnlyCollection<OnboardingCandidate> Candidates { get; private set; } = Array.Empty<OnboardingCandidate>();
 
-    [TempData]
-    public string? Message { get; set; }
-
     public void OnGet()
     {
         Candidates = _crmService.GetOnboardingCandidates();
@@ -31,10 +28,21 @@ public class OnboardModel : PageModel
         var candidate = _crmService.GetOnboardingCandidate(candidateId);
         if (candidate is null)
         {
-            return NotFound();
+            return new JsonResult(new { success = false, message = "Candidate not found." });
         }
 
-        Message = await _onboardingAgent.OnboardAsync(candidate, cancellationToken);
-        return RedirectToPage();
+        var message = await _onboardingAgent.OnboardAsync(candidate, cancellationToken);
+        var updated = _crmService.GetOnboardingCandidate(candidateId);
+        var success = string.Equals(updated?.Status, "Onboarded", StringComparison.OrdinalIgnoreCase)
+            && !string.IsNullOrEmpty(updated!.CreatedCustomerId);
+
+        return new JsonResult(new
+        {
+            success,
+            message,
+            candidateId,
+            companyName = candidate.CompanyName,
+            customerId = updated?.CreatedCustomerId
+        });
     }
 }
