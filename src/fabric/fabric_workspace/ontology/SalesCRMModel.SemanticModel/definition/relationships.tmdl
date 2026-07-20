@@ -15,6 +15,7 @@ relationship 5ac00000-0000-4000-8000-000000000004
 	toColumn: 'customer customer'.CustomerID
 
 relationship 5ac00000-0000-4000-8000-000000000005
+	isActive: false
 	fromColumn: 'salescrm tradingaccount'.CustomerID
 	toColumn: 'customer customer'.CustomerID
 
