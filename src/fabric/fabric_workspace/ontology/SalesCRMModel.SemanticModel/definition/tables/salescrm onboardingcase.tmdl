@@ -1,0 +1,104 @@
+table 'salescrm onboardingcase'
+	lineageTag: 5a200000-0000-4000-8000-000000000001
+
+	column CaseID
+		dataType: string
+		isNullable: false
+		sourceProviderType: varchar(8000)
+		lineageTag: 5a200000-0000-4000-8000-000000000002
+		summarizeBy: none
+		sourceColumn: CaseID
+
+		annotation SummarizationSetBy = Automatic
+
+	column CustomerID
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 5a200000-0000-4000-8000-000000000003
+		summarizeBy: none
+		sourceColumn: CustomerID
+
+		annotation SummarizationSetBy = Automatic
+
+	column RelationshipManagerID
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 5a200000-0000-4000-8000-000000000004
+		summarizeBy: none
+		sourceColumn: RelationshipManagerID
+
+		annotation SummarizationSetBy = Automatic
+
+	column BusinessLine
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 5a200000-0000-4000-8000-000000000005
+		summarizeBy: none
+		sourceColumn: BusinessLine
+
+		annotation SummarizationSetBy = Automatic
+
+	column CaseStatus
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 5a200000-0000-4000-8000-000000000006
+		summarizeBy: none
+		sourceColumn: CaseStatus
+
+		annotation SummarizationSetBy = Automatic
+
+	column Stage
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 5a200000-0000-4000-8000-000000000007
+		summarizeBy: none
+		sourceColumn: Stage
+
+		annotation SummarizationSetBy = Automatic
+
+	column OpenedDate
+		dataType: dateTime
+		formatString: Long Date
+		sourceProviderType: date
+		lineageTag: 5a200000-0000-4000-8000-000000000008
+		summarizeBy: none
+		sourceColumn: OpenedDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column TargetGoLiveDate
+		dataType: dateTime
+		formatString: Long Date
+		sourceProviderType: date
+		lineageTag: 5a200000-0000-4000-8000-000000000009
+		summarizeBy: none
+		sourceColumn: TargetGoLiveDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column ReadyToTradeDate
+		dataType: dateTime
+		formatString: Long Date
+		sourceProviderType: date
+		lineageTag: 5a200000-0000-4000-8000-00000000000a
+		summarizeBy: none
+		sourceColumn: ReadyToTradeDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	partition 'salescrm onboardingcase' = m
+		mode: directQuery
+		source =
+				let
+				    Source = Sql.Database(SQLEndpoint, DatabaseName),
+				    salescrm_onboardingcase = Source{[Schema="salescrm",Item="onboardingcase"]}[Data]
+				in
+				    salescrm_onboardingcase
+
+	annotation PBI_ResultType = Exception

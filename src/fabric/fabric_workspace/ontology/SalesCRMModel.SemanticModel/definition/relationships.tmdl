@@ -1,0 +1,35 @@
+relationship 5ac00000-0000-4000-8000-000000000001
+	fromColumn: 'salescrm tradingaccount'.CaseID
+	toColumn: 'salescrm onboardingcase'.CaseID
+
+relationship 5ac00000-0000-4000-8000-000000000002
+	fromColumn: 'salescrm onboardingcase'.RelationshipManagerID
+	toColumn: 'salescrm relationshipmanager'.RelationshipManagerID
+
+relationship 5ac00000-0000-4000-8000-000000000003
+	fromColumn: 'salescrm kycassessment'.CaseID
+	toColumn: 'salescrm onboardingcase'.CaseID
+
+relationship 5ac00000-0000-4000-8000-000000000004
+	fromColumn: 'salescrm onboardingcase'.CustomerID
+	toColumn: 'customer customer'.CustomerID
+
+relationship 5ac00000-0000-4000-8000-000000000005
+	fromColumn: 'salescrm tradingaccount'.CustomerID
+	toColumn: 'customer customer'.CustomerID
+
+relationship 5ac00000-0000-4000-8000-000000000006
+	fromColumn: 'customer customer'.CustomerRelationshipTypeID
+	toColumn: 'customer customerrelationshiptype'.CustomerRelationshipTypeID
+
+relationship 5ac00000-0000-4000-8000-000000000007
+	fromColumn: 'customer customeraccount'.CustomerID
+	toColumn: 'customer customer'.CustomerID
+
+relationship 5ac00000-0000-4000-8000-000000000008
+	fromColumn: 'customer customertradename'.CustomerID
+	toColumn: 'customer customer'.CustomerID
+
+relationship 5ac00000-0000-4000-8000-000000000009
+	fromColumn: 'customer location'.CustomerID
+	toColumn: 'customer customer'.CustomerID

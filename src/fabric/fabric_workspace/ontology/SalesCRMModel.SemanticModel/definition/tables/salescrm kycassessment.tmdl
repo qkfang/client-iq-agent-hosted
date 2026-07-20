@@ -1,0 +1,98 @@
+table 'salescrm kycassessment'
+	lineageTag: 5a300000-0000-4000-8000-000000000001
+
+	column KYCID
+		dataType: string
+		isNullable: false
+		sourceProviderType: varchar(8000)
+		lineageTag: 5a300000-0000-4000-8000-000000000002
+		summarizeBy: none
+		sourceColumn: KYCID
+
+		annotation SummarizationSetBy = Automatic
+
+	column CaseID
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 5a300000-0000-4000-8000-000000000003
+		summarizeBy: none
+		sourceColumn: CaseID
+
+		annotation SummarizationSetBy = Automatic
+
+	column RiskRating
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 5a300000-0000-4000-8000-000000000004
+		summarizeBy: none
+		sourceColumn: RiskRating
+
+		annotation SummarizationSetBy = Automatic
+
+	column SanctionsScreeningResult
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 5a300000-0000-4000-8000-000000000005
+		summarizeBy: none
+		sourceColumn: SanctionsScreeningResult
+
+		annotation SummarizationSetBy = Automatic
+
+	column PepScreeningResult
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 5a300000-0000-4000-8000-000000000006
+		summarizeBy: none
+		sourceColumn: PepScreeningResult
+
+		annotation SummarizationSetBy = Automatic
+
+	column AdverseMediaResult
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 5a300000-0000-4000-8000-000000000007
+		summarizeBy: none
+		sourceColumn: AdverseMediaResult
+
+		annotation SummarizationSetBy = Automatic
+
+	column ApprovalStatus
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 5a300000-0000-4000-8000-000000000008
+		summarizeBy: none
+		sourceColumn: ApprovalStatus
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReviewedBy
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 5a300000-0000-4000-8000-000000000009
+		summarizeBy: none
+		sourceColumn: ReviewedBy
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReviewedDate
+		dataType: dateTime
+		formatString: Long Date
+		sourceProviderType: date
+		lineageTag: 5a300000-0000-4000-8000-00000000000a
+		summarizeBy: none
+		sourceColumn: ReviewedDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	partition 'salescrm kycassessment' = m
+		mode: directQuery
+		source =
+				let
+				    Source = Sql.Database(SQLEndpoint, DatabaseName),
+				    salescrm_kycassessment = Source{[Schema="salescrm",Item="kycassessment"]}[Data]
+				in
+				    salescrm_kycassessment
+
+	annotation PBI_ResultType = Exception

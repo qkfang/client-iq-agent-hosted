@@ -1,0 +1,68 @@
+table 'salescrm relationshipmanager'
+	lineageTag: 5a100000-0000-4000-8000-000000000001
+
+	column RelationshipManagerID
+		dataType: string
+		isNullable: false
+		sourceProviderType: varchar(8000)
+		lineageTag: 5a100000-0000-4000-8000-000000000002
+		summarizeBy: none
+		sourceColumn: RelationshipManagerID
+
+		annotation SummarizationSetBy = Automatic
+
+	column FirstName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 5a100000-0000-4000-8000-000000000003
+		summarizeBy: none
+		sourceColumn: FirstName
+
+		annotation SummarizationSetBy = Automatic
+
+	column LastName
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 5a100000-0000-4000-8000-000000000004
+		summarizeBy: none
+		sourceColumn: LastName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Desk
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 5a100000-0000-4000-8000-000000000005
+		summarizeBy: none
+		sourceColumn: Desk
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 5a100000-0000-4000-8000-000000000006
+		summarizeBy: none
+		sourceColumn: Region
+
+		annotation SummarizationSetBy = Automatic
+
+	column Email
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 5a100000-0000-4000-8000-000000000007
+		summarizeBy: none
+		sourceColumn: Email
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'salescrm relationshipmanager' = m
+		mode: directQuery
+		source =
+				let
+				    Source = Sql.Database(SQLEndpoint, DatabaseName),
+				    salescrm_relationshipmanager = Source{[Schema="salescrm",Item="relationshipmanager"]}[Data]
+				in
+				    salescrm_relationshipmanager
+
+	annotation PBI_ResultType = Exception

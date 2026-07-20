@@ -1,0 +1,27 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: en-IN
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 1
+
+annotation PBI_QueryOrder = ["SQLEndpoint","DatabaseName","customer customer","customer customeraccount","customer customerrelationshiptype","customer customertradename","customer location","salescrm kycassessment","salescrm onboardingcase","salescrm relationshipmanager","salescrm tradingaccount"]
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table 'customer customer'
+ref table 'customer customeraccount'
+ref table 'customer customerrelationshiptype'
+ref table 'customer customertradename'
+ref table 'customer location'
+ref table 'salescrm kycassessment'
+ref table 'salescrm onboardingcase'
+ref table 'salescrm relationshipmanager'
+ref table 'salescrm tradingaccount'
+ref table SQLEndpoint
+ref table DatabaseName
+
+ref cultureInfo en-US

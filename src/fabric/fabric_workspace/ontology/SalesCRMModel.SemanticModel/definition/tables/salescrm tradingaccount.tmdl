@@ -1,0 +1,80 @@
+table 'salescrm tradingaccount'
+	lineageTag: 5a400000-0000-4000-8000-000000000001
+
+	column TradingAccountID
+		dataType: string
+		isNullable: false
+		sourceProviderType: varchar(8000)
+		lineageTag: 5a400000-0000-4000-8000-000000000002
+		summarizeBy: none
+		sourceColumn: TradingAccountID
+
+		annotation SummarizationSetBy = Automatic
+
+	column CustomerID
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 5a400000-0000-4000-8000-000000000003
+		summarizeBy: none
+		sourceColumn: CustomerID
+
+		annotation SummarizationSetBy = Automatic
+
+	column CaseID
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 5a400000-0000-4000-8000-000000000004
+		summarizeBy: none
+		sourceColumn: CaseID
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProductLine
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 5a400000-0000-4000-8000-000000000005
+		summarizeBy: none
+		sourceColumn: ProductLine
+
+		annotation SummarizationSetBy = Automatic
+
+	column AccountStatus
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 5a400000-0000-4000-8000-000000000006
+		summarizeBy: none
+		sourceColumn: AccountStatus
+
+		annotation SummarizationSetBy = Automatic
+
+	column OpenedDate
+		dataType: dateTime
+		formatString: Long Date
+		sourceProviderType: date
+		lineageTag: 5a400000-0000-4000-8000-000000000007
+		summarizeBy: none
+		sourceColumn: OpenedDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column IsoCurrencyCode
+		dataType: string
+		sourceProviderType: varchar(8000)
+		lineageTag: 5a400000-0000-4000-8000-000000000008
+		summarizeBy: none
+		sourceColumn: IsoCurrencyCode
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'salescrm tradingaccount' = m
+		mode: directQuery
+		source =
+				let
+				    Source = Sql.Database(SQLEndpoint, DatabaseName),
+				    salescrm_tradingaccount = Source{[Schema="salescrm",Item="tradingaccount"]}[Data]
+				in
+				    salescrm_tradingaccount
+
+	annotation PBI_ResultType = Exception
