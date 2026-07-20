@@ -27,6 +27,13 @@ if [ -n "$RESOURCE_GROUP" ] && [ -n "$DEPLOYMENT_NAME" ]; then
     CHAT_MODEL=${CHAT_MODEL:-$(echo "$outputs" | jq -r '.AZURE_OPENAI_DEPLOYMENT_MODEL.value // empty')}
 fi
 
+# Fall back to azd-provided environment variables (Bicep outputs) when the
+# deployment-output lookup above was skipped or returned nothing.
+SEARCH_ENDPOINT=${SEARCH_ENDPOINT:-$AZURE_AI_SEARCH_ENDPOINT}
+STORAGE_ACCOUNT_NAME=${STORAGE_ACCOUNT_NAME:-$AZURE_STORAGE_ACCOUNT_NAME}
+EMBEDDING_MODEL=${EMBEDDING_MODEL:-$AZURE_OPENAI_EMBEDDING_MODEL}
+CHAT_MODEL=${CHAT_MODEL:-$AZURE_OPENAI_DEPLOYMENT_MODEL}
+
 STORAGE_CONTAINER_NAME=${STORAGE_CONTAINER_NAME:-knowledge-base-example}
 KNOWLEDGE_SOURCE_NAME=${KNOWLEDGE_SOURCE_NAME:-hr-benefits-example}
 KNOWLEDGE_BASE_NAME=${KNOWLEDGE_BASE_NAME:-hr-benefits-example}

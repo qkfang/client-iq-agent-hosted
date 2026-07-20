@@ -114,7 +114,7 @@
 
 # MARKDOWN ********************
 
-# ### Create schema and tables for onboarding domain
+# ### Create schema and tables for salescrm domain
 
 # CELL ********************
 

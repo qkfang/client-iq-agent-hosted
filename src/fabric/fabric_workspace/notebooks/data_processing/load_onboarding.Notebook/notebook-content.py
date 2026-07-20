@@ -10,7 +10,7 @@
 
 # MARKDOWN ********************
 
-# # Onboarding Data Loading
+# # Sales CRM Data Loading
 # 
 # This notebook loads all Commodities & Global Markets onboarding CSV files from the lakehouse Files/data/onboarding directory into Delta tables.
 # 
@@ -26,7 +26,7 @@
 from pyspark.sql.functions import col
 
 # Schema Configuration
-SCHEMA_NAME = "onboarding"
+SCHEMA_NAME = "salescrm"
 DATA_PATH = "Files/data/onboarding"
 
 # Ensure schema exists
@@ -108,7 +108,7 @@ trading_account_count = trading_account_df.count()
 
 # Summary
 total_records = relationship_manager_count + onboarding_case_count + kyc_assessment_count + trading_account_count
-print(f"📊Onboarding schema: 4 tables, {total_records:,} records loaded")
+print(f"📊Sales CRM schema: 4 tables, {total_records:,} records loaded")
 print(f"   - RelationshipManager: {relationship_manager_count:,} records")
 print(f"   - OnboardingCase: {onboarding_case_count:,} records")
 print(f"   - KYCAssessment: {kyc_assessment_count:,} records")

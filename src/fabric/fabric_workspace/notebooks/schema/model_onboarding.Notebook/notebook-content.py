@@ -10,7 +10,7 @@
 
 # MARKDOWN ********************
 
-# # Data Model for Commodities & Global Markets Onboarding
+# # Data Model for Sales CRM
 # 
 # ## Schema Structure
 # - **Onboarding & Relationship Management (4 tables)**:
@@ -26,7 +26,7 @@
 ################################################################################################
 
 # Schema Configuration
-SCHEMA_NAME = "onboarding"
+SCHEMA_NAME = "salescrm"
 spark.sql(f"CREATE DATABASE IF NOT EXISTS {SCHEMA_NAME}")
 print(f"✅ {SCHEMA_NAME} schema ready!")
 

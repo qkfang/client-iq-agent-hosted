@@ -10,13 +10,13 @@
 # 
 # **⚠️ WARNING**: This operation removes ALL data from ALL tables. Use only in development/testing environments.
 # 
-# **Schemas**: customer, product, sales, finance, inventory, supplychain, onboarding, shared
+# **Schemas**: customer, product, sales, finance, inventory, supplychain, salescrm, shared
 
 # CELL ********************
 
 # Display warning and confirm operation
 print("⚠️  WARNING: This operation will remove ALL DATA from ALL TABLES")
-print("📋 Schemas to be truncated: customer, product, sales, finance, inventory, supplychain, onboarding, shared")
+print("📋 Schemas to be truncated: customer, product, sales, finance, inventory, supplychain, salescrm, shared")
 print("🔄 Table structures will be preserved")
 print("")
 
@@ -142,23 +142,23 @@ print("✅ Supply Chain schema truncation complete!")
 
 # MARKDOWN ********************
 
-# ### Truncate Onboarding Schema Tables
+# ### Truncate Sales CRM Schema Tables
 
 # CELL ********************
 
-print("🤝 Truncating Onboarding schema tables...")
+print("🤝 Truncating Sales CRM schema tables...")
 
-# Onboarding schema tables
-onboarding_tables = ['RelationshipManager', 'OnboardingCase', 'KYCAssessment', 'TradingAccount']
+# Sales CRM schema tables
+salescrm_tables = ['RelationshipManager', 'OnboardingCase', 'KYCAssessment', 'TradingAccount']
 
-for table in onboarding_tables:
+for table in salescrm_tables:
     try:
-        spark.sql(f"TRUNCATE TABLE onboarding.{table}")
-        print(f"   ✅ onboarding.{table} truncated")
+        spark.sql(f"TRUNCATE TABLE salescrm.{table}")
+        print(f"   ✅ salescrm.{table} truncated")
     except Exception as e:
-        print(f"   ❌ Error truncating onboarding.{table}: {str(e)}")
+        print(f"   ❌ Error truncating salescrm.{table}: {str(e)}")
 
-print("✅ Onboarding schema truncation complete!")
+print("✅ Sales CRM schema truncation complete!")
 
 # MARKDOWN ********************
 

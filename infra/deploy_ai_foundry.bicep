@@ -75,6 +75,8 @@ var aiSearchName = '${abbrs.ai.aiSearch}${solutionSuffix}'
 // Storage account names must be 3-24 chars, all lowercase, no special chars
 var storageName = take(toLower(replace('${abbrs.storage.storageAccount}${solutionSuffix}', '-', '')), 24)
 var aiSearchConnectionName = '${abbrs.ai.aiSearch}con-${solutionSuffix}'
+var bingAccountName = 'bing-${solutionSuffix}'
+var bingConnectionName = 'bingcon-${solutionSuffix}'
 
 var aiModelDeployments = concat([
   {
@@ -274,6 +276,39 @@ resource searchConnection 'Microsoft.CognitiveServices/accounts/projects/connect
     metadata: {
       ApiType: 'Azure'
       ResourceId: aiSearch.id
+    }
+  }
+}
+
+// Bing Grounding account
+resource bingAccount 'Microsoft.Bing/accounts@2020-06-10' = {
+  name: bingAccountName
+  location: 'global'
+  sku: {
+    name: 'G1'
+  }
+  kind: 'Bing.Grounding'
+  properties: {
+    statisticsEnabled: false
+  }
+}
+
+// Connect Bing Grounding to Project
+resource bingConnection 'Microsoft.CognitiveServices/accounts/projects/connections@2025-04-01-preview' = if (empty(azureExistingAIProjectResourceId)) {
+  parent: aiProject
+  name: bingConnectionName
+  properties: {
+    category: 'GroundingWithBingSearch'
+    target: bingAccount.properties.endpoint
+    authType: 'ApiKey'
+    isSharedToAll: true
+    credentials: {
+      key: bingAccount.listKeys().key1
+    }
+    metadata: {
+      ApiType: 'Azure'
+      ResourceId: bingAccount.id
+      location: 'global'
     }
   }
 }
@@ -635,6 +670,12 @@ output aiSearchConnectionName string = aiSearchConnectionName
 
 @description('The resource ID of the AI Search connection.')
 output aiSearchConnectionId string = empty(azureExistingAIProjectResourceId) ? searchConnection.id : ''
+
+@description('The name of the Bing Grounding account.')
+output bingAccountName string = bingAccount.name
+
+@description('The name of the Bing Grounding connection.')
+output bingConnectionName string = bingConnectionName
 
 @description('The name of the Log Analytics workspace.')
 output logAnalyticsWorkspaceResourceName string = useExisting ? existingLogAnalyticsWorkspace.name : logAnalytics.name

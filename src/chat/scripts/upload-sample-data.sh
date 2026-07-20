@@ -1,7 +1,11 @@
 #!/bin/bash
 
-# Upload sample data to Azure Storage and create sample search index
-# This script should be run after the Bicep deployment completes
+# Upload a sample PDF to Blob Storage and create a small sample search index.
+# Uses Microsoft Entra ID (RBAC) auth for both Storage and Azure AI Search, so
+# no account keys are required.
+#
+# Reads configuration from the azd environment (Bicep outputs), with plain
+# environment-variable fallbacks so the script can also be run standalone.
 
 set -e
 
@@ -10,20 +14,20 @@ echo "Azure AI Search - Sample Data Setup"
 echo "======================================"
 echo ""
 
-# Check if required parameters are provided
-if [ -z "$STORAGE_ACCOUNT_NAME" ] || [ -z "$STORAGE_CONTAINER_NAME" ] || [ -z "$SEARCH_ENDPOINT" ] || [ -z "$SEARCH_ADMIN_KEY" ]; then
-    echo "Error: Required environment variables not set."
-    echo ""
-    echo "Usage: Set the following environment variables before running:"
-    echo "  export STORAGE_ACCOUNT_NAME='your-storage-account'"
-    echo "  export STORAGE_CONTAINER_NAME='sample-documents'"
-    echo "  export SEARCH_ENDPOINT='https://your-search.search.windows.net'"
-    echo "  export SEARCH_ADMIN_KEY='your-admin-key'"
-    echo ""
-    echo "Or pass them from Bicep outputs:"
-    echo "  export STORAGE_ACCOUNT_NAME=\$(az deployment group show -g <rg> -n <deployment> --query properties.outputs.storageAccountName.value -o tsv)"
+# Resolve configuration from azd-provided environment variables, with fallbacks.
+STORAGE_ACCOUNT_NAME="${STORAGE_ACCOUNT_NAME:-$AZURE_STORAGE_ACCOUNT_NAME}"
+STORAGE_CONTAINER_NAME="${STORAGE_CONTAINER_NAME:-sample-documents}"
+SEARCH_ENDPOINT="${SEARCH_ENDPOINT:-$AZURE_AI_SEARCH_ENDPOINT}"
+SEARCH_API_VERSION="${SEARCH_API_VERSION:-2023-11-01}"
+
+if [ -z "$STORAGE_ACCOUNT_NAME" ] || [ -z "$SEARCH_ENDPOINT" ]; then
+    echo "Error: Required configuration not resolved."
+    echo "  Set STORAGE_ACCOUNT_NAME (or AZURE_STORAGE_ACCOUNT_NAME)"
+    echo "  and SEARCH_ENDPOINT (or AZURE_AI_SEARCH_ENDPOINT)."
     exit 1
 fi
+
+SEARCH_TOKEN=$(az account get-access-token --resource https://search.azure.com --query accessToken -o tsv)
 
 echo "Configuration:"
 echo "  Storage Account: $STORAGE_ACCOUNT_NAME"
@@ -49,6 +53,12 @@ fi
 # Step 2: Upload PDF to Azure Blob Storage
 echo ""
 echo "[2/4] Uploading PDF to Azure Blob Storage..."
+az storage container create \
+    --account-name "$STORAGE_ACCOUNT_NAME" \
+    --name "$STORAGE_CONTAINER_NAME" \
+    --auth-mode login \
+    --output none
+
 az storage blob upload \
     --account-name "$STORAGE_ACCOUNT_NAME" \
     --container-name "$STORAGE_CONTAINER_NAME" \
@@ -101,9 +111,9 @@ HOTELS_INDEX_SCHEMA='{
   }
 }'
 
-curl -X PUT "$SEARCH_ENDPOINT/indexes/hotels-sample?api-version=2023-11-01" \
+curl -X PUT "$SEARCH_ENDPOINT/indexes/hotels-sample?api-version=$SEARCH_API_VERSION" \
     -H "Content-Type: application/json" \
-    -H "api-key: $SEARCH_ADMIN_KEY" \
+    -H "Authorization: Bearer $SEARCH_TOKEN" \
     -d "$HOTELS_INDEX_SCHEMA"
 
 echo "✓ Created hotels-sample index"
@@ -168,9 +178,9 @@ HOTELS_DATA='{
   ]
 }'
 
-curl -X POST "$SEARCH_ENDPOINT/indexes/hotels-sample/docs/index?api-version=2023-11-01" \
+curl -X POST "$SEARCH_ENDPOINT/indexes/hotels-sample/docs/index?api-version=$SEARCH_API_VERSION" \
     -H "Content-Type: application/json" \
-    -H "api-key: $SEARCH_ADMIN_KEY" \
+    -H "Authorization: Bearer $SEARCH_TOKEN" \
     -d "$HOTELS_DATA"
 
 echo "✓ Uploaded 3 sample hotels"
