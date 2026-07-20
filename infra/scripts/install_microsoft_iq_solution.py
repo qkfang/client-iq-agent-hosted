@@ -18,9 +18,12 @@ It performs the following steps to bootstrap the solution:
     6. setup_administrators   - Add workspace administrators
     7. upload_installer       - Upload the installer notebook to the workspace
     8. run_installer          - Execute the installer notebook end-to-end
-    9. deploy_hosted_agent    - Build and deploy the hosted Foundry agent
+    9. deploy_hosted_agent    - Build and deploy the hosted Foundry agents
                                 (optional; runs only when
-                                AZURE_CONTAINER_REGISTRY_NAME is set)
+                                AZURE_CONTAINER_REGISTRY_NAME is set). Deploys
+                                both the knowledge-base agent (src/hosted) and
+                                the Copilot Studio proxy agent
+                                (src/hosted-agent-cps).
 
 The installer notebook (fabric_solution_installer.ipynb) handles the remaining
 solution-specific steps (lakehouse creation, data ingestion, notebook deployment,
@@ -77,10 +80,20 @@ Environment Variables:
     AZURE_CONTAINER_REGISTRY_NAME        (optional) Azure Container Registry name. When set, the
                                                     hosted Foundry agent is built and deployed as a
                                                     final step. When unset, that step is skipped.
-    HOSTED_AGENT_IMAGE_TAG               (optional) Tag applied to the hosted agent image.
-                                                    Defaults to "latest".
     HOSTED_AGENT_CPU                     (optional) Hosted agent CPU allocation. Defaults to "0.5".
     HOSTED_AGENT_MEMORY                  (optional) Hosted agent memory allocation. Defaults to "1.0Gi".
+
+    The following variables configure the Copilot Studio proxy agent
+    (src/hosted-agent-cps). Values are read from the process/azd environment,
+    falling back to src/hosted-agent-cps/.env. All five must resolve for that
+    agent to be deployed; when any is missing the CPS agent deploy is skipped:
+
+    ENVIRONMENT_ID                       Power Platform environment ID hosting the
+                                         Copilot Studio agent.
+    AGENT_IDENTIFIER                     Copilot Studio agent schema name / identifier.
+    AZURE_TENANT_ID                      Microsoft Entra tenant ID of the app registration.
+    AZURE_CLIENT_ID                      App registration client ID.
+    AZURE_CLIENT_SECRET                  App registration client secret.
 """
 
 import logging
@@ -107,6 +120,7 @@ from common.config import REPO_ROOT, SOLUTION_NAME, default_workspace_name
 from common.env_utils import (
     get_required_env_var,
     parse_workspace_administrators,
+    read_env_file,
     set_azd_env_var,
 )
 from common.step_printer import print_step, print_steps_summary
@@ -125,7 +139,7 @@ from foundry.step_agent_setup import setup_agent
 from foundry.step_knowledge_base import setup_knowledge_base
 from foundry.step_onboarding_agent_setup import setup_onboarding_agent
 from foundry.step_pipeline_agents_setup import setup_pipeline_agents
-from hosted.step_hosted_agent_deploy import deploy_hosted_agent
+from hosted.step_hosted_agent_deploy import deploy_cps_hosted_agent, deploy_hosted_agent
 
 
 # ---------------------------------------------------------------------------
@@ -142,6 +156,7 @@ ALL_DEPLOYMENT_STEPS = [
     "upload_installer",
     "run_installer",
     "deploy_hosted_agent",
+    "deploy_cps_hosted_agent",
 ]
 
 
@@ -299,234 +314,234 @@ def main() -> None:
     # ------------------------------------------------------------------
     # Step 1 – Set up AI Search knowledge base (Foundry IQ)
     # ------------------------------------------------------------------
-    print_step(1, 9, "Setting up AI Search knowledge base and Foundry IQ",
-               search_endpoint=search_endpoint,
-               index=search_index_name,
-               knowledge_base=knowledge_base_name)
-    try:
-        setup_knowledge_base(
-            solution_name=SOLUTION_NAME,
-            search_endpoint=search_endpoint,
-            blob_endpoint=blob_endpoint,
-            ai_endpoint=ai_endpoint,
-            search_index_name=search_index_name,
-            blob_container_name=blob_container_name,
-            knowledge_source_name=knowledge_source_name,
-            knowledge_base_name=knowledge_base_name,
-            embedding_model=embedding_model,
-            chat_model=chat_model,
-        )
-        logger.info("   Setting up customer onboarding knowledge base…")
-        setup_knowledge_base(
-            solution_name=f"{SOLUTION_NAME} Onboarding",
-            search_endpoint=search_endpoint,
-            blob_endpoint=blob_endpoint,
-            ai_endpoint=ai_endpoint,
-            search_index_name=onboarding_search_index_name,
-            blob_container_name=onboarding_blob_container_name,
-            knowledge_source_name=onboarding_knowledge_source_name,
-            knowledge_base_name=onboarding_knowledge_base_name,
-            embedding_model=embedding_model,
-            chat_model=chat_model,
-            docs_subdir="documents_onboarding",
-        )
-        logger.info("Successfully completed: setup_knowledge_base")
-        executed_steps.append("setup_knowledge_base")
-    except Exception as exc:
-        _abort("setup_knowledge_base", exc)
+    # print_step(1, 9, "Setting up AI Search knowledge base and Foundry IQ",
+    #            search_endpoint=search_endpoint,
+    #            index=search_index_name,
+    #            knowledge_base=knowledge_base_name)
+    # try:
+    #     setup_knowledge_base(
+    #         solution_name=SOLUTION_NAME,
+    #         search_endpoint=search_endpoint,
+    #         blob_endpoint=blob_endpoint,
+    #         ai_endpoint=ai_endpoint,
+    #         search_index_name=search_index_name,
+    #         blob_container_name=blob_container_name,
+    #         knowledge_source_name=knowledge_source_name,
+    #         knowledge_base_name=knowledge_base_name,
+    #         embedding_model=embedding_model,
+    #         chat_model=chat_model,
+    #     )
+    #     logger.info("   Setting up customer onboarding knowledge base…")
+    #     setup_knowledge_base(
+    #         solution_name=f"{SOLUTION_NAME} Onboarding",
+    #         search_endpoint=search_endpoint,
+    #         blob_endpoint=blob_endpoint,
+    #         ai_endpoint=ai_endpoint,
+    #         search_index_name=onboarding_search_index_name,
+    #         blob_container_name=onboarding_blob_container_name,
+    #         knowledge_source_name=onboarding_knowledge_source_name,
+    #         knowledge_base_name=onboarding_knowledge_base_name,
+    #         embedding_model=embedding_model,
+    #         chat_model=chat_model,
+    #         docs_subdir="documents_onboarding",
+    #     )
+    #     logger.info("Successfully completed: setup_knowledge_base")
+    #     executed_steps.append("setup_knowledge_base")
+    # except Exception as exc:
+    #     _abort("setup_knowledge_base", exc)
 
-    # ------------------------------------------------------------------
-    # Step 2 – Create AI Foundry agent (Knowledge Base MCP tool)
-    #
-    # Best-effort: the Foundry agents API is platform-dependent and
-    # occasionally returns transient errors (e.g. ``(NotFound) Project not
-    # found``) even when the underlying agent is created.  We log any
-    # exception as a warning, record it for the final summary, and continue
-    # with the deployment.
-    # ------------------------------------------------------------------
-    print_step(2, 9, "Creating AI Foundry agent with Knowledge Base MCP tool",
-               agent_endpoint=agent_endpoint,
-               knowledge_base=knowledge_base_name,
-               connection=kb_mcp_connection_name)
-    try:
-        setup_agent(
-            solution_name=SOLUTION_NAME,
-            agent_endpoint=agent_endpoint,
-            agent_model=agent_model,
-            search_endpoint=search_endpoint,
-            search_index_name=search_index_name,
-            knowledge_base_name=knowledge_base_name,
-            kb_mcp_connection_name=kb_mcp_connection_name,
-            subscription_id=subscription_id,
-            resource_group=resource_group,
-            ai_service_name=ai_service_name,
-            ai_project_name=ai_project_name,
-        )
-        logger.info("   Creating onboarding agent with Knowledge Base MCP tool…")
-        setup_agent(
-            solution_name=f"{SOLUTION_NAME} Onboarding",
-            agent_endpoint=agent_endpoint,
-            agent_model=agent_model,
-            search_endpoint=search_endpoint,
-            search_index_name=onboarding_search_index_name,
-            knowledge_base_name=onboarding_knowledge_base_name,
-            kb_mcp_connection_name=onboarding_kb_mcp_connection_name,
-            subscription_id=subscription_id,
-            resource_group=resource_group,
-            ai_service_name=ai_service_name,
-            ai_project_name=ai_project_name,
-            agent_name=ONBOARDING_AGENT_NAME,
-            scenario_desc="Guiding new-client onboarding: entity resolution, KYC/AML screening, document validation and account setup.",
-        )
-        logger.info("Successfully completed: setup_agent")
-        executed_steps.append("setup_agent")
-    except Exception as exc:
-        _warn_step(
-            "setup_agent",
-            exc,
-            guidance=(
-                "This is often caused by a transient platform-level issue "
-                "with the AI Foundry agents API and may not indicate a real "
-                "failure. Please open the AI Foundry project and verify "
-                "whether the agent was created. If it was not, re-run the "
-                "deployment."
-            ),
-        )
+    # # ------------------------------------------------------------------
+    # # Step 2 – Create AI Foundry agent (Knowledge Base MCP tool)
+    # #
+    # # Best-effort: the Foundry agents API is platform-dependent and
+    # # occasionally returns transient errors (e.g. ``(NotFound) Project not
+    # # found``) even when the underlying agent is created.  We log any
+    # # exception as a warning, record it for the final summary, and continue
+    # # with the deployment.
+    # # ------------------------------------------------------------------
+    # print_step(2, 9, "Creating AI Foundry agent with Knowledge Base MCP tool",
+    #            agent_endpoint=agent_endpoint,
+    #            knowledge_base=knowledge_base_name,
+    #            connection=kb_mcp_connection_name)
+    # try:
+    #     setup_agent(
+    #         solution_name=SOLUTION_NAME,
+    #         agent_endpoint=agent_endpoint,
+    #         agent_model=agent_model,
+    #         search_endpoint=search_endpoint,
+    #         search_index_name=search_index_name,
+    #         knowledge_base_name=knowledge_base_name,
+    #         kb_mcp_connection_name=kb_mcp_connection_name,
+    #         subscription_id=subscription_id,
+    #         resource_group=resource_group,
+    #         ai_service_name=ai_service_name,
+    #         ai_project_name=ai_project_name,
+    #     )
+    #     logger.info("   Creating onboarding agent with Knowledge Base MCP tool…")
+    #     setup_agent(
+    #         solution_name=f"{SOLUTION_NAME} Onboarding",
+    #         agent_endpoint=agent_endpoint,
+    #         agent_model=agent_model,
+    #         search_endpoint=search_endpoint,
+    #         search_index_name=onboarding_search_index_name,
+    #         knowledge_base_name=onboarding_knowledge_base_name,
+    #         kb_mcp_connection_name=onboarding_kb_mcp_connection_name,
+    #         subscription_id=subscription_id,
+    #         resource_group=resource_group,
+    #         ai_service_name=ai_service_name,
+    #         ai_project_name=ai_project_name,
+    #         agent_name=ONBOARDING_AGENT_NAME,
+    #         scenario_desc="Guiding new-client onboarding: entity resolution, KYC/AML screening, document validation and account setup.",
+    #     )
+    #     logger.info("Successfully completed: setup_agent")
+    #     executed_steps.append("setup_agent")
+    # except Exception as exc:
+    #     _warn_step(
+    #         "setup_agent",
+    #         exc,
+    #         guidance=(
+    #             "This is often caused by a transient platform-level issue "
+    #             "with the AI Foundry agents API and may not indicate a real "
+    #             "failure. Please open the AI Foundry project and verify "
+    #             "whether the agent was created. If it was not, re-run the "
+    #             "deployment."
+    #         ),
+    #     )
 
-    # ------------------------------------------------------------------
-    # Step 3 – Create OnboardingAgent (Knowledge Base MCP tool)
-    #
-    # Best-effort, same rationale as setup_agent above.
-    # ------------------------------------------------------------------
-    print_step(3, 9, "Creating OnboardingAgent with Knowledge Base MCP tool",
-               agent_endpoint=agent_endpoint,
-               knowledge_base=knowledge_base_name,
-               connection=kb_mcp_connection_name)
-    try:
-        setup_onboarding_agent(
-            solution_name=SOLUTION_NAME,
-            agent_endpoint=agent_endpoint,
-            agent_model=agent_model,
-            search_endpoint=search_endpoint,
-            knowledge_base_name=knowledge_base_name,
-            kb_mcp_connection_name=kb_mcp_connection_name,
-            subscription_id=subscription_id,
-            resource_group=resource_group,
-            ai_service_name=ai_service_name,
-            ai_project_name=ai_project_name,
-        )
-        logger.info("Successfully completed: setup_onboarding_agent")
-        executed_steps.append("setup_onboarding_agent")
-    except Exception as exc:
-        _warn_step(
-            "setup_onboarding_agent",
-            exc,
-            guidance=(
-                "This is often caused by a transient platform-level issue "
-                "with the AI Foundry agents API and may not indicate a real "
-                "failure. Please open the AI Foundry project and verify "
-                "whether the agent was created. If it was not, re-run the "
-                "deployment."
-            ),
-        )
+    # # ------------------------------------------------------------------
+    # # Step 3 – Create OnboardingAgent (Knowledge Base MCP tool)
+    # #
+    # # Best-effort, same rationale as setup_agent above.
+    # # ------------------------------------------------------------------
+    # print_step(3, 9, "Creating OnboardingAgent with Knowledge Base MCP tool",
+    #            agent_endpoint=agent_endpoint,
+    #            knowledge_base=knowledge_base_name,
+    #            connection=kb_mcp_connection_name)
+    # try:
+    #     setup_onboarding_agent(
+    #         solution_name=SOLUTION_NAME,
+    #         agent_endpoint=agent_endpoint,
+    #         agent_model=agent_model,
+    #         search_endpoint=search_endpoint,
+    #         knowledge_base_name=knowledge_base_name,
+    #         kb_mcp_connection_name=kb_mcp_connection_name,
+    #         subscription_id=subscription_id,
+    #         resource_group=resource_group,
+    #         ai_service_name=ai_service_name,
+    #         ai_project_name=ai_project_name,
+    #     )
+    #     logger.info("Successfully completed: setup_onboarding_agent")
+    #     executed_steps.append("setup_onboarding_agent")
+    # except Exception as exc:
+    #     _warn_step(
+    #         "setup_onboarding_agent",
+    #         exc,
+    #         guidance=(
+    #             "This is often caused by a transient platform-level issue "
+    #             "with the AI Foundry agents API and may not indicate a real "
+    #             "failure. Please open the AI Foundry project and verify "
+    #             "whether the agent was created. If it was not, re-run the "
+    #             "deployment."
+    #         ),
+    #     )
 
-    # ------------------------------------------------------------------
-    # Step 4 – Create onboarding-form pipeline agents (Intake, Orchestrator,
-    # Opportunity, Insight, Crm, Lego)
-    #
-    # Best-effort, same rationale as setup_agent above.
-    # ------------------------------------------------------------------
-    print_step(4, 9, "Creating onboarding-form pipeline agents", agent_endpoint=agent_endpoint)
-    try:
-        setup_pipeline_agents(
-            solution_name=SOLUTION_NAME,
-            agent_endpoint=agent_endpoint,
-            agent_model=agent_model,
-        )
-        logger.info("Successfully completed: setup_pipeline_agents")
-        executed_steps.append("setup_pipeline_agents")
-    except Exception as exc:
-        _warn_step(
-            "setup_pipeline_agents",
-            exc,
-            guidance=(
-                "This is often caused by a transient platform-level issue "
-                "with the AI Foundry agents API and may not indicate a real "
-                "failure. Please open the AI Foundry project and verify "
-                "whether the agents were created. If not, re-run the "
-                "deployment."
-            ),
-        )
+    # # ------------------------------------------------------------------
+    # # Step 4 – Create onboarding-form pipeline agents (Intake, Orchestrator,
+    # # Opportunity, Insight, Crm, Lego)
+    # #
+    # # Best-effort, same rationale as setup_agent above.
+    # # ------------------------------------------------------------------
+    # print_step(4, 9, "Creating onboarding-form pipeline agents", agent_endpoint=agent_endpoint)
+    # try:
+    #     setup_pipeline_agents(
+    #         solution_name=SOLUTION_NAME,
+    #         agent_endpoint=agent_endpoint,
+    #         agent_model=agent_model,
+    #     )
+    #     logger.info("Successfully completed: setup_pipeline_agents")
+    #     executed_steps.append("setup_pipeline_agents")
+    # except Exception as exc:
+    #     _warn_step(
+    #         "setup_pipeline_agents",
+    #         exc,
+    #         guidance=(
+    #             "This is often caused by a transient platform-level issue "
+    #             "with the AI Foundry agents API and may not indicate a real "
+    #             "failure. Please open the AI Foundry project and verify "
+    #             "whether the agents were created. If not, re-run the "
+    #             "deployment."
+    #         ),
+    #     )
 
-    # ------------------------------------------------------------------
-    # Step 5 – Set up Fabric workspace
-    # ------------------------------------------------------------------
-    print_step(5, 9, "Setting up Fabric workspace and capacity assignment",
-               capacity_name=capacity_name, workspace_name=workspace_name)
-    try:
-        workspace_id = setup_workspace(
-            fabric_client=fabric_client,
-            capacity_name=capacity_name,
-            workspace_name=workspace_name,
-            subscription_id=subscription_id,
-            resource_group=resource_group,
-        )
-        logger.info("Successfully completed: setup_workspace")
-        executed_steps.append("setup_workspace")
-        # Persist for downstream automation (e.g. CI deployment summary).
-        set_azd_env_var("FABRIC_WORKSPACE_ID", workspace_id)
-        set_azd_env_var("FABRIC_WORKSPACE_NAME", workspace_name)
-    except Exception as exc:
-        _abort("setup_workspace", exc)
+    # # ------------------------------------------------------------------
+    # # Step 5 – Set up Fabric workspace
+    # # ------------------------------------------------------------------
+    # print_step(5, 9, "Setting up Fabric workspace and capacity assignment",
+    #            capacity_name=capacity_name, workspace_name=workspace_name)
+    # try:
+    #     workspace_id = setup_workspace(
+    #         fabric_client=fabric_client,
+    #         capacity_name=capacity_name,
+    #         workspace_name=workspace_name,
+    #         subscription_id=subscription_id,
+    #         resource_group=resource_group,
+    #     )
+    #     logger.info("Successfully completed: setup_workspace")
+    #     executed_steps.append("setup_workspace")
+    #     # Persist for downstream automation (e.g. CI deployment summary).
+    #     set_azd_env_var("FABRIC_WORKSPACE_ID", workspace_id)
+    #     set_azd_env_var("FABRIC_WORKSPACE_NAME", workspace_name)
+    # except Exception as exc:
+    #     _abort("setup_workspace", exc)
 
-    # Workspace-scoped client required for all subsequent steps
-    logger.info("\nCreating workspace-scoped Fabric API client…")
-    try:
-        workspace_client = create_workspace_fabric_client(workspace_id)
-        logger.info("   Workspace client authenticated")
-    except Exception as exc:
-        _abort("create_workspace_client", exc)
+    # # Workspace-scoped client required for all subsequent steps
+    # logger.info("\nCreating workspace-scoped Fabric API client…")
+    # try:
+    #     workspace_client = create_workspace_fabric_client(workspace_id)
+    #     logger.info("   Workspace client authenticated")
+    # except Exception as exc:
+    #     _abort("create_workspace_client", exc)
 
-    # ------------------------------------------------------------------
-    # Step 5 – Configure workspace administrators
-    # ------------------------------------------------------------------
-    admin_display = ", ".join(workspace_administrators) if workspace_administrators else "None"
-    print_step(6, 9, "Configuring workspace administrators",
-               workspace_id=workspace_id, administrators=admin_display)
-    try:
-        setup_workspace_administrators(
-            workspace_client=workspace_client,
-            fabric_admins=workspace_administrators or [],
-            graph_client=graph_client,
-        )
-        logger.info("Successfully completed: setup_administrators")
-        executed_steps.append("setup_administrators")
-    except Exception as exc:
-        _abort("setup_administrators", exc)
+    # # ------------------------------------------------------------------
+    # # Step 5 – Configure workspace administrators
+    # # ------------------------------------------------------------------
+    # admin_display = ", ".join(workspace_administrators) if workspace_administrators else "None"
+    # print_step(6, 9, "Configuring workspace administrators",
+    #            workspace_id=workspace_id, administrators=admin_display)
+    # try:
+    #     setup_workspace_administrators(
+    #         workspace_client=workspace_client,
+    #         fabric_admins=workspace_administrators or [],
+    #         graph_client=graph_client,
+    #     )
+    #     logger.info("Successfully completed: setup_administrators")
+    #     executed_steps.append("setup_administrators")
+    # except Exception as exc:
+    #     _abort("setup_administrators", exc)
 
-    # ------------------------------------------------------------------
-    # Step 6 – Upload installer notebook
-    # ------------------------------------------------------------------
-    print_step(7, 9, "Uploading installer notebook",
-               notebook=INSTALLER_NOTEBOOK_NAME)
-    try:
-        notebook_id = upload_installer_notebook(workspace_client, notebook_path, github_token=github_token)
-        logger.info("Successfully completed: upload_installer")
-        executed_steps.append("upload_installer")
-    except Exception as exc:
-        _abort("upload_installer", exc)
+    # # ------------------------------------------------------------------
+    # # Step 6 – Upload installer notebook
+    # # ------------------------------------------------------------------
+    # print_step(7, 9, "Uploading installer notebook",
+    #            notebook=INSTALLER_NOTEBOOK_NAME)
+    # try:
+    #     notebook_id = upload_installer_notebook(workspace_client, notebook_path, github_token=github_token)
+    #     logger.info("Successfully completed: upload_installer")
+    #     executed_steps.append("upload_installer")
+    # except Exception as exc:
+    #     _abort("upload_installer", exc)
 
-    # ------------------------------------------------------------------
-    # Step 7 – Run installer notebook
-    # ------------------------------------------------------------------
-    print_step(8, 9, "Running installer notebook",
-               notebook_id=notebook_id)
-    try:
-        run_installer_notebook(workspace_client, notebook_id)
-        logger.info("Successfully completed: run_installer")
-        executed_steps.append("run_installer")
-    except Exception as exc:
-        _abort("run_installer", exc)
+    # # ------------------------------------------------------------------
+    # # Step 7 – Run installer notebook
+    # # ------------------------------------------------------------------
+    # print_step(8, 9, "Running installer notebook",
+    #            notebook_id=notebook_id)
+    # try:
+    #     run_installer_notebook(workspace_client, notebook_id)
+    #     logger.info("Successfully completed: run_installer")
+    #     executed_steps.append("run_installer")
+    # except Exception as exc:
+    #     _abort("run_installer", exc)
 
     # ------------------------------------------------------------------
     # Step 8 – Deploy hosted Foundry agent (optional)
@@ -556,7 +571,6 @@ def main() -> None:
                 ai_service_name=ai_service_name,
                 ai_project_name=ai_project_name,
                 container_registry_name=container_registry_name,
-                image_tag=os.getenv("HOSTED_AGENT_IMAGE_TAG", "latest"),
                 source_dir=os.path.join(REPO_ROOT, "src", "hosted"),
                 cpu=os.getenv("HOSTED_AGENT_CPU", "0.5"),
                 memory=os.getenv("HOSTED_AGENT_MEMORY", "1.0Gi"),
@@ -573,6 +587,59 @@ def main() -> None:
                     "deploy_hosted_agent.py to retry."
                 ),
             )
+
+        # Copilot Studio proxy agent (src/hosted-agent-cps). Requires the
+        # Copilot Studio environment/agent identifiers and the Entra app
+        # registration credentials used to authenticate to Copilot Studio.
+        # Values come from the process/azd environment, falling back to the
+        # agent's own src/hosted-agent-cps/.env file. When any of these are
+        # missing the agent is skipped so the rest of the deployment still
+        # succeeds.
+        cps_source_dir = os.path.join(REPO_ROOT, "src", "hosted-agent-cps")
+        cps_env = read_env_file(os.path.join(cps_source_dir, ".env"))
+        cps_environment_id = os.getenv("ENVIRONMENT_ID") or cps_env.get("ENVIRONMENT_ID")
+        cps_agent_identifier = os.getenv("AGENT_IDENTIFIER") or cps_env.get("AGENT_IDENTIFIER")
+        cps_tenant_id = os.getenv("AZURE_TENANT_ID") or cps_env.get("AZURE_TENANT_ID")
+        cps_client_id = os.getenv("AZURE_CLIENT_ID") or cps_env.get("AZURE_CLIENT_ID")
+        cps_client_secret = os.getenv("AZURE_CLIENT_SECRET") or cps_env.get("AZURE_CLIENT_SECRET")
+        if not (
+            cps_environment_id
+            and cps_agent_identifier
+            and cps_tenant_id
+            and cps_client_id
+            and cps_client_secret
+        ):
+            logger.info(
+                "   Copilot Studio proxy agent config not set "
+                "(ENVIRONMENT_ID / AGENT_IDENTIFIER / AZURE_TENANT_ID / "
+                "AZURE_CLIENT_ID / AZURE_CLIENT_SECRET) — skipping CPS agent deploy."
+            )
+        else:
+            try:
+                deploy_cps_hosted_agent(
+                    agent_endpoint=agent_endpoint,
+                    container_registry_name=container_registry_name,
+                    source_dir=cps_source_dir,
+                    cpu=os.getenv("HOSTED_AGENT_CPU", "0.5"),
+                    memory=os.getenv("HOSTED_AGENT_MEMORY", "1.0Gi"),
+                    environment_id=cps_environment_id,
+                    agent_identifier=cps_agent_identifier,
+                    tenant_id=cps_tenant_id,
+                    client_id=cps_client_id,
+                    client_secret=cps_client_secret,
+                )
+                logger.info("Successfully completed: deploy_cps_hosted_agent")
+                executed_steps.append("deploy_cps_hosted_agent")
+            except Exception as exc:
+                _warn_step(
+                    "deploy_cps_hosted_agent",
+                    exc,
+                    guidance=(
+                        "Verify the container registry exists, the image built "
+                        "successfully, and the Copilot Studio app registration "
+                        "credentials are valid."
+                    ),
+                )
 
     # ------------------------------------------------------------------
     # Success summary

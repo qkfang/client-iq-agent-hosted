@@ -19,7 +19,11 @@ except ImportError:
 
 import msal
 from agent_framework_copilotstudio import CopilotStudioAgent
-from microsoft_agents.copilotstudio.client import ConnectionSettings, CopilotClient
+from microsoft_agents.copilotstudio.client import (
+    ConnectionSettings,
+    CopilotClient,
+    PowerPlatformEnvironment,
+)
 
 
 def _acquire_token(settings: ConnectionSettings) -> str:
@@ -39,7 +43,7 @@ def _acquire_token(settings: ConnectionSettings) -> str:
         authority=f"https://login.microsoftonline.com/{tenant_id}",
         client_credential=client_secret,
     )
-    scope = CopilotClient.scope_from_settings(settings)
+    scope = PowerPlatformEnvironment.get_token_audience(settings)
     result = app.acquire_token_for_client(scopes=[scope])
 
     if "access_token" not in result:
@@ -50,9 +54,26 @@ def _acquire_token(settings: ConnectionSettings) -> str:
     return result["access_token"]
 
 
+class _HostedCopilotStudioAgent(CopilotStudioAgent):
+    """CopilotStudioAgent that tolerates extra runtime kwargs from the host.
+
+    The Foundry hosting layer always forwards an ``options`` keyword to
+    ``run``, which the base ``CopilotStudioAgent.run`` does not accept. Drop
+    any unsupported keyword arguments before delegating to the base agent.
+    """
+
+    def run(self, messages=None, *, stream=False, session=None, **_ignored):
+        return super().run(messages, stream=stream, session=session)
+
+
 def _build_agent() -> CopilotStudioAgent:
     environment_id = os.environ.get("ENVIRONMENT_ID")
-    agent_identifier = os.environ.get("AGENT_IDENTIFIER")
+    # All AGENT_* env vars are reserved by the Foundry hosting platform, so the
+    # hosted deployment injects the identifier as COPILOT_AGENT_IDENTIFIER.
+    # Fall back to AGENT_IDENTIFIER for local runs that use .env.
+    agent_identifier = os.environ.get("COPILOT_AGENT_IDENTIFIER") or os.environ.get(
+        "AGENT_IDENTIFIER"
+    )
 
     if not environment_id or not agent_identifier:
         raise EnvironmentError(
@@ -70,7 +91,7 @@ def _build_agent() -> CopilotStudioAgent:
     token = _acquire_token(settings)
     client = CopilotClient(settings=settings, token=token)
 
-    return CopilotStudioAgent(
+    return _HostedCopilotStudioAgent(
         client=client,
         name="AgentCps",
         description="A hosted agent that invokes a Copilot Studio agent via the Copilot SDK.",

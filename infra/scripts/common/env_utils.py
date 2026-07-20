@@ -45,6 +45,26 @@ def read_file_content(file_path: str) -> str:
         raise Exception(f"Error reading file {file_path}: {e}")
 
 
+def read_env_file(file_path: str) -> dict:
+    """
+    Read a ``.env`` file into a dict of key/value pairs.
+
+    Missing files return an empty dict so callers can use the result as an
+    optional fallback source without additional guarding.
+
+    Args:
+        file_path: Path to the ``.env`` file.
+
+    Returns:
+        Mapping of variable name to value (values with ``None`` are omitted).
+    """
+    if not os.path.isfile(file_path):
+        return {}
+    from dotenv import dotenv_values
+
+    return {k: v for k, v in dotenv_values(file_path).items() if v is not None}
+
+
 def get_required_env_var(var_name: str) -> str:
     """
     Get required environment variable or exit with error.

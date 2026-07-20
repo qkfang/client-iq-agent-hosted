@@ -314,6 +314,7 @@ The deployment follows a **two-phase automated workflow**, both phases triggered
 | 5 | | | `setup_administrators` ([`step_workspace_admins.py`](../infra/scripts/fabric/step_workspace_admins.py)) | Add [workspace administrators](https://learn.microsoft.com/fabric/get-started/roles-workspaces) using [Graph API](https://learn.microsoft.com/graph/overview) resolution with fallback. |
 | 6 | | | `upload_installer` ([`step_notebook_installer.py`](../infra/scripts/fabric/step_notebook_installer.py)) | Upload [`fabric_solution_installer.ipynb`](../infra/fabric/deploy/fabric_solution_installer.ipynb), patched in-memory with the current git branch. |
 | 7 | | | `run_installer` ([`step_notebook_installer.py`](../infra/scripts/fabric/step_notebook_installer.py)) | Execute the installer notebook as a Fabric job. The notebook uses [`fabric-launcher`](https://github.com/microsoft/fabric-launcher) to deploy items from [`src/fabric/fabric_workspace/`](../src/fabric/fabric_workspace/), then runs `pipeline_main` for data ingestion, deploys ontologies, and organizes folders. |
+| 8 | | | `deploy_hosted_agent` ([`step_hosted_agent_deploy.py`](../infra/scripts/hosted/step_hosted_agent_deploy.py)) | Build and deploy the hosted Foundry agents to Azure Container Registry: the knowledge-base agent ([`src/hosted/`](../src/hosted/)) wired to the Knowledge Base via [MCP](https://modelcontextprotocol.io/introduction), and the Copilot Studio proxy agent ([`src/hosted-agent-cps/`](../src/hosted-agent-cps/)). **Optional**: runs only when `AZURE_CONTAINER_REGISTRY_NAME` is set; the Copilot Studio agent is additionally skipped unless its `ENVIRONMENT_ID`, `AGENT_IDENTIFIER`, `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, and `AZURE_CLIENT_SECRET` variables are set. **Best-effort**: failures are logged as warnings and the deployment continues. |
 
 ---
 
@@ -370,7 +371,7 @@ Access your workspace:
 
 ### Microsoft Foundry Components
 
-Sourced and named by [`install_microsoft_iq_solution.py`](../infra/scripts/install_microsoft_iq_solution.py) (steps `setup_knowledge_base`, `setup_agent`, and `setup_onboarding_agent`).
+Sourced and named by [`install_microsoft_iq_solution.py`](../infra/scripts/install_microsoft_iq_solution.py) (steps `setup_knowledge_base`, `setup_agent`, `setup_onboarding_agent`, and `deploy_hosted_agent`).
 
 | Component | Default name | Purpose |
 |---|---|---|
@@ -380,6 +381,8 @@ Sourced and named by [`install_microsoft_iq_solution.py`](../infra/scripts/insta
 | **KB MCP project connection** | `{solution_suffix}-kb-mcp-connection` | Foundry connection that exposes the Knowledge Base to the agents through the [Model Context Protocol](https://modelcontextprotocol.io/introduction). Override with `KB_MCP_CONNECTION_NAME`. |
 | **Chat Agent** | `ChatAgent` | AI Foundry agent wired to the Knowledge Base via the MCP tool above. Answers questions with document citations. |
 | **Onboarding Agent** | `OnboardingAgent` | AI Foundry agent wired to the same Knowledge Base MCP tool. Helps new users find onboarding and reference documentation. |
+| **Hosted Chat Agent** | `hosted-chat-agent` | Container-hosted Foundry agent ([`src/hosted/`](../src/hosted/)) wired to the same Knowledge Base MCP tool. Deployed only when `AZURE_CONTAINER_REGISTRY_NAME` is set. |
+| **Copilot Studio Proxy Agent** | `agent-cps` | Container-hosted Foundry agent ([`src/hosted-agent-cps/`](../src/hosted-agent-cps/)) that proxies an existing Copilot Studio agent. Deployed only when `AZURE_CONTAINER_REGISTRY_NAME` and the Copilot Studio credentials (`ENVIRONMENT_ID`, `AGENT_IDENTIFIER`, `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`) are set. |
 
 #### Verify in the Foundry portal
 

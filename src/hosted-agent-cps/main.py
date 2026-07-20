@@ -26,11 +26,16 @@ except ImportError:
     pass  # dotenv not needed in hosted deployment
 
 from agent_framework_foundry_hosting import ResponsesHostServer
+from azure.ai.agentserver.responses import InMemoryResponseProvider
 from agent import agent
 
 
 def main():
-    server = ResponsesHostServer(agent)
+    # The Copilot Studio agent keeps its own conversation state, so the Foundry
+    # remote history store is not needed. Using an in-memory store avoids a 404
+    # on GET /storage/history/item_ids when the client replays a conversation_id
+    # that was never persisted server-side.
+    server = ResponsesHostServer(agent, store=InMemoryResponseProvider())
     server.run()
 
 

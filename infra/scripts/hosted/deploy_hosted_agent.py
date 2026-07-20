@@ -38,10 +38,11 @@ Environment Variables:
     KB_MCP_CONNECTION_NAME               (optional) Project connection name for the
                                                     Knowledge Base MCP tool.
                                                     Defaults to <SOLUTION_SUFFIX>-kb-mcp-connection.
-    HOSTED_AGENT_IMAGE_TAG                (optional) Tag applied to the built image.
-                                                    Defaults to "latest".
     HOSTED_AGENT_CPU                      (optional) CPU allocation. Defaults to "0.5".
     HOSTED_AGENT_MEMORY                   (optional) Memory allocation. Defaults to "1.0Gi".
+
+    The container image tag is auto-incremented (v1, v2, v3, …) from the tags
+    already present in the registry, so no tag variable is required.
 """
 
 import logging
@@ -82,7 +83,6 @@ def main() -> None:
     kb_mcp_connection_name = os.getenv(
         "KB_MCP_CONNECTION_NAME", f"{solution_suffix}-kb-mcp-connection"
     )
-    image_tag = os.getenv("HOSTED_AGENT_IMAGE_TAG", "latest")
     cpu = os.getenv("HOSTED_AGENT_CPU", "0.5")
     memory = os.getenv("HOSTED_AGENT_MEMORY", "1.0Gi")
     source_dir = os.path.join(REPO_ROOT, "src", "hosted")
@@ -95,7 +95,6 @@ def main() -> None:
     logger.info(f"Knowledge Base:      {knowledge_base_name}")
     logger.info(f"KB MCP Connection:   {kb_mcp_connection_name}")
     logger.info(f"Container Registry:  {container_registry_name}")
-    logger.info(f"Image Tag:           {image_tag}")
     logger.info(f"Source Directory:    {source_dir}")
     logger.info(f"Start time:          {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     logger.info("=" * 60)
@@ -111,7 +110,6 @@ def main() -> None:
         ai_service_name=ai_service_name,
         ai_project_name=ai_project_name,
         container_registry_name=container_registry_name,
-        image_tag=image_tag,
         source_dir=source_dir,
         cpu=cpu,
         memory=memory,

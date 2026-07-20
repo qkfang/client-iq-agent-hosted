@@ -19,5 +19,5 @@ template:
   environment_variables:
     - name: ENVIRONMENT_ID
       value: "{{ENVIRONMENT_ID}}"
-    - name: AGENT_IDENTIFIER
+    - name: COPILOT_AGENT_IDENTIFIER
       value: "{{AGENT_IDENTIFIER}}"

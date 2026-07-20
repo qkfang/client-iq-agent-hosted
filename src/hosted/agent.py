@@ -68,9 +68,6 @@ def _build_agent() -> Agent:
         instructions=_SYSTEM_PROMPT,
         tools=[],
         context_providers=[],
-        # History is managed by the Responses hosting infrastructure, so the
-        # service does not need to store it.
-        default_options={"store": False},
     )
 
 

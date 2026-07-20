@@ -20,5 +20,5 @@ resources:
 environment_variables:
     - name: ENVIRONMENT_ID
       value: ''
-    - name: AGENT_IDENTIFIER
+    - name: COPILOT_AGENT_IDENTIFIER
       value: ''
