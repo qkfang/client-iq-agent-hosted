@@ -266,6 +266,7 @@ module appServices 'deploy_app_service.bicep' = {
     serviceBusQueueName: serviceBus.outputs.serviceBusQueueName
     foundryProjectEndpoint: aifoundry.outputs.projectEndpoint
     foundryOnboardingAgentId: onboardingAgentId
+    foundryModelDeploymentName: gptModelName
     aiServicesName: aifoundry.outputs.aiServicesName
     applicationInsightsConnectionString: aifoundry.outputs.applicationInsightsConnectionString
   }

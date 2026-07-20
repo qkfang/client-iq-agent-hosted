@@ -13,10 +13,21 @@ public class FoundryOptions
     public string ProjectEndpoint { get; set; } = string.Empty;
 
     /// <summary>
-    /// The id of the SalesCRMOnboarding agent that researches candidates and
-    /// finalises CRM records via the /mcp endpoint.
+    /// The id/name of the SalesCRMOnboarding agent that researches candidates
+    /// and finalises CRM records via the /mcp endpoint.
     /// </summary>
     public string SalesCrmOnboardingAgentId { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The chat model deployment name used when creating the agent version.
+    /// </summary>
+    public string ModelDeploymentName { get; set; } = "gpt-5-mini";
+
+    /// <summary>
+    /// The publicly reachable URL of this web app's MCP endpoint that the
+    /// agent calls back to finalise onboarding, e.g. https://{app}/mcp.
+    /// </summary>
+    public string WebAppMcpUrl { get; set; } = string.Empty;
 
     /// <summary>
     /// Optional Entra tenant id override for local development.

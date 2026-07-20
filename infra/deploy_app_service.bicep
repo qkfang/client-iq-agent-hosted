@@ -53,6 +53,9 @@ param foundryCrmAgentId string = ''
 @description('The Azure AI Foundry agent id for the Lego agent.')
 param foundryLegoAgentId string = ''
 
+@description('The chat model deployment name used by the CRM Web App onboarding agent.')
+param foundryModelDeploymentName string = ''
+
 @description('The name of the Azure AI Services account to grant the Function App access to.')
 param aiServicesName string
 
@@ -136,6 +139,8 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
       appSettings: [
         { name: 'Foundry__ProjectEndpoint', value: foundryProjectEndpoint }
         { name: 'Foundry__SalesCrmOnboardingAgentId', value: foundryOnboardingAgentId }
+        { name: 'Foundry__ModelDeploymentName', value: foundryModelDeploymentName }
+        { name: 'Foundry__WebAppMcpUrl', value: 'https://${webAppName}.azurewebsites.net/mcp' }
         { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: applicationInsightsConnectionString }
       ]
     }
