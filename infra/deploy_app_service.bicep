@@ -202,6 +202,16 @@ resource functionAppAzureAIUser 'Microsoft.Authorization/roleAssignments@2022-04
   }
 }
 
+resource webAppAzureAIUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: aiServices
+  name: guid(aiServices.id, webApp.id, azureAIUser.id)
+  properties: {
+    principalId: webApp.identity.principalId
+    roleDefinitionId: azureAIUser.id
+    principalType: 'ServicePrincipal'
+  }
+}
+
 @description('The name of the App Service Plan.')
 output appServicePlanName string = appServicePlan.name
 
