@@ -1,3 +1,6 @@
+using Azure.AI.Projects;
+using Azure.Core;
+using Microsoft.Extensions.Options;
 using Onboarding.Web.Agents;
 using Onboarding.Web.Models;
 
@@ -14,15 +17,22 @@ public class OnboardingAgentService
     private readonly CrmService _crmService;
     private readonly ILogger<OnboardingAgentService> _logger;
     private readonly OnboardingAgent? _agent;
+    private readonly FoundryOptions _foundry;
 
-    public OnboardingAgentService(CrmService crmService, ILogger<OnboardingAgentService> logger, OnboardingAgent? agent = null)
+    public OnboardingAgentService(CrmService crmService, ILogger<OnboardingAgentService> logger, IOptions<FoundryOptions> foundry, OnboardingAgent? agent = null)
     {
         _crmService = crmService;
         _logger = logger;
+        _foundry = foundry.Value;
         _agent = agent;
     }
 
-    public async Task<string> OnboardAsync(OnboardingCandidate candidate, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Onboards a candidate. When <paramref name="userCredential"/> is supplied,
+    /// the agent runs with the signed-in user's token so Work IQ resolves that
+    /// user's Microsoft 365 context; otherwise it runs with the app identity.
+    /// </summary>
+    public async Task<string> OnboardAsync(OnboardingCandidate candidate, TokenCredential? userCredential = null, CancellationToken cancellationToken = default)
     {
         _crmService.SetCandidateStatus(candidate.CandidateId, "Onboarding in progress");
 
@@ -34,7 +44,10 @@ public class OnboardingAgentService
 
         try
         {
-            var output = await _agent.RunAsync(BuildPrompt(candidate), cancellationToken);
+            var prompt = BuildPrompt(candidate);
+            var output = userCredential is not null
+                ? await _agent.RunAsync(new AIProjectClient(new Uri(_foundry.ProjectEndpoint), userCredential), prompt, cancellationToken)
+                : await _agent.RunAsync(prompt, cancellationToken);
 
             // The agent finalises the record by calling finalize_customer_onboarding
             // on this app's /mcp endpoint. When that callback lands on a different

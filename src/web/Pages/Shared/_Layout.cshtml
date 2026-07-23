@@ -17,6 +17,17 @@
                 <li><a asp-page="/Index" class="@(currentPage == "/Index" || currentPage == "/Details" ? "active" : "")">Customers</a></li>
                 <li><a asp-page="/Onboard" class="@(currentPage == "/Onboard" ? "active" : "")">Onboard Customers</a></li>
             </ul>
+            <span class="user-area">
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <span class="user-name">@User.Identity.Name</span>
+                    <a asp-area="MicrosoftIdentity" asp-controller="Account" asp-action="SignOut">Sign out</a>
+                }
+                else
+                {
+                    <a asp-area="MicrosoftIdentity" asp-controller="Account" asp-action="SignIn">Sign in</a>
+                }
+            </span>
         </nav>
     </header>
     <main role="main">

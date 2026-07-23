@@ -1,5 +1,8 @@
 using Azure.AI.Projects;
 using Azure.Identity;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.Identity.Web;
+using Microsoft.Identity.Web.UI;
 using Onboarding.Web.Agents;
 using Onboarding.Web.Models;
 using Onboarding.Web.Services;
@@ -8,7 +11,28 @@ using OpenAI.Responses;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddRazorPages();
+// Entra sign-in so the agent can run with the user's token (enabled once an
+// AzureAd:ClientId is configured). The user token lets Work IQ resolve the
+// signed-in user's Microsoft 365 context via On-Behalf-Of.
+var authEnabled = !string.IsNullOrWhiteSpace(builder.Configuration["AzureAd:ClientId"]);
+if (authEnabled)
+{
+    builder.Services
+        .AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
+        .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"))
+        .EnableTokenAcquisitionToCallDownstreamApi(new[] { FoundryOptions.ResponsesApiScope })
+        .AddInMemoryTokenCaches();
+    builder.Services.AddControllersWithViews().AddMicrosoftIdentityUI();
+}
+
+builder.Services.AddRazorPages(options =>
+{
+    // Protect the CRM pages but leave the /mcp callback endpoint anonymous.
+    if (authEnabled)
+    {
+        options.Conventions.AuthorizeFolder("/");
+    }
+});
 
 builder.Services.Configure<FoundryOptions>(builder.Configuration.GetSection("Foundry"));
 builder.Services.AddSingleton<CrmService>();
@@ -93,10 +117,18 @@ app.UseHttpsRedirection();
 
 app.UseRouting();
 
+if (authEnabled)
+{
+    app.UseAuthentication();
+}
 app.UseAuthorization();
 
 app.UseStaticFiles();
 app.MapRazorPages();
+if (authEnabled)
+{
+    app.MapControllers();
+}
 
 // MCP endpoint the Foundry onboarding agent calls to update the CRM.
 app.MapMcp("/mcp");

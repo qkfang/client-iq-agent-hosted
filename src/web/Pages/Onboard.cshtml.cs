@@ -1,5 +1,7 @@
+using Azure.Core;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Identity.Web;
 using Onboarding.Web.Models;
 using Onboarding.Web.Services;
 
@@ -31,7 +33,25 @@ public class OnboardModel : PageModel
             return new JsonResult(new { success = false, message = "Candidate not found." });
         }
 
-        var message = await _onboardingAgent.OnboardAsync(candidate, cancellationToken);
+        // Acquire the signed-in user's token so the agent (and Work IQ) run in
+        // the user's context. Falls back to the app identity when sign-in is off.
+        TokenCredential? userCredential = null;
+        var tokenAcquisition = HttpContext.RequestServices.GetService<ITokenAcquisition>();
+        if (tokenAcquisition is not null)
+        {
+            try
+            {
+                var result = await tokenAcquisition.GetAuthenticationResultForUserAsync(
+                    new[] { FoundryOptions.ResponsesApiScope });
+                userCredential = new StaticTokenCredential(result.AccessToken, result.ExpiresOn);
+            }
+            catch (MicrosoftIdentityWebChallengeUserException)
+            {
+                return Challenge();
+            }
+        }
+
+        var message = await _onboardingAgent.OnboardAsync(candidate, userCredential, cancellationToken);
         var updated = _crmService.GetOnboardingCandidate(candidateId);
         var success = string.Equals(updated?.Status, "Onboarded", StringComparison.OrdinalIgnoreCase)
             && !string.IsNullOrEmpty(updated!.CreatedCustomerId);

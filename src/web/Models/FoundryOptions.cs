@@ -7,6 +7,13 @@ namespace Onboarding.Web.Models;
 public class FoundryOptions
 {
     /// <summary>
+    /// Scope used to acquire the signed-in user's token for the Foundry
+    /// Responses API. Passing this user token lets tools such as Work IQ run
+    /// On-Behalf-Of the current user.
+    /// </summary>
+    public const string ResponsesApiScope = "https://ai.azure.com/.default";
+
+    /// <summary>
     /// The Azure AI Foundry project endpoint, e.g.
     /// https://{project}.services.ai.azure.com/api/projects/{name}.
     /// </summary>

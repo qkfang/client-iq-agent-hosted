@@ -12,10 +12,11 @@ namespace Onboarding.Web.Agents;
 /// </summary>
 public abstract class BaseAgent
 {
-    private readonly ProjectResponsesClient _responseClient;
+    private readonly AIProjectClient _projectClient;
     private readonly ILogger _logger;
 
     public string AgentId { get; }
+    public string AgentVersionName { get; }
     public string Instructions { get; }
 
     protected BaseAgent(
@@ -26,6 +27,7 @@ public abstract class BaseAgent
         IList<ResponseTool>? tools,
         ILogger logger)
     {
+        _projectClient = projectClient;
         AgentId = agentId;
         Instructions = instructions;
         _logger = logger;
@@ -47,15 +49,25 @@ public abstract class BaseAgent
             agentId,
             new ProjectsAgentVersionCreationOptions(definition)).Value;
 
-        _responseClient = projectClient.ProjectOpenAIClient.GetProjectResponsesClientForAgent(version.Name);
+        AgentVersionName = version.Name;
     }
 
     /// <summary>
-    /// Runs the prompt through the agent, auto-approving MCP tool calls, and
-    /// returns the final text output.
+    /// Runs the prompt using the app identity. Work IQ tool calls run in the
+    /// context of that service identity, not an end user.
     /// </summary>
-    public async Task<string> RunAsync(string message, CancellationToken cancellationToken = default)
+    public Task<string> RunAsync(string message, CancellationToken cancellationToken = default)
+        => RunAsync(_projectClient, message, cancellationToken);
+
+    /// <summary>
+    /// Runs the prompt using the supplied project client. Pass a client built
+    /// from the signed-in user's token so tools such as Work IQ resolve the
+    /// current user's Microsoft 365 context via On-Behalf-Of.
+    /// </summary>
+    public async Task<string> RunAsync(AIProjectClient projectClient, string message, CancellationToken cancellationToken = default)
     {
+        var responseClient = projectClient.ProjectOpenAIClient.GetProjectResponsesClientForAgent(AgentVersionName);
+
         CreateResponseOptions? nextOptions = new()
         {
             InputItems = { ResponseItem.CreateUserMessageItem(message) },
@@ -64,7 +76,7 @@ public abstract class BaseAgent
         ResponseResult? result = null;
         while (nextOptions is not null)
         {
-            result = await _responseClient.CreateResponseAsync(nextOptions, cancellationToken);
+            result = await responseClient.CreateResponseAsync(nextOptions, cancellationToken);
             nextOptions = null;
 
             foreach (var item in result.OutputItems)
