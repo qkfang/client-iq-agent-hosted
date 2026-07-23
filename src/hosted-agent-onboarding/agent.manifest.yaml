@@ -1,10 +1,10 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/microsoft/AgentSchema/refs/heads/main/schemas/v1.0/AgentManifest.yaml
-name: hosted-chat-agent
-displayName: "HostedChatAgent"
+name: hosted-onboarding-agent
+displayName: "OnboardingAgent"
 description: >
-  A hosted operations assistant grounded with the Foundry IQ knowledge base
-  built by this solution accelerator (delivery operations, inventory
-  logistics, supplier relationships).
+  A hosted customer onboarding agent that extracts an onboarding form,
+  enriches it with Work IQ, checks it against the Foundry IQ knowledge base,
+  summarises the customer with Bing and Fabric IQ, and finalises the CRM record.
 metadata:
   tags:
     - AI Agent Hosting
@@ -12,7 +12,7 @@ metadata:
     - Foundry IQ
     - Python
 template:
-  name: hosted-chat-agent
+  name: hosted-onboarding-agent
   kind: hosted
   protocols:
     - protocol: responses
@@ -24,8 +24,29 @@ resources:
   - kind: model
     id: gpt-5.6-sol
     name: AZURE_AI_MODEL_DEPLOYMENT_NAME
-  # Foundry IQ knowledge base built by infra/scripts/foundry/step_knowledge_base.py.
-  # The `id` must match the knowledge base name, which defaults to
-  # "<SOLUTION_SUFFIX>-kb" (see infra/scripts/install_microsoft_iq_solution.py).
+  # The tools below mirror the .NET src/web OnboardingAgent tool set. They are
+  # attached to the hosted agent version at deploy time by
+  # infra/scripts/hosted/step_hosted_agent_deploy.py (deploy_onboarding_hosted_agent);
+  # this manifest declares them as the source of truth.
+  #
+  # IQ knowledge bases (Foundry IQ / Fabric IQ / Web IQ). The `id` must match
+  # the knowledge base name. Foundry IQ defaults to "<SOLUTION_SUFFIX>-kb"; the
+  # Fabric IQ and Web IQ knowledge base names are supplied via the
+  # ONBOARDING_AGENT_KB_NAMES environment variable
+  # (see infra/scripts/install_microsoft_iq_solution.py).
   - kind: knowledge
     id: "<SOLUTION_SUFFIX>-kb"
+  - kind: knowledge
+    id: "<FABRIC_IQ_KB_NAME>"
+  - kind: knowledge
+    id: "<WEB_IQ_KB_NAME>"
+  # Work IQ MCP tool — hosted Microsoft service exposing workplace knowledge.
+  - kind: tool
+    id: WorkIQMCP
+  # Bing web search used to research the customer.
+  - kind: tool
+    id: web-search
+  # This solution's own MCP endpoint used to finalise the CRM record. Wired only
+  # when the web app is deployed (AZURE_WEB_APP_NAME).
+  - kind: tool
+    id: onboarding-crm-mcp

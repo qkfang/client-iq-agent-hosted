@@ -2,18 +2,17 @@
 
 """Hosted agent entry point — Copilot Studio agent proxy (hosted).
 
-Uses the Microsoft Agent Framework Copilot SDK (agent-framework-copilotstudio)
-to invoke an existing Copilot Studio agent via the Direct-to-Engine API.
+Talks to an existing Copilot Studio agent over the Direct Line channel, which
+works headlessly against agents configured with "No Authentication".
 
 Hosted via ResponsesHostServer from agent-framework-foundry-hosting, which
 provides the readiness endpoint required by the Foundry platform.
 
 Required environment variables:
-    ENVIRONMENT_ID:       Power Platform environment ID hosting the Copilot Studio agent
-    AGENT_IDENTIFIER:     Copilot Studio agent schema name / identifier
-    AZURE_TENANT_ID:      Microsoft Entra tenant ID of the app registration
-    AZURE_CLIENT_ID:      App registration client ID
-    AZURE_CLIENT_SECRET:  App registration client secret
+    ENVIRONMENT_ID:            Power Platform environment ID hosting the Copilot Studio agent
+    AGENT_IDENTIFIER:          Copilot Studio agent schema name / identifier
+    DIRECTLINE_TOKEN_ENDPOINT: (optional) explicit Direct Line token endpoint;
+                               derived from the two values above when omitted
 """
 
 from pathlib import Path

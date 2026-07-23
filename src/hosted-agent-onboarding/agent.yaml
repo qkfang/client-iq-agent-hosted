@@ -1,10 +1,12 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/microsoft/AgentSchema/refs/heads/main/schemas/v1.0/ContainerAgent.yaml
 
 kind: hosted
-name: hosted-chat-agent
+name: hosted-onboarding-agent
 description: |
-    A hosted operations assistant grounded with the Foundry IQ knowledge base
-    built by this solution accelerator. Built with the Agent Framework SDK.
+    A hosted customer onboarding agent that extracts an onboarding form,
+    enriches it with Work IQ, checks it against the Foundry IQ knowledge base,
+    summarises the customer with Bing and Fabric IQ, and finalises the CRM
+    record. Built with the Agent Framework SDK.
 metadata:
     tags:
         - AI Agent Hosting

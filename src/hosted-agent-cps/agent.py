@@ -1,13 +1,15 @@
 """Hosted Foundry agent that proxies a Microsoft Copilot Studio agent.
 
-This agent is designed for **hosted deployment** to Microsoft Foundry. It uses
-the Microsoft Agent Framework Copilot Studio integration (Copilot SDK) to
-invoke an existing Copilot Studio agent via the Direct-to-Engine API, and
-exposes it through the same Foundry hosting protocol as the other agents in
-this repository.
+This agent is designed for **hosted deployment** to Microsoft Foundry. It talks
+to an existing Copilot Studio agent over the Direct Line channel, which works
+headlessly against agents configured with "No Authentication" and does not
+require an end-user token or the private-preview app-only S2S Direct-to-Engine
+capability. It is exposed through the same Foundry hosting protocol as the other
+agents in this repository.
 """
 
 import os
+from collections.abc import AsyncIterable, Sequence
 from pathlib import Path
 
 try:
@@ -17,56 +19,88 @@ try:
 except ImportError:
     pass  # dotenv not needed in hosted deployment
 
-import msal
-from agent_framework_copilotstudio import CopilotStudioAgent
-from microsoft_agents.copilotstudio.client import (
-    ConnectionSettings,
-    CopilotClient,
-    PowerPlatformEnvironment,
+from agent_framework import (
+    AgentResponse,
+    AgentResponseUpdate,
+    AgentSession,
+    BaseAgent,
+    Content,
+    Message,
+    ResponseStream,
+    normalize_messages,
+)
+from agent_framework.exceptions import AgentException
+from microsoft_agents.copilotstudio.client import ConnectionSettings, PowerPlatformEnvironment
+
+from directline_client import DirectLineClient
+
+_TOKEN_ENDPOINT_TEMPLATE = (
+    "{host}/powervirtualagents/botsbyschema/{schema}/directline/token?api-version=2022-03-01-preview"
 )
 
 
-def _acquire_token(settings: ConnectionSettings) -> str:
-    """Acquire an app-only access token for the Copilot Studio Direct-to-Engine API."""
-    tenant_id = os.environ.get("AZURE_TENANT_ID")
-    client_id = os.environ.get("AZURE_CLIENT_ID")
-    client_secret = os.environ.get("AZURE_CLIENT_SECRET")
-
-    if not all([tenant_id, client_id, client_secret]):
-        raise EnvironmentError(
-            "AZURE_TENANT_ID, AZURE_CLIENT_ID and AZURE_CLIENT_SECRET environment "
-            "variables are required. Copy .env.template to .env and fill them in."
-        )
-
-    app = msal.ConfidentialClientApplication(
-        client_id,
-        authority=f"https://login.microsoftonline.com/{tenant_id}",
-        client_credential=client_secret,
+def _build_token_endpoint(environment_id: str, agent_identifier: str) -> str:
+    """Derive the Copilot Studio Direct Line token endpoint for the environment."""
+    settings = ConnectionSettings(
+        environment_id=environment_id,
+        agent_identifier=agent_identifier,
+        cloud=None,
+        copilot_agent_type=None,
+        custom_power_platform_cloud=None,
     )
-    scope = PowerPlatformEnvironment.get_token_audience(settings)
-    result = app.acquire_token_for_client(scopes=[scope])
-
-    if "access_token" not in result:
-        raise EnvironmentError(
-            f"Failed to acquire Copilot Studio token: {result.get('error_description', result.get('error'))}"
-        )
-
-    return result["access_token"]
+    host = PowerPlatformEnvironment.get_copilot_studio_connection_url(settings).split("/copilotstudio/")[0]
+    return _TOKEN_ENDPOINT_TEMPLATE.format(host=host, schema=agent_identifier)
 
 
-class _HostedCopilotStudioAgent(CopilotStudioAgent):
-    """CopilotStudioAgent that tolerates extra runtime kwargs from the host.
+class DirectLineAgent(BaseAgent):
+    """A hosted agent that invokes a Copilot Studio agent over Direct Line."""
 
-    The Foundry hosting layer always forwards an ``options`` keyword to
-    ``run``, which the base ``CopilotStudioAgent.run`` does not accept. Drop
-    any unsupported keyword arguments before delegating to the base agent.
-    """
+    def __init__(self, client: DirectLineClient, *, name: str, description: str) -> None:
+        super().__init__(name=name, description=description)
+        self.client = client
+
+    async def _ensure_conversation(self, session: AgentSession) -> str:
+        conversation_id = session.service_session_id
+        if conversation_id is None:
+            conversation_id = await self.client.start_conversation()
+            session.service_session_id = conversation_id
+        if not isinstance(conversation_id, str):
+            raise AgentException("DirectLineAgent requires service_session_id to be a string")
+        return conversation_id
 
     def run(self, messages=None, *, stream=False, session=None, **_ignored):
-        return super().run(messages, stream=stream, session=session)
+        if stream:
+            return self._run_stream_impl(messages, session)
+        return self._run_impl(messages, session)
+
+    async def _run_impl(self, messages, session: AgentSession | None) -> AgentResponse:
+        session = session or self.create_session()
+        conversation_id = await self._ensure_conversation(session)
+        question = "\n".join(message.text for message in normalize_messages(messages))
+
+        response_messages = [
+            Message(role="assistant", contents=[Content.from_text(text)])
+            async for text in self.client.ask(conversation_id, question)
+        ]
+        response_id = response_messages[0].message_id if response_messages else None
+        return AgentResponse(messages=response_messages, response_id=response_id)
+
+    def _run_stream_impl(self, messages, session: AgentSession | None) -> ResponseStream:
+        async def _stream() -> AsyncIterable[AgentResponseUpdate]:
+            nonlocal session
+            session = session or self.create_session()
+            conversation_id = await self._ensure_conversation(session)
+            question = "\n".join(message.text for message in normalize_messages(messages))
+            async for text in self.client.ask(conversation_id, question):
+                yield AgentResponseUpdate(role="assistant", contents=[Content.from_text(text)])
+
+        def _finalize(updates: Sequence[AgentResponseUpdate]) -> AgentResponse:
+            return AgentResponse.from_updates(updates)
+
+        return ResponseStream(_stream(), finalizer=_finalize)
 
 
-def _build_agent() -> CopilotStudioAgent:
+def _build_agent() -> DirectLineAgent:
     environment_id = os.environ.get("ENVIRONMENT_ID")
     # All AGENT_* env vars are reserved by the Foundry hosting platform, so the
     # hosted deployment injects the identifier as COPILOT_AGENT_IDENTIFIER.
@@ -81,20 +115,15 @@ def _build_agent() -> CopilotStudioAgent:
             "Copy .env.template to .env and fill in your Copilot Studio agent details."
         )
 
-    settings = ConnectionSettings(
-        environment_id=environment_id,
-        agent_identifier=agent_identifier,
-        cloud=None,
-        copilot_agent_type=None,
-        custom_power_platform_cloud=None,
+    token_endpoint = os.environ.get("DIRECTLINE_TOKEN_ENDPOINT") or _build_token_endpoint(
+        environment_id, agent_identifier
     )
-    token = _acquire_token(settings)
-    client = CopilotClient(settings=settings, token=token)
+    client = DirectLineClient(token_endpoint)
 
-    return _HostedCopilotStudioAgent(
-        client=client,
+    return DirectLineAgent(
+        client,
         name="AgentCps",
-        description="A hosted agent that invokes a Copilot Studio agent via the Copilot SDK.",
+        description="A hosted agent that invokes a Copilot Studio agent over Direct Line.",
     )
 
 

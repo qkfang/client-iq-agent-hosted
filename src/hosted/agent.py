@@ -60,6 +60,7 @@ def _build_agent() -> Agent:
         credential=credential,
     )
 
+    tools = { "confluence", "workiq" }
     # The Knowledge Base MCP tool is wired up by the deployment script in
     # infra/scripts/hosted, not instantiated here.
     return Agent(

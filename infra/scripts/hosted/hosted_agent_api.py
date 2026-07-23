@@ -20,6 +20,10 @@ logger = logging.getLogger(__name__)
 
 HOSTED_AGENT_NAME = "hosted-chat-agent"
 HOSTED_CPS_AGENT_NAME = "hosted-cps-agent"
+HOSTED_ONBOARDING_AGENT_NAME = "hosted-onboarding-agent"
+
+# The web app's own MCP tool used to finalise the CRM record.
+ONBOARDING_CRM_SERVER_LABEL = "onboarding-crm-mcp"
 
 
 def get_next_image_tag(registry_name: str, image_name: str) -> str:
@@ -142,13 +146,16 @@ def create_or_update_hosted_agent(
     environment_variables: dict,
     mcp_endpoint: str | None = None,
     connection_name: str | None = None,
+    extra_tools: list | None = None,
 ):
     """Create or replace a hosted AI Foundry agent, optionally with the KB MCP tool.
 
     If an agent with the same name already exists it is deleted before the
     new version is created. When both ``mcp_endpoint`` and ``connection_name``
     are provided the agent is wired up to the Knowledge Base MCP tool;
-    otherwise it is deployed without any tools.
+    otherwise it is deployed without any tools. Any tools passed in
+    ``extra_tools`` (e.g. Work IQ, the finalize MCP tool or web search) are
+    attached in addition to the Knowledge Base tool.
 
     Args:
         project_client: Authenticated ``AIProjectClient`` (created with
@@ -162,6 +169,7 @@ def create_or_update_hosted_agent(
             deploy the agent without the MCP tool.
         connection_name: Project connection name registered for the MCP tool.
             Omit to deploy the agent without the MCP tool.
+        extra_tools: Additional tool definitions to attach to the agent.
 
     Returns:
         The created hosted agent version.
@@ -197,6 +205,8 @@ def create_or_update_hosted_agent(
                 project_connection_id=connection_name,
             )
         )
+    if extra_tools:
+        tools.extend(extra_tools)
 
     agent_definition = HostedAgentDefinition(
         cpu=cpu,

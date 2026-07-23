@@ -1,3 +1,4 @@
+using System.ClientModel.Primitives;
 using Azure.AI.Projects;
 using Azure.Identity;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -57,7 +58,10 @@ if (!string.IsNullOrWhiteSpace(foundry.ProjectEndpoint) &&
         var onAppService = !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("WEBSITE_INSTANCE_ID"));
         credentialOptions.ExcludeManagedIdentityCredential = !onAppService;
 
-        var projectClient = new AIProjectClient(new Uri(foundry.ProjectEndpoint), new DefaultAzureCredential(credentialOptions));
+        // Do not retry agent calls; surface failures immediately. Allow up to 10
+        // minutes for long-running agent operations before timing out.
+        var clientOptions = new AIProjectClientOptions { RetryPolicy = new ClientRetryPolicy(maxRetries: 0), NetworkTimeout = TimeSpan.FromMinutes(10) };
+        var projectClient = new AIProjectClient(new Uri(foundry.ProjectEndpoint), new DefaultAzureCredential(credentialOptions), clientOptions);
 
         var neverApprove = new McpToolCallApprovalPolicy(GlobalMcpToolCallApprovalPolicy.NeverRequireApproval);
         var tools = new List<ResponseTool>();

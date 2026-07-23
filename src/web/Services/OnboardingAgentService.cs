@@ -1,3 +1,4 @@
+using System.ClientModel.Primitives;
 using Azure.AI.Projects;
 using Azure.Core;
 using Microsoft.Extensions.Options;
@@ -46,7 +47,7 @@ public class OnboardingAgentService
         {
             var prompt = BuildPrompt(candidate);
             var output = userCredential is not null
-                ? await _agent.RunAsync(new AIProjectClient(new Uri(_foundry.ProjectEndpoint), userCredential), prompt, cancellationToken)
+                ? await _agent.RunAsync(new AIProjectClient(new Uri(_foundry.ProjectEndpoint), userCredential, new AIProjectClientOptions { RetryPolicy = new ClientRetryPolicy(maxRetries: 0), NetworkTimeout = TimeSpan.FromMinutes(10) }), prompt, cancellationToken)
                 : await _agent.RunAsync(prompt, cancellationToken);
 
             // The agent finalises the record by calling finalize_customer_onboarding

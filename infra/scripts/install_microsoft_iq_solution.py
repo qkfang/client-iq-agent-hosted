@@ -141,7 +141,11 @@ from foundry.step_agent_setup import setup_agent
 from foundry.step_knowledge_base import setup_knowledge_base
 from foundry.step_onboarding_agent_setup import setup_onboarding_agent
 from foundry.step_pipeline_agents_setup import setup_pipeline_agents
-from hosted.step_hosted_agent_deploy import deploy_cps_hosted_agent, deploy_hosted_agent
+from hosted.step_hosted_agent_deploy import (
+    deploy_cps_hosted_agent,
+    deploy_hosted_agent,
+    deploy_onboarding_hosted_agent,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -159,6 +163,7 @@ ALL_DEPLOYMENT_STEPS = [
     "run_installer",
     "deploy_hosted_agent",
     "deploy_cps_hosted_agent",
+    "deploy_onboarding_hosted_agent",
 ]
 
 
@@ -642,6 +647,55 @@ def main() -> None:
                         "credentials are valid."
                     ),
                 )
+
+        # Onboarding agent (src/hosted-agent-onboarding). Runs the full customer
+        # onboarding workflow wired up with the IQ knowledge bases (Foundry IQ,
+        # Fabric IQ, Web IQ), Work IQ, web search and — when the web app is
+        # deployed — the finalize_customer_onboarding MCP tool. A failure is
+        # recorded as a warning and does not abort the deploy.
+        web_app_name = os.getenv("AZURE_WEB_APP_NAME")
+        webapp_mcp_url = (
+            f"https://{web_app_name}.azurewebsites.net/mcp" if web_app_name else None
+        )
+        # Knowledge bases wired as MCP tools. Defaults to the Foundry IQ KB;
+        # set ONBOARDING_AGENT_KB_NAMES (comma-separated) to add the Fabric IQ
+        # and Web IQ knowledge bases so the agent matches the .NET tool set.
+        onboarding_agent_kb_names = [
+            _name.strip()
+            for _name in os.getenv(
+                "ONBOARDING_AGENT_KB_NAMES", knowledge_base_name
+            ).split(",")
+            if _name.strip()
+        ]
+        try:
+            deploy_onboarding_hosted_agent(
+                agent_endpoint=agent_endpoint,
+                agent_model=agent_model,
+                search_endpoint=search_endpoint,
+                knowledge_base_names=onboarding_agent_kb_names,
+                kb_mcp_connection_name=kb_mcp_connection_name,
+                subscription_id=subscription_id,
+                resource_group=resource_group,
+                ai_service_name=ai_service_name,
+                ai_project_name=ai_project_name,
+                container_registry_name=container_registry_name,
+                source_dir=os.path.join(REPO_ROOT, "src", "hosted-agent-onboarding"),
+                cpu=os.getenv("HOSTED_AGENT_CPU", "0.5"),
+                memory=os.getenv("HOSTED_AGENT_MEMORY", "1.0Gi"),
+                webapp_mcp_url=webapp_mcp_url,
+            )
+            logger.info("Successfully completed: deploy_onboarding_hosted_agent")
+            executed_steps.append("deploy_onboarding_hosted_agent")
+        except Exception as exc:
+            _warn_step(
+                "deploy_onboarding_hosted_agent",
+                exc,
+                guidance=(
+                    "Verify the container registry exists and the image built "
+                    "successfully. You can re-run infra/scripts/hosted/"
+                    "deploy_hosted_agent.py to retry."
+                ),
+            )
 
     # ------------------------------------------------------------------
     # Success summary
