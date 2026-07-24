@@ -5,9 +5,13 @@
 }
 
 <h1>@ViewData["Title"]</h1>
-<p>Prospective customers queued for onboarding. Onboarding invokes the Foundry <code>SalesCRMOnboarding</code> agent, which researches the company and finalises the CRM record via the <code>/mcp</code> endpoint.</p>
+<p>Prospective customers ready to onboard. When you start onboarding, a Microsoft IQ agent automatically researches the company, gathers the details it needs, and creates a complete customer record for you—no manual data entry required.</p>
 
 @Html.AntiForgeryToken()
+
+<div class="grid-toolbar">
+    <button type="button" class="btn btn-primary" data-onboard-freeform>New onboarding prompt</button>
+</div>
 
 <div class="entity-grid">
     <table class="entity-table">
@@ -53,11 +57,38 @@
 </div>
 
 <div id="onboard-modal" class="modal-overlay" hidden>
-    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="onboard-modal-title">
+    <div class="modal-card modal-card-lg" role="dialog" aria-modal="true" aria-labelledby="onboard-modal-title">
         <h2 id="onboard-modal-title" class="modal-title">Onboarding</h2>
-        <p id="onboard-modal-message" class="modal-message"></p>
-        <div class="modal-actions">
+
+        <div class="modal-tabs" role="tablist">
+            <button type="button" class="modal-tab is-active" data-tab="message" role="tab">Message</button>
+            <button type="button" class="modal-tab" data-tab="result" role="tab" disabled>Result</button>
+            <button type="button" class="modal-tab" data-tab="json" role="tab" disabled>JSON</button>
+        </div>
+
+        <div class="modal-tabpanel" data-panel="message">
+            <select id="onboard-sample" class="modal-select">
+                <option value="">Sample prompts…</option>
+                <option value='please onboard: "Contoso Solutions" as a Private Company'>Onboard Contoso Solutions (Private Company)</option>
+                <option value="give me details about customer Tsehayetu">Customer details lookup</option>
+                <option value="what is the standard onboarding steps">Standard onboarding steps</option>
+            </select>
+            <textarea id="onboard-message" class="modal-textarea" rows="12" spellcheck="false"></textarea>
+        </div>
+        <div class="modal-tabpanel" data-panel="result" hidden>
+            <p id="onboard-result" class="modal-message"></p>
             <a id="onboard-modal-link" class="btn btn-primary" href="/" hidden>View in Customers</a>
+        </div>
+        <div class="modal-tabpanel" data-panel="json" hidden>
+            <pre id="onboard-json" class="modal-json"></pre>
+        </div>
+
+        <div id="onboard-progress" class="modal-progress" hidden>
+            <div class="modal-progress-bar"></div>
+        </div>
+
+        <div class="modal-actions">
+            <button type="button" id="onboard-submit" class="btn btn-primary">Submit</button>
             <button type="button" class="btn btn-secondary" data-modal-close>Close</button>
         </div>
     </div>
@@ -69,18 +100,54 @@
             const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
             const modal = document.getElementById('onboard-modal');
             const title = document.getElementById('onboard-modal-title');
-            const message = document.getElementById('onboard-modal-message');
+            const messageBox = document.getElementById('onboard-message');
+            const sampleSelect = document.getElementById('onboard-sample');
+            const resultBox = document.getElementById('onboard-result');
+            const jsonBox = document.getElementById('onboard-json');
             const link = document.getElementById('onboard-modal-link');
+            const submitBtn = document.getElementById('onboard-submit');
+            const progress = document.getElementById('onboard-progress');
+            const tabs = modal.querySelectorAll('.modal-tab');
+            const panels = modal.querySelectorAll('.modal-tabpanel');
 
-            function showModal(text, isSuccess, customerId) {
-                title.textContent = isSuccess ? 'Onboarding complete' : 'Onboarding';
-                message.textContent = text;
-                if (isSuccess && customerId) {
-                    link.href = '/Details?customerId=' + encodeURIComponent(customerId);
-                    link.hidden = false;
-                } else {
-                    link.hidden = true;
-                }
+            let currentCandidateId = null;
+            let currentRowBtn = null;
+
+            function selectTab(name) {
+                tabs.forEach(t => t.classList.toggle('is-active', t.dataset.tab === name));
+                panels.forEach(p => { p.hidden = p.dataset.panel !== name; });
+            }
+
+            function setResultTabsEnabled(enabled) {
+                tabs.forEach(t => {
+                    if (t.dataset.tab === 'result' || t.dataset.tab === 'json') {
+                        t.disabled = !enabled;
+                    }
+                });
+            }
+
+            tabs.forEach(t => t.addEventListener('click', function () {
+                if (!t.disabled) selectTab(t.dataset.tab);
+            }));
+
+            sampleSelect.addEventListener('change', function () {
+                if (sampleSelect.value) messageBox.value = sampleSelect.value;
+            });
+
+            function openModal(titleText, message, candidateId, rowBtn) {
+                title.textContent = titleText;
+                messageBox.value = message || '';
+                sampleSelect.value = '';
+                resultBox.textContent = '';
+                jsonBox.textContent = '';
+                link.hidden = true;
+                progress.hidden = true;
+                submitBtn.disabled = false;
+                submitBtn.hidden = false;
+                setResultTabsEnabled(false);
+                selectTab('message');
+                currentCandidateId = candidateId || null;
+                currentRowBtn = rowBtn || null;
                 modal.hidden = false;
             }
 
@@ -89,37 +156,78 @@
             modal.querySelector('[data-modal-close]').addEventListener('click', closeModal);
             modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
 
+            submitBtn.addEventListener('click', async function () {
+                const body = new URLSearchParams({ message: messageBox.value });
+                if (currentCandidateId) body.set('candidateId', currentCandidateId);
+
+                submitBtn.disabled = true;
+                progress.hidden = false;
+
+                try {
+                    const res = await fetch('?handler=Onboard', {
+                        method: 'POST',
+                        headers: { 'RequestVerificationToken': token },
+                        body
+                    });
+                    const data = await res.json();
+
+                    if (data.reauth) {
+                        // Token cache was lost (e.g. app restart); reload to
+                        // silently re-authenticate via the on-open check.
+                        window.location.reload();
+                        return;
+                    }
+
+                    resultBox.textContent = data.message || '';
+                    jsonBox.textContent = JSON.stringify(data, null, 2);
+                    setResultTabsEnabled(true);
+                    selectTab('result');
+                    submitBtn.hidden = true;
+
+                    if (data.success && data.customerId) {
+                        title.textContent = 'Onboarding complete';
+                        link.href = '/Details?customerId=' + encodeURIComponent(data.customerId);
+                        link.hidden = false;
+
+                        const row = document.querySelector('[data-candidate-row="' + currentCandidateId + '"]');
+                        if (row) {
+                            row.querySelector('[data-status-cell]').innerHTML =
+                                '<span class="badge">Onboarded</span> ' +
+                                '<a href="/Details?customerId=' + encodeURIComponent(data.customerId) + '">' +
+                                data.customerId + '</a>';
+                            row.querySelector('[data-action-cell]').innerHTML = '';
+                        }
+                    } else if (currentRowBtn) {
+                        currentRowBtn.disabled = false;
+                        currentRowBtn.textContent = 'Onboard';
+                    }
+                } catch (err) {
+                    resultBox.textContent = 'Onboarding request failed: ' + err.message;
+                    jsonBox.textContent = '';
+                    setResultTabsEnabled(true);
+                    selectTab('result');
+                    submitBtn.disabled = false;
+                } finally {
+                    progress.hidden = true;
+                }
+            });
+
+            document.querySelector('[data-onboard-freeform]').addEventListener('click', function () {
+                openModal('New onboarding prompt', '', null, null);
+            });
+
             document.querySelectorAll('[data-onboard]').forEach(function (btn) {
                 btn.addEventListener('click', async function () {
                     const candidateId = btn.getAttribute('data-onboard');
                     btn.disabled = true;
-                    btn.textContent = 'Onboarding…';
-
+                    btn.textContent = 'Loading…';
                     try {
-                        const res = await fetch('?handler=Onboard', {
-                            method: 'POST',
-                            headers: { 'RequestVerificationToken': token },
-                            body: new URLSearchParams({ candidateId })
-                        });
+                        const res = await fetch('?handler=Message&candidateId=' + encodeURIComponent(candidateId));
                         const data = await res.json();
-
-                        showModal(data.message, data.success, data.customerId);
-
-                        if (data.success) {
-                            const row = document.querySelector('[data-candidate-row="' + candidateId + '"]');
-                            if (row) {
-                                row.querySelector('[data-status-cell]').innerHTML =
-                                    '<span class="badge">Onboarded</span> ' +
-                                    '<a href="/Details?customerId=' + encodeURIComponent(data.customerId) + '">' +
-                                    data.customerId + '</a>';
-                                row.querySelector('[data-action-cell]').innerHTML = '';
-                            }
-                        } else {
-                            btn.disabled = false;
-                            btn.textContent = 'Onboard';
-                        }
+                        openModal('Onboarding', data.message, candidateId, btn);
                     } catch (err) {
-                        showModal('Onboarding request failed: ' + err.message, false);
+                        openModal('Onboarding', '', candidateId, btn);
+                    } finally {
                         btn.disabled = false;
                         btn.textContent = 'Onboard';
                     }

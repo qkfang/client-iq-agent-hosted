@@ -1,7 +1,7 @@
 #Requires -Version 7.0
 <#
 .SYNOPSIS
-    Register a confidential web app in Microsoft Entra so the Onboarding CRM web
+    Register a confidential web app in Microsoft Entra so the Customer Onboarding Portal web
     app can sign users in and call the Foundry Responses API on their behalf.
 
 .DESCRIPTION

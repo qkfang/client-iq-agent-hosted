@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Onboarding CRM</title>
+    <title>@ViewData["Title"] - Customer Onboarding Portal</title>
     <link rel="stylesheet" href="~/css/site.css" />
 </head>
 <body>
@@ -12,7 +12,7 @@
             var currentPage = ViewContext.RouteData.Values["page"]?.ToString();
         }
         <nav class="top-nav">
-            <span class="brand">Onboarding CRM</span>
+            <a asp-page="/Index" class="brand"><span class="brand-mark">O</span>Customer Onboarding Portal</a>
             <ul class="nav-links">
                 <li><a asp-page="/Index" class="@(currentPage == "/Index" || currentPage == "/Details" ? "active" : "")">Customers</a></li>
                 <li><a asp-page="/Onboard" class="@(currentPage == "/Onboard" ? "active" : "")">Onboard Customers</a></li>
@@ -33,6 +33,10 @@
     <main role="main">
         @RenderBody()
     </main>
+    <footer class="app-footer">
+        <span>&copy; @DateTime.UtcNow.Year Customer Onboarding Portal</span>
+        <span>Powered by Microsoft Foundry</span>
+    </footer>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

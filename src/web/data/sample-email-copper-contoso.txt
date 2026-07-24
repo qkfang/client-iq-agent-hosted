@@ -1,0 +1,66 @@
+From: Elisabeth Arcouet <elisabeth@contoso.com>
+To: Taylor Brooks <taylor.brooks@fabrikam.example>
+Cc: Trading Desk <trading@contoso.com>
+Subject: RE: RE: Copper cathode - firming up March tonnage
+Date: Wed, 12 Mar 2025 15:20:47 -0500
+
+Hi Taylor,
+
+Appreciate the recap. Let's proceed with the two lots as discussed. If the
+LME cash-to-3-month spread stays this tight we'll likely add another parcel
+before quarter end - I'll confirm once our board signs off.
+
+On the account side, we're still listed as "Partner" but I want to make sure
+the paperwork is current before we settle. Flag anything you need from our
+end and I'll turn it around same day.
+
+Best,
+Elisabeth Arcouet
+Contoso Solutions
+Business Partner | Sales
+(740) 555-0144 | elisabeth@contoso.com
+
+-----Original Message-----
+From: Taylor Brooks <taylor.brooks@fabrikam.example>
+Sent: Wednesday, 12 March 2025 2:41 PM
+To: Elisabeth Arcouet <elisabeth@contoso.com>
+Subject: RE: Copper cathode - firming up March tonnage
+
+Hi Elisabeth,
+
+Thanks for the fast reply. Copper has been grinding higher all week -
+Chinese smelter maintenance is pulling more cathode out of the market and
+the backwardation is telling the same story. I'd lock the March tonnage
+sooner rather than later if the level works for you.
+
+I've pulled up your record on file - everything looks in order, just
+confirm the delivery terms and we can paper it today.
+
+Regards,
+Taylor
+
+-----Original Message-----
+From: Elisabeth Arcouet <elisabeth@contoso.com>
+Sent: Wednesday, 12 March 2025 2:15 PM
+To: Taylor Brooks <taylor.brooks@fabrikam.example>
+Subject: Copper cathode - firming up March tonnage
+
+Hi Taylor,
+
+Following our call earlier - can you send indicative pricing on grade A
+copper cathode for two lots into our Midwest warehouse? We're keeping a
+close eye on the copper market and would like to move while the premiums
+are still workable.
+
+For reference, our details on file:
+  Customer ID:   CID-010
+  Type:          Business (Partner)
+  Contact:       Elisabeth Arcouet
+  Segment:       Sales
+  Established:   2020-02-01
+  Phone:         (740) 555-0144
+  Email:         elisabeth@contoso.com
+
+Thanks,
+Elisabeth Arcouet
+Contoso Solutions

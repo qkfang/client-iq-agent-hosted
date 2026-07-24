@@ -32,8 +32,10 @@ public class OnboardingAgentService
     /// Onboards a candidate. When <paramref name="userCredential"/> is supplied,
     /// the agent runs with the signed-in user's token so Work IQ resolves that
     /// user's Microsoft 365 context; otherwise it runs with the app identity.
+    /// A caller may supply an edited <paramref name="message"/> to override the
+    /// prompt built from the candidate.
     /// </summary>
-    public async Task<string> OnboardAsync(OnboardingCandidate candidate, TokenCredential? userCredential = null, CancellationToken cancellationToken = default)
+    public async Task<string> OnboardAsync(OnboardingCandidate candidate, string? message = null, TokenCredential? userCredential = null, CancellationToken cancellationToken = default)
     {
         _crmService.SetCandidateStatus(candidate.CandidateId, "Onboarding in progress");
 
@@ -45,9 +47,9 @@ public class OnboardingAgentService
 
         try
         {
-            var prompt = BuildPrompt(candidate);
+            var prompt = string.IsNullOrWhiteSpace(message) ? BuildPrompt(candidate) : message;
             var output = userCredential is not null
-                ? await _agent.RunAsync(new AIProjectClient(new Uri(_foundry.ProjectEndpoint), userCredential, new AIProjectClientOptions { RetryPolicy = new ClientRetryPolicy(maxRetries: 0), NetworkTimeout = TimeSpan.FromMinutes(10) }), prompt, cancellationToken)
+                ? await _agent.RunAsync(BuildUserClient(userCredential), prompt, cancellationToken)
                 : await _agent.RunAsync(prompt, cancellationToken);
 
             // The agent finalises the record by calling finalize_customer_onboarding
@@ -71,7 +73,35 @@ public class OnboardingAgentService
         }
     }
 
-    private static string BuildPrompt(OnboardingCandidate candidate) =>
+    /// <summary>
+    /// Runs an arbitrary prompt through the agent without finalising a candidate.
+    /// Used by the free-form onboarding prompt box.
+    /// </summary>
+    public async Task<string> RunPromptAsync(string message, TokenCredential? userCredential = null, CancellationToken cancellationToken = default)
+    {
+        if (_agent is null)
+        {
+            return "Foundry not configured. Agent is unavailable.";
+        }
+
+        try
+        {
+            return userCredential is not null
+                ? await _agent.RunAsync(BuildUserClient(userCredential), message, cancellationToken)
+                : await _agent.RunAsync(message, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Agent prompt run failed");
+            return $"Agent failed: {ex.Message}";
+        }
+    }
+
+    private AIProjectClient BuildUserClient(TokenCredential userCredential) =>
+        new(new Uri(_foundry.ProjectEndpoint), userCredential, new AIProjectClientOptions { RetryPolicy = new ClientRetryPolicy(maxRetries: 0), NetworkTimeout = TimeSpan.FromMinutes(10) });
+
+    /// <summary>Builds the default onboarding prompt for a candidate.</summary>
+    public static string BuildPrompt(OnboardingCandidate candidate) =>
         "Onboard the following prospective customer from this onboarding form.\n\n" +
         "# Customer Onboarding Form\n\n" +
         $"- candidateId: {candidate.CandidateId}\n" +
