@@ -433,6 +433,10 @@ h1 + .badge {
     min-height: 0;
 }
 
+.modal-card-lg .modal-tabpanel[data-panel="message"][hidden] {
+    display: none;
+}
+
 .modal-card-lg .modal-tabpanel[data-panel="message"] .modal-textarea {
     flex: 1;
     min-height: 0;
@@ -550,6 +554,76 @@ h1 + .badge {
     white-space: pre-wrap;
     line-height: 1.55;
     color: var(--ink-700);
+}
+
+.modal-chat {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin: 16px 0 24px;
+}
+
+.chat-row {
+    display: flex;
+}
+
+.chat-row-user {
+    justify-content: flex-end;
+}
+
+.chat-row-agent {
+    justify-content: flex-start;
+}
+
+.chat-bubble {
+    max-width: 82%;
+    padding: 12px 16px;
+    border-radius: 16px;
+    line-height: 1.55;
+    color: var(--ink-700);
+    font-size: 0.9rem;
+}
+
+.chat-bubble-user {
+    background: var(--brand-500);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+}
+
+.chat-bubble-user .chat-label {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.chat-bubble-agent {
+    background: #f1f5f9;
+    border: 1px solid var(--line);
+    border-bottom-left-radius: 4px;
+}
+
+.chat-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+    color: var(--ink-500);
+}
+
+.chat-bubble p {
+    margin: 0 0 10px;
+}
+
+.chat-bubble p:last-child {
+    margin-bottom: 0;
+}
+
+.chat-bubble ul {
+    margin: 0 0 10px;
+    padding-left: 20px;
+}
+
+.chat-bubble li {
+    margin: 4px 0;
 }
 
 .modal-actions {

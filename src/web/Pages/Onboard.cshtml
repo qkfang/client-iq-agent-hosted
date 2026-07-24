@@ -64,6 +64,7 @@
             <button type="button" class="modal-tab is-active" data-tab="message" role="tab">Message</button>
             <button type="button" class="modal-tab" data-tab="result" role="tab" disabled>Result</button>
             <button type="button" class="modal-tab" data-tab="json" role="tab" disabled>JSON</button>
+            <button type="button" class="modal-tab" data-tab="sample" role="tab">Sample</button>
         </div>
 
         <div class="modal-tabpanel" data-panel="message">
@@ -81,6 +82,31 @@
         </div>
         <div class="modal-tabpanel" data-panel="json" hidden>
             <pre id="onboard-json" class="modal-json"></pre>
+        </div>
+        <div class="modal-tabpanel" data-panel="sample" hidden>
+            <div class="modal-chat">
+                <div class="chat-row chat-row-user">
+                    <div class="chat-bubble chat-bubble-user">
+                        <div class="chat-label">Onboarding Prompt</div>
+                        <p>please onboard: "Contoso Solutions" as a Private Company</p>
+                    </div>
+                </div>
+                <div class="chat-row chat-row-agent">
+                    <div class="chat-bubble chat-bubble-agent">
+                        <div class="chat-label">Onboarding Response</div>
+                        <ul>
+                            <li><strong>CRM Customer ID:</strong> <code>CUST-2002</code></li>
+                            <li><strong>Customer:</strong> Contoso Solutions</li>
+                            <li><strong>Entity type:</strong> Private Company</li>
+                            <li><strong>Status:</strong> <strong>Ready to trade</strong></li>
+                            <li><strong>KYC/AML risk:</strong> <strong>High</strong></li>
+                        </ul>
+                        <p>Internal records identified a March 12, 2025 email concerning copper-cathode pricing, tonnage, account paperwork, and delivery terms. No related meetings, chats, or Fabric IQ customer record were found.</p>
+                        <p><strong>Important:</strong> Country, contact details, website, incorporation evidence, ownership/UBO information, and conclusive sanctions/PEP screening remain unavailable. These are normally mandatory before certification. 【8:0†document_collection_validation_checklist.pdf】 【8:4†onboarding_case_stage_definitions.pdf】 【8:8†ready_to_trade_certification_criteria.pdf】</p>
+                        <p>Public identity matching was also inconclusive, and Microsoft commonly uses "Contoso" as a fictional sample-company name. (<a href="https://learn.microsoft.com/en-us/microsoft-365/enterprise/contoso-case-study?view=o365-worldwide" target="_blank" rel="noopener">learn.microsoft.com</a>) <strong>Manual compliance escalation is strongly recommended.</strong></p>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div id="onboard-progress" class="modal-progress" hidden>
