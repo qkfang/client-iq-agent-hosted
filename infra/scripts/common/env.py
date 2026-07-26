@@ -80,6 +80,22 @@ def load_project_env() -> bool:
     return False
 
 
+def load_infra_env() -> bool:
+    """Load environment variables from the ``infra/.env`` file.
+
+    Existing variables (e.g. those injected by azd) are not overridden.
+
+    Returns:
+        True if the ``infra/.env`` file was found and loaded.
+    """
+    env_file = _PROJECT_ROOT / "infra" / ".env"
+    if env_file.exists():
+        load_dotenv(env_file, override=False)
+        logger.debug(f"Loaded infra environment from {env_file}")
+        return True
+    return False
+
+
 def load_all_env() -> tuple:
     """Load both azd and project environment variables.
 
@@ -88,6 +104,7 @@ def load_all_env() -> tuple:
     """
     azd_loaded = load_azd_env()
     project_loaded = load_project_env()
+    load_infra_env()
 
     if not os.getenv("SOLUTION_NAME"):
         os.environ["SOLUTION_NAME"] = os.getenv("AZURE_ENV_NAME", "demo")

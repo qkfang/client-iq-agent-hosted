@@ -56,6 +56,22 @@ param foundryLegoAgentId string = ''
 @description('The chat model deployment name used by the CRM Web App onboarding agent.')
 param foundryModelDeploymentName string = ''
 
+@description('The Microsoft Entra authority instance used by the CRM Web App sign-in.')
+param azureAdInstance string = environment().authentication.loginEndpoint
+
+@description('The Microsoft Entra tenant id used by the CRM Web App sign-in. When empty, sign-in is disabled and the app runs unauthenticated.')
+param azureAdTenantId string = ''
+
+@description('The Microsoft Entra application (client) id used by the CRM Web App sign-in.')
+param azureAdClientId string = ''
+
+@description('The Microsoft Entra client secret used by the CRM Web App sign-in.')
+@secure()
+param azureAdClientSecret string = ''
+
+@description('The OpenID Connect callback path used by the CRM Web App sign-in.')
+param azureAdCallbackPath string = '/signin-oidc'
+
 @description('The name of the Azure AI Services account to grant the Function App access to.')
 param aiServicesName string
 
@@ -141,6 +157,11 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
         { name: 'Foundry__SalesCrmOnboardingAgentId', value: foundryOnboardingAgentId }
         { name: 'Foundry__ModelDeploymentName', value: foundryModelDeploymentName }
         { name: 'Foundry__WebAppMcpUrl', value: 'https://${webAppName}.azurewebsites.net/mcp' }
+        { name: 'AzureAd__Instance', value: azureAdInstance }
+        { name: 'AzureAd__TenantId', value: azureAdTenantId }
+        { name: 'AzureAd__ClientId', value: azureAdClientId }
+        { name: 'AzureAd__ClientSecret', value: azureAdClientSecret }
+        { name: 'AzureAd__CallbackPath', value: azureAdCallbackPath }
         { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: applicationInsightsConnectionString }
       ]
     }

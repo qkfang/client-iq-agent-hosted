@@ -62,6 +62,22 @@ param azureExistingAIProjectResourceId string = ''
 @description('Optional. The Azure AI Foundry agent id for the SalesCRMOnboarding agent used by the CRM Web App. When empty, the Web App onboards candidates locally.')
 param onboardingAgentId string = ''
 
+@description('Optional. The Microsoft Entra authority instance used by the CRM Web App sign-in.')
+param azureAdInstance string = environment().authentication.loginEndpoint
+
+@description('Optional. The Microsoft Entra tenant id used by the CRM Web App sign-in. When empty, sign-in is disabled and the app runs unauthenticated.')
+param azureAdTenantId string = ''
+
+@description('Optional. The Microsoft Entra application (client) id used by the CRM Web App sign-in.')
+param azureAdClientId string = ''
+
+@description('Optional. The Microsoft Entra client secret used by the CRM Web App sign-in.')
+@secure()
+param azureAdClientSecret string = ''
+
+@description('Optional. The OpenID Connect callback path used by the CRM Web App sign-in.')
+param azureAdCallbackPath string = '/signin-oidc'
+
 @minLength(1)
 @description('Industry use case for deployment')
 @allowed([
@@ -267,6 +283,11 @@ module appServices 'deploy_app_service.bicep' = {
     foundryProjectEndpoint: aifoundry.outputs.projectEndpoint
     foundryOnboardingAgentId: onboardingAgentId
     foundryModelDeploymentName: gptModelName
+    azureAdInstance: azureAdInstance
+    azureAdTenantId: azureAdTenantId
+    azureAdClientId: azureAdClientId
+    azureAdClientSecret: azureAdClientSecret
+    azureAdCallbackPath: azureAdCallbackPath
     aiServicesName: aifoundry.outputs.aiServicesName
     applicationInsightsConnectionString: aifoundry.outputs.applicationInsightsConnectionString
   }

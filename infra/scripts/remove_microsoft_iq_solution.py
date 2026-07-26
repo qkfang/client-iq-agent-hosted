@@ -17,6 +17,7 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 from common.config import SOLUTION_NAME, default_workspace_name
+from common.env import load_infra_env
 from common.env_utils import get_required_env_var
 from fabric.fabric_api import create_fabric_client, FabricApiError
 
@@ -30,6 +31,7 @@ from fabric.fabric_api import create_fabric_client, FabricApiError
 ##############################
 
 # Load configuration from environment variables
+load_infra_env()
 solution_suffix = get_required_env_var("SOLUTION_SUFFIX")
 # Use custom workspace name if provided; fall back to auto-generated name.
 # 'or' handles both None (unset) and '' (set to empty by CI/CD when var is not configured).

@@ -22,6 +22,17 @@ services:
     language: dotnet
 
 hooks:
+  preprovision:
+    windows:
+      run: ./infra/scripts/utils/Load-InfraEnv.ps1
+      shell: pwsh
+      continueOnError: false
+      interactive: false
+    posix:
+      run: ./infra/scripts/utils/Load-InfraEnv.ps1
+      shell: pwsh
+      continueOnError: false
+      interactive: false
   postprovision:
     - windows:
         run: ./infra/scripts/utils/Run-PythonScript.ps1 -ScriptPath "infra/scripts/install_microsoft_iq_solution.py"

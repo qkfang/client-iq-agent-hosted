@@ -14,11 +14,11 @@ total sales order by ida?
 
 
 
-please onboard: "Sample Trading Pty Ltd" as as Private Company
+please onboard: "Contoso Solutions" as as Private Company
 
   {
     "customerId": "CUST-1001",
-    "customerName": "Sample Trading Pty Ltd",
+    "customerName": "Contoso Solutions",
     "legalEntityType": "Private Company",
     "country": "Australia",
     "industry": "Wholesale Trade",
@@ -26,9 +26,9 @@ please onboard: "Sample Trading Pty Ltd" as as Private Company
     "kycRiskRating": "Not assessed",
     "accountOwner": "Alex Morgan",
     "primaryContactName": "Jordan Lee",
-    "primaryContactEmail": "jordan.lee@sample-trading.example",
+    "primaryContactEmail": "jordan.lee@best-share-trading.example",
     "phone": "+61 2 5550 1001",
-    "website": "https://sample-trading.example",
+    "website": "https://best-share-trading.example",
     "annualRevenue": 4200000,
     "employeeCount": 35,
     "lastUpdatedBy": "System",
