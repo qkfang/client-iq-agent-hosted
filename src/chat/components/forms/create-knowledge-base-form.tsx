@@ -56,7 +56,7 @@ export function CreateKnowledgeBaseForm({
     defaultValues: {
       name: '',
       description: '',
-  modelDeployment: 'gpt-5-mini', // default selection
+  modelDeployment: 'gpt-5.6-sol', // default selection
       sources: [],
       outputModality: 'extractiveData',
       answerInstructions: '',
@@ -226,7 +226,7 @@ export function CreateKnowledgeBaseForm({
               </div>
               <FormControl>
                 <Select
-                  value={watchedModel || 'gpt-5-mini'}
+                  value={watchedModel || 'gpt-5.6-sol'}
                   onValueChange={(value) => {
                     setValue('modelDeployment', value)
                     trigger('modelDeployment')

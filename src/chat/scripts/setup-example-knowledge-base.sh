@@ -40,7 +40,7 @@ KNOWLEDGE_BASE_NAME=${KNOWLEDGE_BASE_NAME:-hr-benefits-example}
 KNOWLEDGE_AGENT_NAME=${KNOWLEDGE_AGENT_NAME:-hr-benefits-example-agent}
 SEARCH_API_VERSION=${SEARCH_API_VERSION:-2025-11-01-preview}
 EMBEDDING_MODEL=${EMBEDDING_MODEL:-text-embedding-3-small}
-CHAT_MODEL=${CHAT_MODEL:-gpt-5-mini}
+CHAT_MODEL=${CHAT_MODEL:-gpt-5.6-sol}
 
 if [ -z "$SEARCH_ENDPOINT" ] || [ -z "$STORAGE_ACCOUNT_NAME" ] || [ -z "$AZURE_OPENAI_ENDPOINT" ]; then
     echo "Error: Required configuration not resolved."

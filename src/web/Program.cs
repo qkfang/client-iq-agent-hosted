@@ -11,6 +11,11 @@ using OpenAI.Responses;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Send request, dependency and trace telemetry to Application Insights. The
+// connection string is provided by the APPLICATIONINSIGHTS_CONNECTION_STRING
+// app setting on Azure App Service.
+builder.Services.AddApplicationInsightsTelemetry();
+
 // Add services to the container.
 // Entra sign-in so the agent can run with the user's token (enabled once an
 // AzureAd:ClientId is configured). The user token lets Work IQ resolve the

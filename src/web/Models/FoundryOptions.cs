@@ -28,7 +28,7 @@ public class FoundryOptions
     /// <summary>
     /// The chat model deployment name used when creating the agent version.
     /// </summary>
-    public string ModelDeploymentName { get; set; } = "gpt-5-mini";
+    public string ModelDeploymentName { get; set; } = "gpt-5.6-sol";
 
     /// <summary>
     /// The publicly reachable URL of this web app's MCP endpoint that the

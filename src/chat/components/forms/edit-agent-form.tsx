@@ -81,7 +81,7 @@ export function EditAgentForm({
     defaultValues: {
       name: agent.name,
       description: agent.description || '',
-      model: agent.models?.[0]?.azureOpenAIParameters?.modelName || 'gpt-5-mini',
+      model: agent.models?.[0]?.azureOpenAIParameters?.modelName || 'gpt-5.6-sol',
       outputModality: (agent as any).outputMode || 'extractiveData',
       answerInstructions: agent.answerInstructions || '',
       retrievalInstructions: agent.retrievalInstructions || '',
@@ -140,8 +140,8 @@ export function EditAgentForm({
           kind: 'azureOpenAI',
           azureOpenAIParameters: {
             resourceUri: process.env.NEXT_PUBLIC_AZURE_OPENAI_ENDPOINT || '',
-            deploymentId: data.model || 'gpt-5-mini',
-            modelName: data.model || 'gpt-5-mini'
+            deploymentId: data.model || 'gpt-5.6-sol',
+            modelName: data.model || 'gpt-5.6-sol'
           }
         }],
         knowledgeSources: selectedSources.map(name => ({
@@ -283,7 +283,7 @@ export function EditAgentForm({
               <FormLabel required>AI model</FormLabel>
               <FormControl>
                 <Select
-                  value={watchedModel || agent.models?.[0]?.azureOpenAIParameters?.modelName || 'gpt-5-mini'}
+                  value={watchedModel || agent.models?.[0]?.azureOpenAIParameters?.modelName || 'gpt-5.6-sol'}
                   onValueChange={(value) => {
                     setValue('model', value)
                     trigger('model')
@@ -293,13 +293,13 @@ export function EditAgentForm({
                     <SelectValue placeholder="Select a model" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="gpt-5-mini">
+                    <SelectItem value="gpt-5.6-sol">
                       <div>
                         <div className="font-medium">GPT-4o Mini</div>
                         <div className="text-xs text-fg-muted">Fast, cost-effective, recommended</div>
                       </div>
                     </SelectItem>
-                    <SelectItem value="gpt-5-mini">
+                    <SelectItem value="gpt-5.6-sol">
                       <div>
                         <div className="font-medium">GPT-4o</div>
                         <div className="text-xs text-fg-muted">Highest quality responses</div>
@@ -329,7 +329,7 @@ export function EditAgentForm({
                         <div className="text-xs text-fg-muted">Latest nano model</div>
                       </div>
                     </SelectItem>
-                    <SelectItem value="gpt-5-mini">
+                    <SelectItem value="gpt-5.6-sol">
                       <div>
                         <div className="font-medium">GPT-5 Mini</div>
                         <div className="text-xs text-fg-muted">Latest mini model</div>

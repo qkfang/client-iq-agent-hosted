@@ -67,7 +67,7 @@ export function CreateAgentForm({
     defaultValues: {
       name: '',
       description: '',
-      model: 'gpt-5-mini', // Using supported model name
+      model: 'gpt-5.6-sol', // Using supported model name
       sources: [],
       outputModality: 'extractiveData' as const,
       answerInstructions: '',
@@ -244,7 +244,7 @@ export function CreateAgentForm({
               </div>
               <FormControl>
                 <Select
-                  value={watchedModel || "gpt-5-mini"}
+                  value={watchedModel || "gpt-5.6-sol"}
                   onValueChange={(value) => {
                     setValue('model', value)
                     trigger('model')
@@ -254,13 +254,13 @@ export function CreateAgentForm({
                     <SelectValue placeholder="Select a model" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="gpt-5-mini">
+                    <SelectItem value="gpt-5.6-sol">
                       <div>
                         <div className="font-medium">GPT-4o Mini</div>
                         <div className="text-xs text-fg-muted">Fast, cost-effective, recommended</div>
                       </div>
                     </SelectItem>
-                    <SelectItem value="gpt-5-mini">
+                    <SelectItem value="gpt-5.6-sol">
                       <div>
                         <div className="font-medium">GPT-4o</div>
                         <div className="text-xs text-fg-muted">Highest quality responses</div>
@@ -290,7 +290,7 @@ export function CreateAgentForm({
                         <div className="text-xs text-fg-muted">Latest nano model</div>
                       </div>
                     </SelectItem>
-                    <SelectItem value="gpt-5-mini">
+                    <SelectItem value="gpt-5.6-sol">
                       <div>
                         <div className="font-medium">GPT-5 Mini</div>
                         <div className="text-xs text-fg-muted">Latest mini model</div>

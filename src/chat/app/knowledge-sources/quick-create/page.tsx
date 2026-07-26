@@ -34,7 +34,7 @@ const SOURCE_TYPE_INFO = {
       containerName: 'kr-demos',
       folderPath: 'documents/',
       embeddingModel: 'text-embedding-3-small',
-      completionModel: 'gpt-5-mini'
+      completionModel: 'gpt-5.6-sol'
     }
   },
   searchIndex: {
@@ -167,8 +167,8 @@ function QuickCreateKnowledgeSourcePageContent() {
               kind: 'azureOpenAI',
               azureOpenAIParameters: {
                 resourceUri: aoaiEndpoint,
-                deploymentId: 'gpt-5-mini',
-                modelName: 'gpt-5-mini'
+                deploymentId: 'gpt-5.6-sol',
+                modelName: 'gpt-5.6-sol'
               }
             }
           }

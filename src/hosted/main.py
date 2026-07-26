@@ -11,7 +11,7 @@ provides the readiness endpoint required by the Foundry platform.
 
 Required environment variables:
     FOUNDRY_PROJECT_ENDPOINT:          Foundry project endpoint (injected by the platform)
-    AZURE_AI_MODEL_DEPLOYMENT_NAME:    Model deployment name (e.g., gpt-5-mini)
+    AZURE_AI_MODEL_DEPLOYMENT_NAME:    Model deployment name (e.g., gpt-5.6-sol)
 """
 
 from pathlib import Path

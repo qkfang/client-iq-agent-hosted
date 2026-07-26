@@ -324,7 +324,7 @@ function KnowledgePageContent() {
                         <div className="flex items-center gap-2">
                           <StatusPill variant="success">healthy</StatusPill>
                           <span className="text-xs text-fg-muted font-medium">
-                            {kb.model || 'gpt-5-mini'}
+                            {kb.model || 'gpt-5.6-sol'}
                           </span>
                         </div>
                       </div>

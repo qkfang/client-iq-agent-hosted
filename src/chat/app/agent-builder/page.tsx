@@ -470,8 +470,8 @@ function AgentBuilderPageContent() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="gpt-4.1">GPT-4.1 (MCP Compatible)</SelectItem>
-                  <SelectItem value="gpt-5-mini">GPT-4o (Latest)</SelectItem>
-                  <SelectItem value="gpt-5-mini">GPT-4o Mini</SelectItem>
+                  <SelectItem value="gpt-5.6-sol">GPT-4o (Latest)</SelectItem>
+                  <SelectItem value="gpt-5.6-sol">GPT-4o Mini</SelectItem>
                   <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
                 </SelectContent>
               </Select>

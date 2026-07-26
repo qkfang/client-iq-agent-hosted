@@ -34,24 +34,16 @@ hooks:
       continueOnError: false
       interactive: false
   postprovision:
-    - windows:
-        run: ./infra/scripts/utils/Run-PythonScript.ps1 -ScriptPath "infra/scripts/install_microsoft_iq_solution.py"
-        shell: pwsh
-        continueOnError: false
-        interactive: true
-      posix:
-        run: ./infra/scripts/utils/Run-PythonScript.ps1 -ScriptPath "infra/scripts/install_microsoft_iq_solution.py" -SkipPythonVirtualEnvironment
-        shell: pwsh
-        continueOnError: false
-        interactive: true
-    - shell: sh
-      continueOnError: true
+    windows:
+      run: ./infra/scripts/utils/Run-PythonScript.ps1 -ScriptPath "infra/scripts/install_microsoft_iq_solution.py"
+      shell: pwsh
+      continueOnError: false
       interactive: true
-      run: |
-        chmod +x ./src/chat/scripts/configure-rbac.sh ./src/chat/scripts/upload-sample-data.sh ./src/chat/scripts/setup-example-knowledge-base.sh
-        ./src/chat/scripts/configure-rbac.sh
-        ./src/chat/scripts/upload-sample-data.sh
-        ./src/chat/scripts/setup-example-knowledge-base.sh
+    posix:
+      run: ./infra/scripts/utils/Run-PythonScript.ps1 -ScriptPath "infra/scripts/install_microsoft_iq_solution.py" -SkipPythonVirtualEnvironment
+      shell: pwsh
+      continueOnError: false
+      interactive: true
   predown:
     windows:
       run: ./infra/scripts/utils/Run-PythonScript.ps1 -ScriptPath "infra/scripts/remove_microsoft_iq_solution.py"

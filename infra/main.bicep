@@ -104,7 +104,7 @@ param searchServiceLocation string = resourceGroup().location
   azd: {
     type: 'location'
     usageName: [
-      'OpenAI.GlobalStandard.gpt-5-mini,150'
+      'OpenAI.GlobalStandard.gpt-5.6-sol,150'
       'OpenAI.GlobalStandard.text-embedding-3-small,80'
     ]
   }
@@ -121,7 +121,7 @@ param aiDeploymentsLocation string
 param deploymentType string = 'GlobalStandard'
 
 @description('Name of the GPT model to deploy')
-param gptModelName string = 'gpt-5-mini'
+param gptModelName string = 'gpt-5.6-sol'
 
 @description('Version of the GPT model to deploy')
 param gptModelVersion string = '2025-08-07'
@@ -321,7 +321,7 @@ output AZURE_FABRIC_CAPACITY_ADMINISTRATORS array = fabricTotalAdminMembers
 
 // AI Foundry Outputs
 
-@description('GPT model deployment name (e.g., gpt-5-mini)')
+@description('GPT model deployment name (e.g., gpt-5.6-sol)')
 output AZURE_OPENAI_DEPLOYMENT_MODEL string = gptModelName
 
 @description('Azure OpenAI service endpoint URL')

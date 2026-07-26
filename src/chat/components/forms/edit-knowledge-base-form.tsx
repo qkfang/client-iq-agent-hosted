@@ -94,7 +94,7 @@ export function EditKnowledgeBaseForm({
       name: knowledgeBase.name,
       description: knowledgeBase.description || '',
       modelDeployment:
-        knowledgeBase.models?.[0]?.azureOpenAIParameters?.modelName || 'gpt-5-mini',
+        knowledgeBase.models?.[0]?.azureOpenAIParameters?.modelName || 'gpt-5.6-sol',
       sources: selectedSources,
       outputModality: outputModality as 'extractiveData' | 'answerSynthesis',
       answerInstructions,
@@ -277,7 +277,7 @@ export function EditKnowledgeBaseForm({
                 </div>
                 <FormControl>
                   <Select
-                    value={watchedModel || 'gpt-5-mini'}
+                    value={watchedModel || 'gpt-5.6-sol'}
                     onValueChange={(value) => {
                       setValue('modelDeployment', value)
                       trigger('modelDeployment')

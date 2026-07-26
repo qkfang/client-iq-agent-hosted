@@ -66,7 +66,7 @@ Environment Variables:
     AZURE_OPENAI_EMBEDDING_MODEL         (optional) Embedding model deployment name.
                                                     Defaults to text-embedding-3-small.
     AZURE_CHAT_MODEL                     (optional) Chat model deployment name.
-                                                    Defaults to gpt-5-mini.
+                                                    Defaults to gpt-5.6-sol.
     AZURE_AI_SEARCH_INDEX                (optional) Search index name.
                                                     Defaults to <SOLUTION_SUFFIX>-documents.
     AZURE_AI_SEARCH_ONBOARDING_INDEX     (optional) Customer onboarding search index name.
@@ -210,7 +210,7 @@ def main() -> None:
         or agent_endpoint.split("/api/projects")[0]
     )
     embedding_model = os.getenv("AZURE_OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
-    chat_model = os.getenv("AZURE_CHAT_MODEL", "gpt-5-mini")
+    chat_model = os.getenv("AZURE_CHAT_MODEL", "gpt-5.6-sol")
     search_index_name = os.getenv("AZURE_AI_SEARCH_INDEX", f"{solution_suffix}-documents")
     blob_container_name = f"{solution_suffix}-documents"
     knowledge_base_name = f"{solution_suffix}-kb"
