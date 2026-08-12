@@ -144,6 +144,14 @@
                 panels.forEach(p => { p.hidden = p.dataset.panel !== name; });
             }
 
+            function formatJson(data) {
+                const clone = Object.assign({}, data);
+                if (typeof clone.message === 'string') {
+                    try { clone.message = JSON.parse(clone.message); } catch { /* keep as text */ }
+                }
+                return JSON.stringify(clone, null, 2);
+            }
+
             function setResultTabsEnabled(enabled) {
                 tabs.forEach(t => {
                     if (t.dataset.tab === 'result' || t.dataset.tab === 'json') {
@@ -205,7 +213,7 @@
                     }
 
                     resultBox.textContent = data.message || '';
-                    jsonBox.textContent = JSON.stringify(data, null, 2);
+                    jsonBox.textContent = formatJson(data);
                     setResultTabsEnabled(true);
                     selectTab('result');
                     submitBtn.hidden = true;

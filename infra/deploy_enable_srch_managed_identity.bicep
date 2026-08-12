@@ -4,9 +4,14 @@ param searchServiceName string
 @description('The Azure region where the search service is deployed.')
 param location string
 
+@description('Tags to apply to the search service.')
+param tags object = {}
+
+// Redeploys the same search service, so tags must be repeated or they are stripped.
 resource aiSearchWithManagedIdentity 'Microsoft.Search/searchServices@2024-06-01-preview' = {
   name: searchServiceName
   location: location
+  tags: union(tags, { SecurityControl: 'Ignore' })
   sku: {
     name: 'basic'
   }

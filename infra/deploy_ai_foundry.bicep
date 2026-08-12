@@ -77,6 +77,7 @@ var storageName = take(toLower(replace('${abbrs.storage.storageAccount}${solutio
 var aiSearchConnectionName = '${abbrs.ai.aiSearch}con-${solutionSuffix}'
 var bingAccountName = 'bing-${solutionSuffix}'
 var bingConnectionName = 'bingcon-${solutionSuffix}'
+var appInsightsConnectionName = 'appinsightscon-${solutionSuffix}'
 
 var aiModelDeployments = concat([
   {
@@ -159,6 +160,9 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
     networkAcls: {
       defaultAction: 'Allow'
       bypass: 'AzureServices'
+      ipRules: []
+      virtualNetworkRules: []
+      resourceAccessRules: []
     }
   }
 }
@@ -247,6 +251,7 @@ module searchServiceEnableIdentity 'deploy_enable_srch_managed_identity.bicep' =
   params: {
     searchServiceName: aiSearchName
     location: searchServiceLocation
+    tags: tags
   }
   dependsOn: [
     aiSearch
@@ -309,6 +314,26 @@ resource bingConnection 'Microsoft.CognitiveServices/accounts/projects/connectio
       ApiType: 'Azure'
       ResourceId: bingAccount.id
       location: 'global'
+    }
+  }
+}
+
+// Connect Application Insights to Project so Foundry logs server-side agent
+// traces (agent runs, model calls, tool invocations) to Application Insights.
+resource appInsightsConnection 'Microsoft.CognitiveServices/accounts/projects/connections@2025-04-01-preview' = if (empty(azureExistingAIProjectResourceId)) {
+  parent: aiProject
+  name: appInsightsConnectionName
+  properties: {
+    category: 'AppInsights'
+    target: applicationInsights.id
+    authType: 'ApiKey'
+    isSharedToAll: true
+    credentials: {
+      key: applicationInsights.properties.ConnectionString
+    }
+    metadata: {
+      ApiType: 'Azure'
+      ResourceId: applicationInsights.id
     }
   }
 }
