@@ -4,6 +4,8 @@ import os
 import sys
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 
 AGENT_ROOT = Path(__file__).resolve().parent.parent
 REPO_ROOT = AGENT_ROOT.parents[1]
@@ -13,12 +15,20 @@ sys.path.insert(0, str(INFRA_SCRIPTS))
 from common.env import load_all_env
 from common.env_utils import get_required_env_var
 from common.logging_config import setup_logging
+from foundry.agent_api import (
+    WORKIQ_MAIL_SERVER_LABEL,
+    WORKIQ_MAIL_SERVER_URL,
+    build_fabric_iq_tool,
+    create_agent_client,
+    publish_toolbox_version,
+)
 from hosted.step_hosted_agent_deploy import deploy_hosted_agent
 
 
 def main() -> None:
     setup_logging()
     load_all_env()
+    load_dotenv(AGENT_ROOT / ".env", override=False)
 
     solution_suffix = get_required_env_var("SOLUTION_SUFFIX")
     agent_endpoint = os.getenv("AZURE_AI_AGENT_ENDPOINT") or os.getenv(
@@ -33,6 +43,35 @@ def main() -> None:
         "AZURE_CHAT_MODEL", "gpt-5.6-sol"
     )
     knowledge_base_name = f"{solution_suffix}-kb"
+    toolbox_name = os.getenv("TOOLBOX_NAME", "workiq-mail-toolbox")
+
+    extra_tools = []
+    fabric_iq_connection_id = os.getenv("FABRIC_IQ_CONNECTION_ID")
+    if fabric_iq_connection_id:
+        fabric_iq_tool = build_fabric_iq_tool(
+            project_connection_id=fabric_iq_connection_id,
+            server_url=os.getenv("FABRIC_IQ_SERVER_URL"),
+        )
+        extra_tools.append(fabric_iq_tool)
+        # The container calls remote tools through the toolbox, so Fabric IQ is
+        # republished alongside the Work IQ Mail tool (versions are immutable).
+        toolbox_client = create_agent_client(agent_endpoint, allow_preview=True)
+        with toolbox_client:
+            publish_toolbox_version(
+                toolbox_client,
+                endpoint=agent_endpoint,
+                toolbox_name=toolbox_name,
+                tools=[
+                    {
+                        "type": "mcp",
+                        "server_label": WORKIQ_MAIL_SERVER_LABEL,
+                        "server_url": WORKIQ_MAIL_SERVER_URL,
+                        "require_approval": "never",
+                        "project_connection_id": WORKIQ_MAIL_SERVER_LABEL,
+                    },
+                    dict(fabric_iq_tool),
+                ],
+            )
 
     deploy_hosted_agent(
         agent_name="hosted-tool-agent",
@@ -53,7 +92,8 @@ def main() -> None:
         source_dir=str(AGENT_ROOT),
         cpu=os.getenv("HOSTED_AGENT_CPU", "0.5"),
         memory=os.getenv("HOSTED_AGENT_MEMORY", "1.0Gi"),
-        toolbox_name=os.getenv("TOOLBOX_NAME", "workiq-mail-toolbox"),
+        toolbox_name=toolbox_name,
+        extra_tools=extra_tools,
     )
 
 
