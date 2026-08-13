@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/microsoft/AgentSchema/refs/heads/main/schemas/v1.0/AgentManifest.yaml
-name: hosted-chat-agent
-displayName: "HostedChatAgent"
+name: hosted-tool-agent
+displayName: "hosted-tool-agent"
 description: >
   A hosted operations assistant grounded with the Foundry IQ knowledge base
   built by this solution accelerator (delivery operations, inventory
@@ -12,7 +12,7 @@ metadata:
     - Foundry IQ
     - Python
 template:
-  name: hosted-chat-agent
+  name: hosted-tool-agent
   kind: hosted
   protocols:
     - protocol: responses
