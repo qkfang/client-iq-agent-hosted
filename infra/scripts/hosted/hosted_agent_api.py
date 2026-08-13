@@ -148,10 +148,11 @@ def create_or_update_hosted_agent(
     connection_name: str | None = None,
     extra_tools: list | None = None,
 ):
-    """Create or replace a hosted AI Foundry agent, optionally with the KB MCP tool.
+    """Create a new hosted AI Foundry agent version, optionally with the KB MCP tool.
 
-    If an agent with the same name already exists it is deleted before the
-    new version is created. When both ``mcp_endpoint`` and ``connection_name``
+    Each deploy adds a new version under the same agent name — the service
+    increments the version number automatically, so earlier versions remain
+    available. When both ``mcp_endpoint`` and ``connection_name``
     are provided the agent is wired up to the Knowledge Base MCP tool;
     otherwise it is deployed without any tools. Any tools passed in
     ``extra_tools`` (e.g. Work IQ, the finalize MCP tool or web search) are
@@ -183,16 +184,11 @@ def create_or_update_hosted_agent(
 
     try:
         existing = project_client.agents.get(agent_name)
+        logger.info(
+            f"      Existing agent version: {getattr(existing, 'version', 'unknown')}"
+        )
     except Exception:
-        existing = None  # agent does not yet exist
-    if existing:
-        try:
-            project_client.agents.delete(agent_name)
-        except Exception:
-            # The agent may still have active sessions, which blocks a plain
-            # delete. Cascade-delete the sessions so the version can be replaced.
-            project_client.agents.delete(agent_name, params={"force": "true"})
-        logger.debug(f"      Deleted existing hosted agent '{agent_name}'")
+        logger.info(f"      Agent '{agent_name}' not found — creating first version")
 
     tools = []
     if mcp_endpoint and connection_name:

@@ -39,10 +39,25 @@ ROUTE_TO_AGENT_NAME = {
     "lego": LEGO_AGENT_NAME,
 }
 
+# Fabric IQ MCP tool — hosted Microsoft service exposing Fabric AI Hub data.
+FABRIC_IQ_SERVER_URL = (
+    "https://api.fabric.microsoft.com/v1/mcp/fabricaihub/integrations/m365"
+)
+
 # Work IQ MCP tool — hosted Microsoft service exposing workplace knowledge.
 WORKIQ_SERVER_LABEL = "WorkIQMCP"
 WORKIQ_SERVER_URL = "https://workiq.svc.cloud.microsoft/mcp"
 WORKIQ_CONNECTION_NAME = "WorkIQMCP"
+
+# Work IQ Agent 365 MCP servers. The project connection name matches the label.
+WORKIQ_MAIL_SERVER_LABEL = "WorkIQMail"
+WORKIQ_MAIL_SERVER_URL = (
+    "https://agent365.svc.cloud.microsoft/agents/servers/mcp_MailTools"
+)
+WORKIQ_CALENDAR_SERVER_LABEL = "WorkIQCalendar"
+WORKIQ_CALENDAR_SERVER_URL = (
+    "https://agent365.svc.cloud.microsoft/agents/servers/mcp_CalendarTools"
+)
 
 
 def create_agent_client(endpoint: str, allow_preview: bool = False):
@@ -409,6 +424,19 @@ def create_kb_mcp_connection(
     }
 
     logger.debug(f"      MCP target: {mcp_endpoint}")
+    existing = http_requests.get(url, headers=headers)
+    if existing.status_code == 200:
+        properties = existing.json().get("properties", {})
+        if (
+            properties.get("authType") == body["properties"]["authType"]
+            and properties.get("category") == body["properties"]["category"]
+            and properties.get("target") == body["properties"]["target"]
+            and properties.get("audience", "").rstrip("/")
+            == body["properties"]["audience"].rstrip("/")
+        ):
+            logger.info(f"   Reusing existing MCP connection '{connection_name}'")
+            return True
+
     response = http_requests.put(url, headers=headers, json=body)
     if response.status_code in (200, 201):
         return True
@@ -452,6 +480,97 @@ def build_workiq_mcp_tool():
         server_url=WORKIQ_SERVER_URL,
         project_connection_id=WORKIQ_CONNECTION_NAME,
     )
+
+
+def build_fabric_iq_tool(project_connection_id: str, server_url: str | None = None):
+    """Build the Fabric IQ tool definition for a Fabric AI Hub connection.
+
+    Args:
+        project_connection_id: Fabric IQ project connection ID (full ARM path
+            or connection name).
+        server_url: Fabric IQ MCP endpoint. Defaults to the Fabric AI Hub M365
+            integration endpoint.
+
+    Returns:
+        A ``Tool`` carrying the ``fabric_iq_preview`` definition.
+    """
+    from azure.ai.projects.models import Tool
+
+    # The installed SDK has no typed Fabric IQ model, so the payload is built
+    # against the generic Tool mapping.
+    return Tool(
+        {
+            "type": "fabric_iq_preview",
+            "project_connection_id": project_connection_id,
+            "server_url": server_url or FABRIC_IQ_SERVER_URL,
+            "require_approval": "never",
+        }
+    )
+
+
+def build_workiq_server_mcp_tool(server_label: str, server_url: str):
+    """Build the MCP tool definition for a Work IQ Agent 365 server.
+
+    Args:
+        server_label: Server label, also used as the project connection name.
+        server_url: MCP endpoint URL for the Work IQ server.
+
+    Returns:
+        An ``MCPTool`` bound to the Work IQ server endpoint.
+    """
+    from azure.ai.projects.models import MCPTool
+
+    return MCPTool(
+        server_label=server_label,
+        server_url=server_url,
+        project_connection_id=server_label,
+    )
+
+
+def publish_toolbox_version(
+    project_client,
+    endpoint: str,
+    toolbox_name: str,
+    tools: list[dict],
+    description: str | None = None,
+) -> str:
+    """Publish a new Foundry toolbox version and make it the default.
+
+    Hosted agent containers reach remote tools through a toolbox rather than
+    through the tools declared on the agent version, so tools the container
+    must call are published here.
+
+    Args:
+        project_client: Authenticated ``AIProjectClient``.
+        endpoint: Azure AI Project endpoint URL.
+        toolbox_name: Name of an existing toolbox.
+        tools: Full tool list for the new version (versions are immutable).
+        description: Optional description for the new version.
+
+    Returns:
+        The published version identifier.
+    """
+    from azure.core.rest import HttpRequest
+
+    base_url = f"{endpoint.rstrip('/')}/toolboxes/{toolbox_name}"
+    body: dict = {"tools": tools}
+    if description:
+        body["description"] = description
+
+    response = project_client.send_request(
+        HttpRequest("POST", f"{base_url}/versions?api-version=v1", json=body)
+    )
+    response.raise_for_status()
+    version = response.json()["version"]
+
+    default_response = project_client.send_request(
+        HttpRequest(
+            "PATCH", f"{base_url}?api-version=v1", json={"default_version": version}
+        )
+    )
+    default_response.raise_for_status()
+    logger.info(f"   Toolbox '{toolbox_name}' now defaults to version {version}")
+    return version
 
 
 def create_or_update_agent(

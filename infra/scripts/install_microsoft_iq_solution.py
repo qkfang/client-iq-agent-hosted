@@ -66,13 +66,15 @@ Environment Variables:
     AZURE_OPENAI_EMBEDDING_MODEL         (optional) Embedding model deployment name.
                                                     Defaults to text-embedding-3-small.
     AZURE_CHAT_MODEL                     (optional) Chat model deployment name.
-                                                    Defaults to gpt-5.6-sol.
+                                                    Falls back to AZURE_OPENAI_DEPLOYMENT_MODEL,
+                                                    then AZURE_AI_AGENT_MODEL_DEPLOYMENT_NAME, then gpt-5-mini.
     AZURE_AI_SEARCH_INDEX                (optional) Search index name.
                                                     Defaults to <SOLUTION_SUFFIX>-documents.
     AZURE_AI_SEARCH_ONBOARDING_INDEX     (optional) Customer onboarding search index name.
                                                     Defaults to <SOLUTION_SUFFIX>-onboarding-documents.
     AZURE_AI_AGENT_MODEL_DEPLOYMENT_NAME (optional) Chat model deployment name for the agent.
-                                                    Falls back to AZURE_CHAT_MODEL, then gpt-5.6-sol.
+                                                    Falls back to AZURE_OPENAI_DEPLOYMENT_MODEL,
+                                                    then AZURE_CHAT_MODEL, then gpt-5-mini.
     KB_MCP_CONNECTION_NAME               (optional) Project connection name for the Knowledge Base MCP tool.
                                                     Defaults to <SOLUTION_SUFFIX>-kb-mcp-connection.
     KB_ONBOARDING_MCP_CONNECTION_NAME    (optional) Project connection name for the onboarding Knowledge Base MCP tool.
@@ -210,7 +212,12 @@ def main() -> None:
         or agent_endpoint.split("/api/projects")[0]
     )
     embedding_model = os.getenv("AZURE_OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
-    chat_model = os.getenv("AZURE_CHAT_MODEL", "gpt-5.6-sol")
+    chat_model = (
+        os.getenv("AZURE_CHAT_MODEL")
+        or os.getenv("AZURE_OPENAI_DEPLOYMENT_MODEL")
+        or os.getenv("AZURE_AI_AGENT_MODEL_DEPLOYMENT_NAME")
+        or "gpt-5-mini"
+    )
     search_index_name = os.getenv("AZURE_AI_SEARCH_INDEX", f"{solution_suffix}-documents")
     blob_container_name = f"{solution_suffix}-documents"
     knowledge_base_name = f"{solution_suffix}-kb"
@@ -227,7 +234,9 @@ def main() -> None:
     # Agent model selection
     agent_model = (
         os.getenv("AZURE_AI_AGENT_MODEL_DEPLOYMENT_NAME")
-        or os.getenv("AZURE_CHAT_MODEL", "gpt-5.6-sol")
+        or os.getenv("AZURE_OPENAI_DEPLOYMENT_MODEL")
+        or os.getenv("AZURE_CHAT_MODEL")
+        or "gpt-5-mini"
     )
     kb_mcp_connection_name = os.getenv("KB_MCP_CONNECTION_NAME", f"{solution_suffix}-kb-mcp-connection")
     onboarding_kb_mcp_connection_name = os.getenv(
@@ -417,70 +426,70 @@ def main() -> None:
             ),
         )
 
-    # ------------------------------------------------------------------
-    # Step 3 - Create OnboardingAgent (Knowledge Base MCP tool)
-    #
-    # Best-effort, same rationale as setup_agent above.
-    # ------------------------------------------------------------------
-    print_step(3, 9, "Creating OnboardingAgent with Knowledge Base MCP tool",
-               agent_endpoint=agent_endpoint,
-               knowledge_base=knowledge_base_name,
-               connection=kb_mcp_connection_name)
-    try:
-        setup_onboarding_agent(
-            solution_name=SOLUTION_NAME,
-            agent_endpoint=agent_endpoint,
-            agent_model=agent_model,
-            search_endpoint=search_endpoint,
-            knowledge_base_name=knowledge_base_name,
-            kb_mcp_connection_name=kb_mcp_connection_name,
-            subscription_id=subscription_id,
-            resource_group=resource_group,
-            ai_service_name=ai_service_name,
-            ai_project_name=ai_project_name,
-        )
-        logger.info("Successfully completed: setup_onboarding_agent")
-        executed_steps.append("setup_onboarding_agent")
-    except Exception as exc:
-        _warn_step(
-            "setup_onboarding_agent",
-            exc,
-            guidance=(
-                "This is often caused by a transient platform-level issue "
-                "with the AI Foundry agents API and may not indicate a real "
-                "failure. Please open the AI Foundry project and verify "
-                "whether the agent was created. If it was not, re-run the "
-                "deployment."
-            ),
-        )
+    # # ------------------------------------------------------------------
+    # # Step 3 - Create OnboardingAgent (Knowledge Base MCP tool)
+    # #
+    # # Best-effort, same rationale as setup_agent above.
+    # # ------------------------------------------------------------------
+    # print_step(3, 9, "Creating OnboardingAgent with Knowledge Base MCP tool",
+    #            agent_endpoint=agent_endpoint,
+    #            knowledge_base=knowledge_base_name,
+    #            connection=kb_mcp_connection_name)
+    # try:
+    #     setup_onboarding_agent(
+    #         solution_name=SOLUTION_NAME,
+    #         agent_endpoint=agent_endpoint,
+    #         agent_model=agent_model,
+    #         search_endpoint=search_endpoint,
+    #         knowledge_base_name=knowledge_base_name,
+    #         kb_mcp_connection_name=kb_mcp_connection_name,
+    #         subscription_id=subscription_id,
+    #         resource_group=resource_group,
+    #         ai_service_name=ai_service_name,
+    #         ai_project_name=ai_project_name,
+    #     )
+    #     logger.info("Successfully completed: setup_onboarding_agent")
+    #     executed_steps.append("setup_onboarding_agent")
+    # except Exception as exc:
+    #     _warn_step(
+    #         "setup_onboarding_agent",
+    #         exc,
+    #         guidance=(
+    #             "This is often caused by a transient platform-level issue "
+    #             "with the AI Foundry agents API and may not indicate a real "
+    #             "failure. Please open the AI Foundry project and verify "
+    #             "whether the agent was created. If it was not, re-run the "
+    #             "deployment."
+    #         ),
+    #     )
 
-    # ------------------------------------------------------------------
-    # Step 4 - Create onboarding-form pipeline agents (Intake, Orchestrator,
-    # Opportunity, Insight, Crm, Lego)
-    #
-    # Best-effort, same rationale as setup_agent above.
-    # ------------------------------------------------------------------
-    print_step(4, 9, "Creating onboarding-form pipeline agents", agent_endpoint=agent_endpoint)
-    try:
-        setup_pipeline_agents(
-            solution_name=SOLUTION_NAME,
-            agent_endpoint=agent_endpoint,
-            agent_model=agent_model,
-        )
-        logger.info("Successfully completed: setup_pipeline_agents")
-        executed_steps.append("setup_pipeline_agents")
-    except Exception as exc:
-        _warn_step(
-            "setup_pipeline_agents",
-            exc,
-            guidance=(
-                "This is often caused by a transient platform-level issue "
-                "with the AI Foundry agents API and may not indicate a real "
-                "failure. Please open the AI Foundry project and verify "
-                "whether the agents were created. If not, re-run the "
-                "deployment."
-            ),
-        )
+    # # ------------------------------------------------------------------
+    # # Step 4 - Create onboarding-form pipeline agents (Intake, Orchestrator,
+    # # Opportunity, Insight, Crm, Lego)
+    # #
+    # # Best-effort, same rationale as setup_agent above.
+    # # ------------------------------------------------------------------
+    # print_step(4, 9, "Creating onboarding-form pipeline agents", agent_endpoint=agent_endpoint)
+    # try:
+    #     setup_pipeline_agents(
+    #         solution_name=SOLUTION_NAME,
+    #         agent_endpoint=agent_endpoint,
+    #         agent_model=agent_model,
+    #     )
+    #     logger.info("Successfully completed: setup_pipeline_agents")
+    #     executed_steps.append("setup_pipeline_agents")
+    # except Exception as exc:
+    #     _warn_step(
+    #         "setup_pipeline_agents",
+    #         exc,
+    #         guidance=(
+    #             "This is often caused by a transient platform-level issue "
+    #             "with the AI Foundry agents API and may not indicate a real "
+    #             "failure. Please open the AI Foundry project and verify "
+    #             "whether the agents were created. If not, re-run the "
+    #             "deployment."
+    #         ),
+    #     )
 
     # ------------------------------------------------------------------
     # Step 5 - Set up Fabric workspace
@@ -528,176 +537,176 @@ def main() -> None:
     except Exception as exc:
         _abort("setup_administrators", exc)
 
-    # ------------------------------------------------------------------
-    # Step 6 - Upload installer notebook
-    # ------------------------------------------------------------------
-    print_step(7, 9, "Uploading installer notebook",
-               notebook=INSTALLER_NOTEBOOK_NAME)
-    try:
-        notebook_id = upload_installer_notebook(workspace_client, notebook_path, github_token=github_token)
-        logger.info("Successfully completed: upload_installer")
-        executed_steps.append("upload_installer")
-    except Exception as exc:
-        _abort("upload_installer", exc)
+    # # ------------------------------------------------------------------
+    # # Step 6 - Upload installer notebook
+    # # ------------------------------------------------------------------
+    # print_step(7, 9, "Uploading installer notebook",
+    #            notebook=INSTALLER_NOTEBOOK_NAME)
+    # try:
+    #     notebook_id = upload_installer_notebook(workspace_client, notebook_path, github_token=github_token)
+    #     logger.info("Successfully completed: upload_installer")
+    #     executed_steps.append("upload_installer")
+    # except Exception as exc:
+    #     _abort("upload_installer", exc)
 
-    # ------------------------------------------------------------------
-    # Step 7 - Run installer notebook
-    # ------------------------------------------------------------------
-    print_step(8, 9, "Running installer notebook",
-               notebook_id=notebook_id)
-    try:
-        run_installer_notebook(workspace_client, notebook_id)
-        logger.info("Successfully completed: run_installer")
-        executed_steps.append("run_installer")
-    except Exception as exc:
-        _abort("run_installer", exc)
+    # # ------------------------------------------------------------------
+    # # Step 7 - Run installer notebook
+    # # ------------------------------------------------------------------
+    # print_step(8, 9, "Running installer notebook",
+    #            notebook_id=notebook_id)
+    # try:
+    #     run_installer_notebook(workspace_client, notebook_id)
+    #     logger.info("Successfully completed: run_installer")
+    #     executed_steps.append("run_installer")
+    # except Exception as exc:
+    #     _abort("run_installer", exc)
 
-    # ------------------------------------------------------------------
-    # Step 8 - Deploy hosted Foundry agent (optional)
-    #
-    # Requires an Azure Container Registry (AZURE_CONTAINER_REGISTRY_NAME),
-    # which is not a main.bicep output. When it is not set the step is
-    # skipped so azd up still succeeds. Best-effort otherwise: a failure is
-    # recorded as a warning and does not abort the deployment.
-    # ------------------------------------------------------------------
-    container_registry_name = os.getenv("AZURE_CONTAINER_REGISTRY_NAME")
-    print_step(9, 9, "Deploying hosted Foundry agent",
-               container_registry=container_registry_name or "Not set (skipped)")
-    if not container_registry_name:
-        logger.info(
-            "   AZURE_CONTAINER_REGISTRY_NAME not set — skipping hosted agent deploy."
-        )
-    else:
-        try:
-            deploy_hosted_agent(
-                agent_endpoint=agent_endpoint,
-                agent_model=agent_model,
-                search_endpoint=search_endpoint,
-                knowledge_base_name=knowledge_base_name,
-                kb_mcp_connection_name=kb_mcp_connection_name,
-                subscription_id=subscription_id,
-                resource_group=resource_group,
-                ai_service_name=ai_service_name,
-                ai_project_name=ai_project_name,
-                container_registry_name=container_registry_name,
-                source_dir=os.path.join(REPO_ROOT, "src", "hosted"),
-                cpu=os.getenv("HOSTED_AGENT_CPU", "0.5"),
-                memory=os.getenv("HOSTED_AGENT_MEMORY", "1.0Gi"),
-            )
-            logger.info("Successfully completed: deploy_hosted_agent")
-            executed_steps.append("deploy_hosted_agent")
-        except Exception as exc:
-            _warn_step(
-                "deploy_hosted_agent",
-                exc,
-                guidance=(
-                    "Verify the container registry exists and the image built "
-                    "successfully. You can re-run infra/scripts/hosted/"
-                    "deploy_hosted_agent.py to retry."
-                ),
-            )
+    # # ------------------------------------------------------------------
+    # # Step 8 - Deploy hosted Foundry agent (optional)
+    # #
+    # # Requires an Azure Container Registry (AZURE_CONTAINER_REGISTRY_NAME),
+    # # which is not a main.bicep output. When it is not set the step is
+    # # skipped so azd up still succeeds. Best-effort otherwise: a failure is
+    # # recorded as a warning and does not abort the deployment.
+    # # ------------------------------------------------------------------
+    # container_registry_name = os.getenv("AZURE_CONTAINER_REGISTRY_NAME")
+    # print_step(9, 9, "Deploying hosted Foundry agent",
+    #            container_registry=container_registry_name or "Not set (skipped)")
+    # if not container_registry_name:
+    #     logger.info(
+    #         "   AZURE_CONTAINER_REGISTRY_NAME not set — skipping hosted agent deploy."
+    #     )
+    # else:
+    #     try:
+    #         deploy_hosted_agent(
+    #             agent_endpoint=agent_endpoint,
+    #             agent_model=agent_model,
+    #             search_endpoint=search_endpoint,
+    #             knowledge_base_name=knowledge_base_name,
+    #             kb_mcp_connection_name=kb_mcp_connection_name,
+    #             subscription_id=subscription_id,
+    #             resource_group=resource_group,
+    #             ai_service_name=ai_service_name,
+    #             ai_project_name=ai_project_name,
+    #             container_registry_name=container_registry_name,
+    #             source_dir=os.path.join(REPO_ROOT, "src", "hosted"),
+    #             cpu=os.getenv("HOSTED_AGENT_CPU", "0.5"),
+    #             memory=os.getenv("HOSTED_AGENT_MEMORY", "1.0Gi"),
+    #         )
+    #         logger.info("Successfully completed: deploy_hosted_agent")
+    #         executed_steps.append("deploy_hosted_agent")
+    #     except Exception as exc:
+    #         _warn_step(
+    #             "deploy_hosted_agent",
+    #             exc,
+    #             guidance=(
+    #                 "Verify the container registry exists and the image built "
+    #                 "successfully. You can re-run infra/scripts/hosted/"
+    #                 "deploy_hosted_agent.py to retry."
+    #             ),
+    #         )
 
-        # Copilot Studio proxy agent (src/hosted-agent-cps). Requires the
-        # Copilot Studio environment/agent identifiers and the Entra app
-        # registration credentials used to authenticate to Copilot Studio.
-        # Values come from the process/azd environment, falling back to the
-        # agent's own src/hosted-agent-cps/.env file. When any of these are
-        # missing the agent is skipped so the rest of the deployment still
-        # succeeds.
-        cps_source_dir = os.path.join(REPO_ROOT, "src", "hosted-agent-cps")
-        cps_env = read_env_file(os.path.join(cps_source_dir, ".env"))
-        cps_environment_id = os.getenv("ENVIRONMENT_ID") or cps_env.get("ENVIRONMENT_ID")
-        cps_agent_identifier = os.getenv("AGENT_IDENTIFIER") or cps_env.get("AGENT_IDENTIFIER")
-        cps_tenant_id = os.getenv("AZURE_TENANT_ID") or cps_env.get("AZURE_TENANT_ID")
-        cps_client_id = os.getenv("AZURE_CLIENT_ID") or cps_env.get("AZURE_CLIENT_ID")
-        cps_client_secret = os.getenv("AZURE_CLIENT_SECRET") or cps_env.get("AZURE_CLIENT_SECRET")
-        if not (
-            cps_environment_id
-            and cps_agent_identifier
-            and cps_tenant_id
-            and cps_client_id
-            and cps_client_secret
-        ):
-            logger.info(
-                "   Copilot Studio proxy agent config not set "
-                "(ENVIRONMENT_ID / AGENT_IDENTIFIER / AZURE_TENANT_ID / "
-                "AZURE_CLIENT_ID / AZURE_CLIENT_SECRET) — skipping CPS agent deploy."
-            )
-        else:
-            try:
-                deploy_cps_hosted_agent(
-                    agent_endpoint=agent_endpoint,
-                    container_registry_name=container_registry_name,
-                    source_dir=cps_source_dir,
-                    cpu=os.getenv("HOSTED_AGENT_CPU", "0.5"),
-                    memory=os.getenv("HOSTED_AGENT_MEMORY", "1.0Gi"),
-                    environment_id=cps_environment_id,
-                    agent_identifier=cps_agent_identifier,
-                    tenant_id=cps_tenant_id,
-                    client_id=cps_client_id,
-                    client_secret=cps_client_secret,
-                )
-                logger.info("Successfully completed: deploy_cps_hosted_agent")
-                executed_steps.append("deploy_cps_hosted_agent")
-            except Exception as exc:
-                _warn_step(
-                    "deploy_cps_hosted_agent",
-                    exc,
-                    guidance=(
-                        "Verify the container registry exists, the image built "
-                        "successfully, and the Copilot Studio app registration "
-                        "credentials are valid."
-                    ),
-                )
+    #     # Copilot Studio proxy agent (src/hosted-agent-cps). Requires the
+    #     # Copilot Studio environment/agent identifiers and the Entra app
+    #     # registration credentials used to authenticate to Copilot Studio.
+    #     # Values come from the process/azd environment, falling back to the
+    #     # agent's own src/hosted-agent-cps/.env file. When any of these are
+    #     # missing the agent is skipped so the rest of the deployment still
+    #     # succeeds.
+    #     cps_source_dir = os.path.join(REPO_ROOT, "src", "hosted-agent-cps")
+    #     cps_env = read_env_file(os.path.join(cps_source_dir, ".env"))
+    #     cps_environment_id = os.getenv("ENVIRONMENT_ID") or cps_env.get("ENVIRONMENT_ID")
+    #     cps_agent_identifier = os.getenv("AGENT_IDENTIFIER") or cps_env.get("AGENT_IDENTIFIER")
+    #     cps_tenant_id = os.getenv("AZURE_TENANT_ID") or cps_env.get("AZURE_TENANT_ID")
+    #     cps_client_id = os.getenv("AZURE_CLIENT_ID") or cps_env.get("AZURE_CLIENT_ID")
+    #     cps_client_secret = os.getenv("AZURE_CLIENT_SECRET") or cps_env.get("AZURE_CLIENT_SECRET")
+    #     if not (
+    #         cps_environment_id
+    #         and cps_agent_identifier
+    #         and cps_tenant_id
+    #         and cps_client_id
+    #         and cps_client_secret
+    #     ):
+    #         logger.info(
+    #             "   Copilot Studio proxy agent config not set "
+    #             "(ENVIRONMENT_ID / AGENT_IDENTIFIER / AZURE_TENANT_ID / "
+    #             "AZURE_CLIENT_ID / AZURE_CLIENT_SECRET) — skipping CPS agent deploy."
+    #         )
+    #     else:
+    #         try:
+    #             deploy_cps_hosted_agent(
+    #                 agent_endpoint=agent_endpoint,
+    #                 container_registry_name=container_registry_name,
+    #                 source_dir=cps_source_dir,
+    #                 cpu=os.getenv("HOSTED_AGENT_CPU", "0.5"),
+    #                 memory=os.getenv("HOSTED_AGENT_MEMORY", "1.0Gi"),
+    #                 environment_id=cps_environment_id,
+    #                 agent_identifier=cps_agent_identifier,
+    #                 tenant_id=cps_tenant_id,
+    #                 client_id=cps_client_id,
+    #                 client_secret=cps_client_secret,
+    #             )
+    #             logger.info("Successfully completed: deploy_cps_hosted_agent")
+    #             executed_steps.append("deploy_cps_hosted_agent")
+    #         except Exception as exc:
+    #             _warn_step(
+    #                 "deploy_cps_hosted_agent",
+    #                 exc,
+    #                 guidance=(
+    #                     "Verify the container registry exists, the image built "
+    #                     "successfully, and the Copilot Studio app registration "
+    #                     "credentials are valid."
+    #                 ),
+    #             )
 
-        # Onboarding agent (src/hosted-agent-onboarding). Runs the full customer
-        # onboarding workflow wired up with the IQ knowledge bases (Foundry IQ,
-        # Fabric IQ, Web IQ), Work IQ, web search and — when the web app is
-        # deployed — the finalize_customer_onboarding MCP tool. A failure is
-        # recorded as a warning and does not abort the deploy.
-        web_app_name = os.getenv("AZURE_WEB_APP_NAME")
-        webapp_mcp_url = (
-            f"https://{web_app_name}.azurewebsites.net/mcp" if web_app_name else None
-        )
-        # Knowledge bases wired as MCP tools. Defaults to the Foundry IQ KB;
-        # set ONBOARDING_AGENT_KB_NAMES (comma-separated) to add the Fabric IQ
-        # and Web IQ knowledge bases so the agent matches the .NET tool set.
-        onboarding_agent_kb_names = [
-            _name.strip()
-            for _name in os.getenv(
-                "ONBOARDING_AGENT_KB_NAMES", knowledge_base_name
-            ).split(",")
-            if _name.strip()
-        ]
-        try:
-            deploy_onboarding_hosted_agent(
-                agent_endpoint=agent_endpoint,
-                agent_model=agent_model,
-                search_endpoint=search_endpoint,
-                knowledge_base_names=onboarding_agent_kb_names,
-                kb_mcp_connection_name=kb_mcp_connection_name,
-                subscription_id=subscription_id,
-                resource_group=resource_group,
-                ai_service_name=ai_service_name,
-                ai_project_name=ai_project_name,
-                container_registry_name=container_registry_name,
-                source_dir=os.path.join(REPO_ROOT, "src", "hosted-agent-onboarding"),
-                cpu=os.getenv("HOSTED_AGENT_CPU", "0.5"),
-                memory=os.getenv("HOSTED_AGENT_MEMORY", "1.0Gi"),
-                webapp_mcp_url=webapp_mcp_url,
-            )
-            logger.info("Successfully completed: deploy_onboarding_hosted_agent")
-            executed_steps.append("deploy_onboarding_hosted_agent")
-        except Exception as exc:
-            _warn_step(
-                "deploy_onboarding_hosted_agent",
-                exc,
-                guidance=(
-                    "Verify the container registry exists and the image built "
-                    "successfully. You can re-run infra/scripts/hosted/"
-                    "deploy_hosted_agent.py to retry."
-                ),
-            )
+    #     # Onboarding agent (src/hosted-agent-onboarding). Runs the full customer
+    #     # onboarding workflow wired up with the IQ knowledge bases (Foundry IQ,
+    #     # Fabric IQ, Web IQ), Work IQ, web search and — when the web app is
+    #     # deployed — the finalize_customer_onboarding MCP tool. A failure is
+    #     # recorded as a warning and does not abort the deploy.
+    #     web_app_name = os.getenv("AZURE_WEB_APP_NAME")
+    #     webapp_mcp_url = (
+    #         f"https://{web_app_name}.azurewebsites.net/mcp" if web_app_name else None
+    #     )
+    #     # Knowledge bases wired as MCP tools. Defaults to the Foundry IQ KB;
+    #     # set ONBOARDING_AGENT_KB_NAMES (comma-separated) to add the Fabric IQ
+    #     # and Web IQ knowledge bases so the agent matches the .NET tool set.
+    #     onboarding_agent_kb_names = [
+    #         _name.strip()
+    #         for _name in os.getenv(
+    #             "ONBOARDING_AGENT_KB_NAMES", knowledge_base_name
+    #         ).split(",")
+    #         if _name.strip()
+    #     ]
+    #     try:
+    #         deploy_onboarding_hosted_agent(
+    #             agent_endpoint=agent_endpoint,
+    #             agent_model=agent_model,
+    #             search_endpoint=search_endpoint,
+    #             knowledge_base_names=onboarding_agent_kb_names,
+    #             kb_mcp_connection_name=kb_mcp_connection_name,
+    #             subscription_id=subscription_id,
+    #             resource_group=resource_group,
+    #             ai_service_name=ai_service_name,
+    #             ai_project_name=ai_project_name,
+    #             container_registry_name=container_registry_name,
+    #             source_dir=os.path.join(REPO_ROOT, "src", "hosted-agent-onboarding"),
+    #             cpu=os.getenv("HOSTED_AGENT_CPU", "0.5"),
+    #             memory=os.getenv("HOSTED_AGENT_MEMORY", "1.0Gi"),
+    #             webapp_mcp_url=webapp_mcp_url,
+    #         )
+    #         logger.info("Successfully completed: deploy_onboarding_hosted_agent")
+    #         executed_steps.append("deploy_onboarding_hosted_agent")
+    #     except Exception as exc:
+    #         _warn_step(
+    #             "deploy_onboarding_hosted_agent",
+    #             exc,
+    #             guidance=(
+    #                 "Verify the container registry exists and the image built "
+    #                 "successfully. You can re-run infra/scripts/hosted/"
+    #                 "deploy_hosted_agent.py to retry."
+    #             ),
+    #         )
 
     # ------------------------------------------------------------------
     # Success summary

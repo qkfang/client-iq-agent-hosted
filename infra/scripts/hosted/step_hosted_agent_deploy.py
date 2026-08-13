@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 def deploy_hosted_agent(
     *,
+    agent_name: str = HOSTED_AGENT_NAME,
     agent_endpoint: str,
     agent_model: str,
     search_endpoint: str,
@@ -40,6 +41,8 @@ def deploy_hosted_agent(
     source_dir: str,
     cpu: str,
     memory: str,
+    extra_tools: list | None = None,
+    toolbox_name: str | None = None,
 ) -> None:
     """Build, push, and deploy the hosted Foundry agent from ``src/hosted``.
 
@@ -57,6 +60,8 @@ def deploy_hosted_agent(
         source_dir: Directory containing the agent source (``src/hosted``).
         cpu: CPU allocation for the hosted agent.
         memory: Memory allocation for the hosted agent.
+        extra_tools: Additional tool definitions to attach alongside the KB tool.
+        toolbox_name: Foundry toolbox the container connects to for remote tools.
     """
     logger.info("   Creating KB MCP project connection...")
     _mcp_ep = (
@@ -79,36 +84,40 @@ def deploy_hosted_agent(
         )
 
     logger.info(f"   Building container image from '{source_dir}'...")
-    _image_tag = get_next_image_tag(container_registry_name, HOSTED_AGENT_NAME)
+    _image_tag = get_next_image_tag(container_registry_name, agent_name)
     _image = build_and_push_image(
         registry_name=container_registry_name,
-        image_name=HOSTED_AGENT_NAME,
+        image_name=agent_name,
         image_tag=_image_tag,
         source_dir=source_dir,
     )
     logger.info(f"      Image: {_image}")
 
-    logger.info("   Initialising AI Project client (preview features enabled)...")
+    logger.info(f"   Deploying hosted agent '{agent_name}'...")
     _agent_client = create_agent_client(agent_endpoint, allow_preview=True)
 
-    logger.info(f"   Deploying hosted agent '{HOSTED_AGENT_NAME}'...")
+    _environment_variables = {"AZURE_AI_MODEL_DEPLOYMENT_NAME": agent_model}
+    if toolbox_name:
+        _environment_variables["TOOLBOX_NAME"] = toolbox_name
+
     with _agent_client:
         _agent = create_or_update_hosted_agent(
             project_client=_agent_client,
-            agent_name=HOSTED_AGENT_NAME,
+            agent_name=agent_name,
             image=_image,
             cpu=cpu,
             memory=memory,
             mcp_endpoint=_mcp_ep,
             connection_name=kb_mcp_connection_name,
+            extra_tools=extra_tools,
             # Only non-reserved env vars may be set. The platform injects
             # FOUNDRY_PROJECT_ENDPOINT (and all FOUNDRY_*/AGENT_* vars) itself,
             # so the model deployment name is passed via a non-reserved var.
-            environment_variables={
-                "AZURE_AI_MODEL_DEPLOYMENT_NAME": agent_model,
-            },
+            environment_variables=_environment_variables,
         )
-    logger.info(f"   Hosted agent '{_agent.name}' ready (id: {_agent.id})")
+    logger.info(
+        f"   Hosted agent '{_agent.name}' version {_agent.version} ready (id: {_agent.id})"
+    )
 
 
 def deploy_cps_hosted_agent(
@@ -175,7 +184,9 @@ def deploy_cps_hosted_agent(
                 "AZURE_CLIENT_SECRET": client_secret,
             },
         )
-    logger.info(f"   Hosted agent '{_agent.name}' ready (id: {_agent.id})")
+    logger.info(
+        f"   Hosted agent '{_agent.name}' version {_agent.version} ready (id: {_agent.id})"
+    )
 
 
 def deploy_onboarding_hosted_agent(
@@ -302,4 +313,6 @@ def deploy_onboarding_hosted_agent(
                 "AZURE_AI_MODEL_DEPLOYMENT_NAME": agent_model,
             },
         )
-    logger.info(f"   Hosted agent '{_agent.name}' ready (id: {_agent.id})")
+    logger.info(
+        f"   Hosted agent '{_agent.name}' version {_agent.version} ready (id: {_agent.id})"
+    )
