@@ -14,6 +14,7 @@ Required environment variables:
     AZURE_AI_MODEL_DEPLOYMENT_NAME:    Model deployment name (e.g., gpt-5.6-sol)
 """
 
+import os
 from pathlib import Path
 
 try:
@@ -22,6 +23,8 @@ try:
     load_dotenv(dotenv_path=Path(__file__).with_name(".env"))
 except ImportError:
     pass  # dotenv not needed in hosted deployment
+
+os.environ.setdefault("AZURE_AI_AGENTSERVER_DISABLE_EXPERIMENTAL_WARNING", "true")
 
 from agent_framework_foundry_hosting import ResponsesHostServer
 from agent import agent
