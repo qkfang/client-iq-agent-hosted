@@ -30,6 +30,6 @@ resources:
   # "<SOLUTION_SUFFIX>-kb" (see infra/scripts/install_microsoft_iq_solution.py).
   - kind: knowledge
     id: "<SOLUTION_SUFFIX>-kb"
-  # Work IQ Mail is reached through the 'workiq-mail-toolbox' Foundry toolbox,
+  # Work IQ Mail is reached through the 'kyc-toolbox' Foundry toolbox,
   # which the container connects to via TOOLBOX_NAME. Tools declared on a hosted
   # agent version are not passed into the container, so it cannot be listed here.

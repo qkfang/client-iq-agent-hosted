@@ -18,6 +18,8 @@ from common.logging_config import setup_logging
 from foundry.agent_api import (
     WORKIQ_MAIL_SERVER_LABEL,
     WORKIQ_MAIL_SERVER_URL,
+    WORKIQ_SERVER_LABEL,
+    WORKIQ_SERVER_URL,
     build_fabric_iq_tool,
 )
 from hosted.step_hosted_agent_deploy import deploy_hosted_agent
@@ -41,27 +43,53 @@ def main() -> None:
         "AZURE_CHAT_MODEL", "gpt-5.6-sol"
     )
     knowledge_base_name = f"{solution_suffix}-kb"
-    toolbox_name = os.getenv("TOOLBOX_NAME", "workiq-mail-toolbox")
+    toolbox_name = os.getenv("TOOLBOX_NAME", "kyc-toolbox")
 
     extra_tools = []
+    # Published together with the KB tool by deploy_hosted_agent (toolbox
+    # versions are immutable, so all tools must go in a single publish).
+    extra_tools.append(
+        {
+            "type": "mcp",
+            "server_label": WORKIQ_MAIL_SERVER_LABEL,
+            "server_url": WORKIQ_MAIL_SERVER_URL,
+            "require_approval": "never",
+            "project_connection_id": WORKIQ_MAIL_SERVER_LABEL,
+        }
+    )
+    for kb_label, kb_path in (
+        ("kb-crm-foundry-iq-6ys34", "crm-foundry-iq"),
+        ("kb-crm-fabric-iq-6ys34", "crm-fabric-iq"),
+        ("kb-crm-web-iq-6ys34", "crm-web-iq"),
+    ):
+        extra_tools.append(
+            {
+                "type": "mcp",
+                "server_label": kb_label,
+                "server_url": (
+                    "https://srch-ciquocsj.search.windows.net/knowledgebases/"
+                    f"{kb_path}/mcp?api-version=2026-05-01-preview"
+                ),
+                "require_approval": "never",
+                "project_connection_id": kb_label,
+            }
+        )
+    extra_tools.append(
+        {
+            "type": "mcp",
+            "server_label": WORKIQ_SERVER_LABEL,
+            "server_url": WORKIQ_SERVER_URL,
+            "require_approval": {"never": {"tool_names": ["ask"]}},
+            "project_connection_id": WORKIQ_SERVER_LABEL,
+        }
+    )
     fabric_iq_connection_id = os.getenv("FABRIC_IQ_CONNECTION_ID")
     if fabric_iq_connection_id:
-        # Published together with the KB tool by deploy_hosted_agent (toolbox
-        # versions are immutable, so all tools must go in a single publish).
         extra_tools.append(
             build_fabric_iq_tool(
                 project_connection_id=fabric_iq_connection_id,
                 server_url=os.getenv("FABRIC_IQ_SERVER_URL"),
             )
-        )
-        extra_tools.append(
-            {
-                "type": "mcp",
-                "server_label": WORKIQ_MAIL_SERVER_LABEL,
-                "server_url": WORKIQ_MAIL_SERVER_URL,
-                "require_approval": "never",
-                "project_connection_id": WORKIQ_MAIL_SERVER_LABEL,
-            }
         )
 
     deploy_hosted_agent(

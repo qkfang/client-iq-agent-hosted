@@ -44,24 +44,24 @@ def main() -> None:
     toolbox_name = os.getenv("TOOLBOX_NAME", "workiq-mail-toolbox")
 
     extra_tools = []
+    # Published together with the KB tool by deploy_hosted_agent (toolbox
+    # versions are immutable, so all tools must go in a single publish).
+    extra_tools.append(
+        {
+            "type": "mcp",
+            "server_label": WORKIQ_MAIL_SERVER_LABEL,
+            "server_url": WORKIQ_MAIL_SERVER_URL,
+            "require_approval": "never",
+            "project_connection_id": WORKIQ_MAIL_SERVER_LABEL,
+        }
+    )
     fabric_iq_connection_id = os.getenv("FABRIC_IQ_CONNECTION_ID")
     if fabric_iq_connection_id:
-        # Published together with the KB tool by deploy_hosted_agent (toolbox
-        # versions are immutable, so all tools must go in a single publish).
         extra_tools.append(
             build_fabric_iq_tool(
                 project_connection_id=fabric_iq_connection_id,
                 server_url=os.getenv("FABRIC_IQ_SERVER_URL"),
             )
-        )
-        extra_tools.append(
-            {
-                "type": "mcp",
-                "server_label": WORKIQ_MAIL_SERVER_LABEL,
-                "server_url": WORKIQ_MAIL_SERVER_URL,
-                "require_approval": "never",
-                "project_connection_id": WORKIQ_MAIL_SERVER_LABEL,
-            }
         )
 
     deploy_hosted_agent(
