@@ -19,8 +19,6 @@ from foundry.agent_api import (
     WORKIQ_MAIL_SERVER_LABEL,
     WORKIQ_MAIL_SERVER_URL,
     build_fabric_iq_tool,
-    create_agent_client,
-    publish_toolbox_version,
 )
 from hosted.step_hosted_agent_deploy import deploy_hosted_agent
 
@@ -48,30 +46,23 @@ def main() -> None:
     extra_tools = []
     fabric_iq_connection_id = os.getenv("FABRIC_IQ_CONNECTION_ID")
     if fabric_iq_connection_id:
-        fabric_iq_tool = build_fabric_iq_tool(
-            project_connection_id=fabric_iq_connection_id,
-            server_url=os.getenv("FABRIC_IQ_SERVER_URL"),
-        )
-        extra_tools.append(fabric_iq_tool)
-        # The container calls remote tools through the toolbox, so Fabric IQ is
-        # republished alongside the Work IQ Mail tool (versions are immutable).
-        toolbox_client = create_agent_client(agent_endpoint, allow_preview=True)
-        with toolbox_client:
-            publish_toolbox_version(
-                toolbox_client,
-                endpoint=agent_endpoint,
-                toolbox_name=toolbox_name,
-                tools=[
-                    {
-                        "type": "mcp",
-                        "server_label": WORKIQ_MAIL_SERVER_LABEL,
-                        "server_url": WORKIQ_MAIL_SERVER_URL,
-                        "require_approval": "never",
-                        "project_connection_id": WORKIQ_MAIL_SERVER_LABEL,
-                    },
-                    dict(fabric_iq_tool),
-                ],
+        # Published together with the KB tool by deploy_hosted_agent (toolbox
+        # versions are immutable, so all tools must go in a single publish).
+        extra_tools.append(
+            build_fabric_iq_tool(
+                project_connection_id=fabric_iq_connection_id,
+                server_url=os.getenv("FABRIC_IQ_SERVER_URL"),
             )
+        )
+        extra_tools.append(
+            {
+                "type": "mcp",
+                "server_label": WORKIQ_MAIL_SERVER_LABEL,
+                "server_url": WORKIQ_MAIL_SERVER_URL,
+                "require_approval": "never",
+                "project_connection_id": WORKIQ_MAIL_SERVER_LABEL,
+            }
+        )
 
     deploy_hosted_agent(
         agent_name="hosted-agent-tool",

@@ -3,8 +3,9 @@
 kind: hosted
 name: hosted-agent-kyc
 description: |
-    A hosted operations assistant grounded with the Foundry IQ knowledge base
-    built by this solution accelerator. Built with the Agent Framework SDK.
+    A hosted KYC/AML compliance assistant grounded with the Foundry IQ
+    knowledge base built by this solution accelerator. Built with the Agent
+    Framework SDK.
 metadata:
     tags:
         - AI Agent Hosting

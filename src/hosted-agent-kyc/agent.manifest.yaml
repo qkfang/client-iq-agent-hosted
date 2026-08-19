@@ -2,9 +2,10 @@
 name: hosted-agent-kyc
 displayName: "hosted-agent-kyc"
 description: >
-  A hosted operations assistant grounded with the Foundry IQ knowledge base
-  built by this solution accelerator (delivery operations, inventory
-  logistics, supplier relationships).
+  A hosted KYC/AML compliance assistant grounded with the Foundry IQ knowledge
+  base built by this solution accelerator. Answers are returned as a
+  structured compliance case response (risk rating, required documents,
+  screening findings, workflow status, next actions).
 metadata:
   tags:
     - AI Agent Hosting

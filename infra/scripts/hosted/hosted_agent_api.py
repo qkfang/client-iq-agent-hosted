@@ -144,19 +144,15 @@ def create_or_update_hosted_agent(
     cpu: str,
     memory: str,
     environment_variables: dict,
-    mcp_endpoint: str | None = None,
-    connection_name: str | None = None,
-    extra_tools: list | None = None,
 ):
-    """Create a new hosted AI Foundry agent version, optionally with the KB MCP tool.
+    """Create a new hosted AI Foundry agent version.
 
     Each deploy adds a new version under the same agent name — the service
     increments the version number automatically, so earlier versions remain
-    available. When both ``mcp_endpoint`` and ``connection_name``
-    are provided the agent is wired up to the Knowledge Base MCP tool;
-    otherwise it is deployed without any tools. Any tools passed in
-    ``extra_tools`` (e.g. Work IQ, the finalize MCP tool or web search) are
-    attached in addition to the Knowledge Base tool.
+    available. The current API has no ``tools`` field on the hosted agent
+    definition: hosted containers reach remote tools (Knowledge Base, Work IQ,
+    Fabric IQ, etc.) through a Foundry toolbox instead, published separately
+    with ``publish_toolbox_version`` before calling this function.
 
     Args:
         project_client: Authenticated ``AIProjectClient`` (created with
@@ -166,11 +162,6 @@ def create_or_update_hosted_agent(
         cpu: CPU allocation for the hosted agent (e.g. ``"0.5"``).
         memory: Memory allocation for the hosted agent (e.g. ``"1.0Gi"``).
         environment_variables: Environment variables to set in the container.
-        mcp_endpoint: Full MCP endpoint URL for the Knowledge Base. Omit to
-            deploy the agent without the MCP tool.
-        connection_name: Project connection name registered for the MCP tool.
-            Omit to deploy the agent without the MCP tool.
-        extra_tools: Additional tool definitions to attach to the agent.
 
     Returns:
         The created hosted agent version.
@@ -178,7 +169,6 @@ def create_or_update_hosted_agent(
     from azure.ai.projects.models import (
         ContainerConfiguration,
         HostedAgentDefinition,
-        MCPTool,
         ProtocolVersionRecord,
     )
 
@@ -190,20 +180,6 @@ def create_or_update_hosted_agent(
     except Exception:
         logger.info(f"      Agent '{agent_name}' not found — creating first version")
 
-    tools = []
-    if mcp_endpoint and connection_name:
-        tools.append(
-            MCPTool(
-                server_label="knowledge-base",
-                server_url=mcp_endpoint,
-                require_approval="never",
-                allowed_tools=["knowledge_base_retrieve"],
-                project_connection_id=connection_name,
-            )
-        )
-    if extra_tools:
-        tools.extend(extra_tools)
-
     agent_definition = HostedAgentDefinition(
         cpu=cpu,
         memory=memory,
@@ -211,7 +187,6 @@ def create_or_update_hosted_agent(
         protocol_versions=[
             ProtocolVersionRecord(protocol="responses", version="2.0.0")
         ],
-        tools=tools,
         environment_variables=environment_variables,
     )
 

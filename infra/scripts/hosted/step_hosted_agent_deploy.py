@@ -9,7 +9,12 @@ entry-point script, following the same pattern as
 
 import logging
 
-from foundry.agent_api import create_agent_client, create_kb_mcp_connection
+from foundry.agent_api import (
+    build_kb_mcp_tool,
+    create_agent_client,
+    create_kb_mcp_connection,
+    publish_toolbox_version,
+)
 from hosted.hosted_agent_api import (
     HOSTED_CPS_AGENT_NAME,
     HOSTED_AGENT_NAME,
@@ -23,6 +28,31 @@ from hosted.hosted_agent_api import (
 # Module-level logger — inherits configuration from the root logger set up
 # by setup_logging() in the entry-point scripts.
 logger = logging.getLogger(__name__)
+
+
+def _publish_tools(
+    agent_client, agent_endpoint: str, toolbox_name: str | None, tools: list
+) -> None:
+    """Publish ``tools`` to ``toolbox_name`` so the hosted container can reach them.
+
+    Hosted agent containers have no ``tools`` field on the agent definition —
+    they call remote tools through a Foundry toolbox instead. Does nothing
+    when there are no tools to attach.
+    """
+    if not tools:
+        return
+    if not toolbox_name:
+        logger.warning(
+            "   No toolbox_name provided — %d tool(s) will not be attached to the agent",
+            len(tools),
+        )
+        return
+    publish_toolbox_version(
+        agent_client,
+        endpoint=agent_endpoint,
+        toolbox_name=toolbox_name,
+        tools=[dict(tool) for tool in tools],
+    )
 
 
 def deploy_hosted_agent(
@@ -100,16 +130,17 @@ def deploy_hosted_agent(
     if toolbox_name:
         _environment_variables["TOOLBOX_NAME"] = toolbox_name
 
+    _kb_tool = build_kb_mcp_tool(_mcp_ep, kb_mcp_connection_name)
+    _tools = [_kb_tool, *(extra_tools or [])]
+
     with _agent_client:
+        _publish_tools(_agent_client, agent_endpoint, toolbox_name, _tools)
         _agent = create_or_update_hosted_agent(
             project_client=_agent_client,
             agent_name=agent_name,
             image=_image,
             cpu=cpu,
             memory=memory,
-            mcp_endpoint=_mcp_ep,
-            connection_name=kb_mcp_connection_name,
-            extra_tools=extra_tools,
             # Only non-reserved env vars may be set. The platform injects
             # FOUNDRY_PROJECT_ENDPOINT (and all FOUNDRY_*/AGENT_* vars) itself,
             # so the model deployment name is passed via a non-reserved var.
@@ -205,6 +236,7 @@ def deploy_onboarding_hosted_agent(
     cpu: str,
     memory: str,
     webapp_mcp_url: str | None = None,
+    toolbox_name: str | None = None,
 ) -> None:
     """Build, push, and deploy the onboarding Foundry agent from ``src/hosted-agent-onboarding``.
 
@@ -233,6 +265,7 @@ def deploy_onboarding_hosted_agent(
         memory: Memory allocation for the hosted agent.
         webapp_mcp_url: Web app MCP endpoint hosting finalize_customer_onboarding.
             Omit to deploy without the finalize tool.
+        toolbox_name: Foundry toolbox the container connects to for remote tools.
     """
     from azure.ai.projects.models import MCPTool, WebSearchTool
 
@@ -300,18 +333,20 @@ def deploy_onboarding_hosted_agent(
     logger.info("   Initialising AI Project client (preview features enabled)...")
     _agent_client = create_agent_client(agent_endpoint, allow_preview=True)
 
+    _environment_variables = {"AZURE_AI_MODEL_DEPLOYMENT_NAME": agent_model}
+    if toolbox_name:
+        _environment_variables["TOOLBOX_NAME"] = toolbox_name
+
     logger.info(f"   Deploying hosted agent '{HOSTED_ONBOARDING_AGENT_NAME}'...")
     with _agent_client:
+        _publish_tools(_agent_client, agent_endpoint, toolbox_name, _tools)
         _agent = create_or_update_hosted_agent(
             project_client=_agent_client,
             agent_name=HOSTED_ONBOARDING_AGENT_NAME,
             image=_image,
             cpu=cpu,
             memory=memory,
-            extra_tools=_tools,
-            environment_variables={
-                "AZURE_AI_MODEL_DEPLOYMENT_NAME": agent_model,
-            },
+            environment_variables=_environment_variables,
         )
     logger.info(
         f"   Hosted agent '{_agent.name}' version {_agent.version} ready (id: {_agent.id})"
