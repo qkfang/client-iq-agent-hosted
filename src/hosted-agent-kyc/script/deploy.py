@@ -74,7 +74,7 @@ def main() -> None:
             )
 
     deploy_hosted_agent(
-        agent_name="hosted-agent-tool",
+        agent_name="hosted-agent-kyc",
         agent_endpoint=agent_endpoint,
         agent_model=agent_model,
         search_endpoint=get_required_env_var("AZURE_AI_SEARCH_ENDPOINT"),

@@ -176,6 +176,7 @@ resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01'
 resource aiServices 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' =  if (empty(azureExistingAIProjectResourceId)) {
   name: aiServicesName
   location: location
+  tags: union(tags, { SecurityControl: 'Ignore' })
   sku: {
     name: 'S0'
   }
@@ -192,7 +193,7 @@ resource aiServices 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' = 
       ipRules: []
     }
     publicNetworkAccess: 'Enabled'
-    disableLocalAuth: true
+    disableLocalAuth: false
   }
 }
 
@@ -262,6 +263,7 @@ resource aiProject 'Microsoft.CognitiveServices/accounts/projects@2025-04-01-pre
   parent: aiServices
   name: aiProjectName
   location: solutionLocation
+  tags: union(tags, { SecurityControl: 'Ignore' })
   kind: 'AIServices'
   identity: {
     type: 'SystemAssigned'

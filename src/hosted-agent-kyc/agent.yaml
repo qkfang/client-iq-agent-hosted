@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/microsoft/AgentSchema/refs/heads/main/schemas/v1.0/ContainerAgent.yaml
 
 kind: hosted
-name: hosted-agent-tool
+name: hosted-agent-kyc
 description: |
     A hosted operations assistant grounded with the Foundry IQ knowledge base
     built by this solution accelerator. Built with the Agent Framework SDK.
