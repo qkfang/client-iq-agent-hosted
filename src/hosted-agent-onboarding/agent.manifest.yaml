@@ -24,7 +24,7 @@ resources:
   - kind: model
     id: gpt-5.6-sol
     name: AZURE_AI_MODEL_DEPLOYMENT_NAME
-  # The tools below mirror the .NET src/web OnboardingAgent tool set. They are
+  # The tools below mirror the .NET src/web-onboarding OnboardingAgent tool set. They are
   # attached to the hosted agent version at deploy time by
   # infra/scripts/hosted/step_hosted_agent_deploy.py (deploy_onboarding_hosted_agent);
   # this manifest declares them as the source of truth.

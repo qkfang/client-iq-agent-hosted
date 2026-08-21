@@ -95,7 +95,7 @@ def _build_agent() -> Agent:
         credential=credential,
     )
 
-    # This hosted agent uses the same tool set as the .NET src/web
+    # This hosted agent uses the same tool set as the .NET src/web-onboarding
     # OnboardingAgent: the Foundry IQ, Fabric IQ and Web IQ knowledge bases,
     # Work IQ, Bing web search and the finalize_customer_onboarding MCP tool.
     # They are attached to the hosted agent version at deploy time by the

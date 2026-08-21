@@ -223,6 +223,8 @@ infra/preflight-*.bicepparam
 # .NET build output
 /src/func/bin/
 /src/func/obj/
-/src/web/bin/
-/src/web/obj/
+/src/web-onboarding/bin/
+/src/web-onboarding/obj/
+/src/web-kyc/bin/
+/src/web-kyc/obj/
 
