@@ -70,6 +70,21 @@ public class KycMcpTools
         [Description("Connected IQ and document the finding came from, e.g. 'Foundry IQ - Approved Regulator list'.")] string? source = null)
         => Result(_cases.SubmitPolicyCheck(customerId, ruleId, outcome, finding, source, AgentActor), customerId);
 
+    [McpServerTool(Name = "submit_group_results"), Description("Report the results for every rule of one rulebook group in a single call. Call this once per group, right after finishing that group.")]
+    public string SubmitGroupResults(
+        [Description("Tracking key for the customer.")] string customerId,
+        [Description("Rulebook group name, e.g. Data enrichment.")] string group,
+        [Description("JSON array covering every rule in the group: [{\"ruleId\":\"ENR-01\",\"outcome\":\"Pass\",\"finding\":\"...\",\"source\":\"Fabric IQ - client master\"}].")] string resultsJson)
+    {
+        KycCase? kycCase = null;
+        foreach (var item in Parse<List<GroupRuleResult>>(resultsJson) ?? [])
+        {
+            kycCase = _cases.SubmitPolicyCheck(customerId, item.RuleId, item.Outcome, item.Finding, item.Source ?? group, AgentActor) ?? kycCase;
+        }
+
+        return Result(kycCase, customerId);
+    }
+
     [McpServerTool(Name = "get_kyc_case"), Description("Get the full KYC/AML case for a customer, including stages, risk assessment, CIP result and requirements.")]
     public string GetCase([Description("Tracking key for the customer, e.g. CUST-1001.")] string customerId)
         => Result(_cases.GetCase(customerId), customerId);
@@ -161,6 +176,8 @@ public class KycMcpTools
         [Description("Final status, e.g. Ready to trade or Escalated.")] string finalStatus,
         [Description("Closing notes.")] string? notes = null)
         => Result(_cases.CompleteCase(customerId, finalStatus, notes, AgentActor), customerId);
+
+    private record GroupRuleResult(string RuleId, string Outcome, string Finding, string? Source);
 
     private static string Result(KycCase? kycCase, string customerId) =>
         kycCase is null

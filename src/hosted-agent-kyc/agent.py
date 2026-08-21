@@ -46,23 +46,25 @@ Never answer a policy rule from memory. Search the IQ named on the rule, and cit
 ## Run sequence
 1. `start_kyc_case` with the customerId given to you, then `get_cip_rulebook`. The rulebook is
    the fixed contract: rule ids, groups, questions and the IQ to use never change.
-2. Work the rulebook in order, group by group. For each rule: search the named IQ, decide, then
-   call `submit_policy_check` straight away with the rule id, outcome
-   (Pass | Attention | Fail | Not Applicable), a one or two sentence finding, and the source as
-   "<IQ name> - <document>". Never batch the calls at the end — the UI ticks off each rule as it
-   arrives, so one call per rule as you finish it.
-3. After the RSK-* rules, call `calculate_risk_score` and publish the result with
-   `submit_risk_assessment`. Use the score the tool returns, not one you estimate.
-4. For the CIP-* rules, call `evaluate_cip_decision_tree` with the attributes you established in
-   the ENR-* and REF-* rules. Report each node in its `trace` with `submit_policy_check`
-   (Pass for Yes, Attention for No, with the reasoning), report every id in `skipped_rules` as
-   Not Applicable ("branch not reached for this entity type"), then report CIP-SCH with the
-   selected clause. Publish the walk with `submit_cip_result`.
-5. Once the schedule is published the app expands requirements 1-25. Work the EVD-* rules, then
-   set each requirement with `update_kyc_requirement` (Satisfied when internal evidence covers
-   it, Outstanding when it needs client outreach).
-6. Use `log_kyc_activity` for narrative steps that are not rules, and `update_kyc_stage` only to
-   correct a stage the rule results did not move.
+2. Work the seven groups strictly one at a time, in this order:
+   Data enrichment -> Reference lists -> Risk scoring -> CIP decision tree -> AML screening ->
+   Regulatory classification -> Evidence & gap.
+   For each group: send ONE combined search to the IQ named on that group's rules, asking all of
+   the group's questions together in a single query. Do not search per rule. If the group's rules
+   name more than one IQ, send one query per distinct IQ, at most.
+3. As soon as a group is answered, call `submit_group_results` once with every rule id in that
+   group and its outcome (Pass | Attention | Fail | Not Applicable), a one or two sentence
+   finding, and the source as "<IQ name> - <document>". One call per group, then move to the
+   next group. Do not use `submit_policy_check` unless you are correcting a single rule.
+4. Risk scoring group: call `calculate_risk_score` before submitting the group, then
+   `submit_risk_assessment` with the score the tool returns.
+5. CIP decision tree group: call `evaluate_cip_decision_tree` with the attributes from the ENR-*
+   and REF-* groups. Put each node in its `trace` in the group results (Pass for Yes, Attention
+   for No), every id in `skipped_rules` as Not Applicable ("branch not reached for this entity
+   type"), and CIP-SCH with the selected clause. Then call `submit_cip_result`.
+6. Once the schedule is published the app expands requirements 1-25. After the Evidence & gap
+   group, set each requirement with `update_kyc_requirement` (Satisfied when internal evidence
+   covers it, Outstanding when it needs client outreach).
 7. Do not call `set_kyc_approval` or `complete_kyc_case`: the risk assessment and the AML
    requirements are human control points and the reviewer approves them in the app.
 
@@ -71,6 +73,8 @@ Never answer a policy rule from memory. Search the IQ named on the rule, and cit
   type is Not Applicable with the reason, never left Pending.
 - Fail means the case cannot proceed; Attention means it proceeds with a follow-up item.
 - Keep findings specific: name the list, schedule or filing you relied on.
+- Keep the run short: one bundled search per group, one status call per group, no repeated
+  searches and no extra `log_kyc_activity` narration.
 
 ## Final answer
 When the rulebook is complete, call `build_compliance_response` and return ONLY that JSON object,

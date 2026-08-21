@@ -1,4 +1,5 @@
 using System.ClientModel.Primitives;
+using Azure.AI.Extensions.OpenAI;
 using Azure.AI.Projects;
 using Azure.Identity;
 using Microsoft.Extensions.Options;
@@ -110,6 +111,14 @@ public class KycAgentService
         // credentials and skip the managed identity probe.
         var onAppService = !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("WEBSITE_INSTANCE_ID"));
         credentialOptions.ExcludeManagedIdentityCredential = !onAppService;
+        if (!onAppService)
+        {
+            // Pin local runs to the `az login` account so a stale Visual Studio
+            // or VS Code sign-in cannot be picked up instead.
+            credentialOptions.ExcludeVisualStudioCredential = true;
+            credentialOptions.ExcludeVisualStudioCodeCredential = true;
+            credentialOptions.ExcludeAzurePowerShellCredential = true;
+        }
 
         var clientOptions = new AIProjectClientOptions
         {
@@ -117,8 +126,15 @@ public class KycAgentService
             NetworkTimeout = TimeSpan.FromMinutes(30)
         };
         var projectClient = new AIProjectClient(new Uri(_options.ProjectEndpoint), new DefaultAzureCredential(credentialOptions), clientOptions);
+        // The agent endpoint builds its own pipeline, so the no-retry policy has
+        // to be repeated here or the SDK default (3 retries) would replay the run.
+        var agentClientOptions = new ProjectOpenAIClientOptions
+        {
+            RetryPolicy = new ClientRetryPolicy(maxRetries: 0),
+            NetworkTimeout = TimeSpan.FromMinutes(30)
+        };
         // Hosted agents are only reachable through their own agent endpoint.
-        var responseClient = projectClient.ProjectOpenAIClient.GetProjectResponsesClientForAgentEndpoint(_options.AgentName);
+        var responseClient = projectClient.ProjectOpenAIClient.GetProjectResponsesClientForAgentEndpoint(_options.AgentName, options: agentClientOptions);
 
         CreateResponseOptions? next = new()
         {
@@ -156,8 +172,8 @@ public class KycAgentService
         - regulator: {(string.IsNullOrWhiteSpace(kycCase.Regulator) ? "unknown - research it" : kycCase.Regulator)}
         - listingExchange: {(string.IsNullOrWhiteSpace(kycCase.ListingExchange) ? "unknown - research it" : kycCase.ListingExchange)}
 
-        Work the fixed rulebook from get_cip_rulebook and report every rule with
-        submit_policy_check as you go, then publish the risk assessment, the CIP
-        schedule and the requirement list.
+        Work the fixed rulebook from get_cip_rulebook one group at a time, with a single
+        bundled search per group, and call submit_group_results once per group, then
+        publish the risk assessment, the CIP schedule and the requirement list.
         """;
 }
