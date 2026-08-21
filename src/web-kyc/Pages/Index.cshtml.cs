@@ -7,23 +7,42 @@ namespace Onboarding.Web.Pages;
 
 public class IndexModel : PageModel
 {
-    private readonly CrmService _crmService;
+    private readonly KycCaseService _cases;
 
-    public IndexModel(CrmService crmService)
+    public IndexModel(KycCaseService cases)
     {
-        _crmService = crmService;
+        _cases = cases;
     }
 
-    public IReadOnlyCollection<CrmRecord> Records { get; private set; } = Array.Empty<CrmRecord>();
-
-    public void OnGet()
+    public IActionResult OnGetFeed() => new JsonResult(new
     {
-        Records = _crmService.GetCustomers();
-    }
+        version = _cases.CurrentVersion,
+        customers = _cases.GetCases().Select(c => new
+        {
+            c.CustomerId,
+            c.CustomerName,
+            c.Jurisdiction,
+            c.EntityType,
+            c.ProductScope,
+            c.BusinessContact,
+            c.CaseStatus,
+            c.CurrentStage,
+            c.NextStepsRequired,
+            c.ActionableBy,
+            c.ReadinessPercent,
+            c.LastUpdatedBy,
+            c.LastUpdatedUtc,
+            OpenRequirements = c.Requirements.Count(r => r.Status == KycStatus.Outstanding),
+            RiskRating = c.RiskAssessment?.RiskRating,
+            CipClause = c.CipResult?.ClauseNumber
+        })
+    });
 
-    public IActionResult OnPostDelete(string customerId)
+    public IActionResult OnPostStart(string customerId)
     {
-        _crmService.DeleteCustomer(customerId);
-        return RedirectToPage();
+        var existing = _cases.GetCase(customerId);
+        _cases.StartCase(customerId, existing?.CustomerName, existing?.Jurisdiction, existing?.EntityType,
+            existing?.ProductScope, existing?.BusinessContact, User.Identity?.Name ?? "Analyst");
+        return new JsonResult(new { customerId });
     }
 }

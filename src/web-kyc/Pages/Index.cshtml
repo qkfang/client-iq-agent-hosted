@@ -1,49 +1,23 @@
 @page
-@using Onboarding.Web.Services
 @model IndexModel
 @{
-    ViewData["Title"] = "Customers";
+    ViewData["Title"] = "KYC / AML checks";
 }
 
-<h1>@ViewData["Title"]</h1>
-<p class="page-intro">Your customer accounts in one place. When a new customer is onboarded, the AI onboarding assistant researches the company and creates or updates the record here automatically — no manual data entry required.</p>
+<section class="page-head">
+    <div>
+        <h1>KYC / AML checks</h1>
+        <p class="page-intro">Customer identification programme (CIP) progress for every client in scope. The Foundry agent pushes each step through MCP using the customer id as the tracking key — this board updates live.</p>
+    </div>
+    <span class="live-pill" data-live-pill>Live</span>
+</section>
 
-<div class="entity-grid">
-    <table class="entity-table">
-        <thead>
-            <tr>
-                <th>Customer Id</th>
-                <th>Name</th>
-                <th>Entity Type</th>
-                <th>Industry</th>
-                <th>Country</th>
-                <th>Account Owner</th>
-                <th>Onboarding Status</th>
-                <th>KYC Risk Rating</th>
-                <th>Last Updated</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var record in Model.Records)
-            {
-                <tr>
-                    <td><a asp-page="/Details" asp-route-customerId="@record.CustomerId">@record.CustomerId</a></td>
-                    <td>@record.CustomerName</td>
-                    <td>@record.LegalEntityType</td>
-                    <td>@record.Industry</td>
-                    <td>@record.Country</td>
-                    <td>@record.AccountOwner</td>
-                    <td><span class="badge">@record.OnboardingStatus</span></td>
-                    <td>@record.KycRiskRating</td>
-                    <td>@record.LastUpdatedUtc.ToString("u") (@record.LastUpdatedBy)</td>
-                    <td>
-                        <form method="post" asp-page-handler="Delete" asp-route-customerId="@record.CustomerId">
-                            <button type="submit" class="btn btn-danger">Delete</button>
-                        </form>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+<div class="customer-grid" data-customer-list>
+    <p class="empty-state">Loading customers…</p>
 </div>
+
+@Html.AntiForgeryToken()
+
+@section Scripts {
+    <script src="~/js/kyc-list.js" asp-append-version="true"></script>
+}

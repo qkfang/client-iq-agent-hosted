@@ -1,0 +1,24 @@
+@page "/case/{customerId}"
+@model CaseModel
+@{
+    ViewData["Title"] = Model.CustomerName;
+}
+
+<section class="page-head">
+    <div>
+        <a class="back-link" asp-page="/Index">&larr; All customers</a>
+        <h1>@Model.CustomerName</h1>
+        <p class="page-intro">Tracking key <code>@Model.CustomerId</code> — CIP evaluation, risk assessment and AML requirements.</p>
+    </div>
+    <span class="live-pill" data-live-pill>Live</span>
+</section>
+
+<div class="case-board" data-case-board data-customer-id="@Model.CustomerId">
+    <p class="empty-state">Loading case…</p>
+</div>
+
+@Html.AntiForgeryToken()
+
+@section Scripts {
+    <script src="~/js/kyc-case.js" asp-append-version="true"></script>
+}

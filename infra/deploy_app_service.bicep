@@ -147,7 +147,7 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
 resource webApp 'Microsoft.Web/sites@2023-12-01' = {
   name: webAppName
   location: location
-  tags: union(tags, { 'azd-service-name': 'web' })
+  tags: union(tags, { 'azd-service-name': 'web-onboarding' })
   kind: 'app'
   identity: {
     type: 'SystemAssigned'
@@ -177,7 +177,7 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
 resource kycWebApp 'Microsoft.Web/sites@2023-12-01' = {
   name: kycWebAppName
   location: location
-  tags: union(tags, { 'azd-service-name': 'kyc' })
+  tags: union(tags, { 'azd-service-name': 'web-kyc' })
   kind: 'app'
   identity: {
     type: 'SystemAssigned'

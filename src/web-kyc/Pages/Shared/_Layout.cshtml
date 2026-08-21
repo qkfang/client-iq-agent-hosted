@@ -3,8 +3,9 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Customer Onboarding Portal</title>
+    <title>@ViewData["Title"] - KYC / AML Portal</title>
     <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="stylesheet" href="~/css/kyc.css" />
 </head>
 <body>
     <header class="app-header">
@@ -12,10 +13,9 @@
             var currentPage = ViewContext.RouteData.Values["page"]?.ToString();
         }
         <nav class="top-nav">
-            <a asp-page="/Index" class="brand"><span class="brand-mark">O</span>Customer Onboarding Portal</a>
+            <a asp-page="/Index" class="brand"><span class="brand-mark">K</span>KYC / AML Portal</a>
             <ul class="nav-links">
-                <li><a asp-page="/Index" class="@(currentPage == "/Index" || currentPage == "/Details" ? "active" : "")">Customers</a></li>
-                <li><a asp-page="/Onboard" class="@(currentPage == "/Onboard" ? "active" : "")">Onboard Customers</a></li>
+                <li><a asp-page="/Index" class="@(currentPage == "/Index" || currentPage == "/Case" ? "active" : "")">Customers</a></li>
             </ul>
             <span class="user-area">
                 @if (User.Identity?.IsAuthenticated == true)
@@ -34,9 +34,10 @@
         @RenderBody()
     </main>
     <footer class="app-footer">
-        <span>&copy; @DateTime.UtcNow.Year Customer Onboarding Portal</span>
+        <span>&copy; @DateTime.UtcNow.Year KYC / AML Portal</span>
         <span>Powered by Microsoft Foundry</span>
     </footer>
+    <script src="~/js/kyc-common.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

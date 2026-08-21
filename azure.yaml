@@ -12,11 +12,11 @@ requiredVersions:
   azd: ">=1.23.11"
 
 services:
-  web:
+  web-onboarding:
     project: ./src/web-onboarding
     host: appservice
     language: dotnet
-  kyc:
+  web-kyc:
     project: ./src/web-kyc
     host: appservice
     language: dotnet
