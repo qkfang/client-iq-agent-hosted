@@ -7,10 +7,12 @@ namespace Onboarding.Web.Pages;
 public class CaseModel : PageModel
 {
     private readonly KycCaseService _cases;
+    private readonly KycAgentService _agent;
 
-    public CaseModel(KycCaseService cases)
+    public CaseModel(KycCaseService cases, KycAgentService agent)
     {
         _cases = cases;
+        _agent = agent;
     }
 
     public string CustomerId { get; private set; } = string.Empty;
@@ -40,8 +42,10 @@ public class CaseModel : PageModel
     public IActionResult OnPostStart(string customerId)
     {
         var existing = _cases.GetCase(customerId);
-        return new JsonResult(_cases.StartCase(customerId, existing?.CustomerName, existing?.Jurisdiction,
-            existing?.EntityType, existing?.ProductScope, existing?.BusinessContact, Reviewer));
+        var kycCase = _cases.StartCase(customerId, existing?.CustomerName, existing?.Jurisdiction,
+            existing?.EntityType, existing?.ProductScope, existing?.BusinessContact, Reviewer);
+        _agent.Kick(kycCase);
+        return new JsonResult(kycCase);
     }
 
     public IActionResult OnPostApprove(string customerId, string target, string state)

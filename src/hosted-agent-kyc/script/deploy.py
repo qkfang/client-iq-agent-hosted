@@ -92,6 +92,19 @@ def main() -> None:
             )
         )
 
+    # Tracking web app: exposes the fixed CIP rulebook and receives each rule
+    # result so the UI ticks off while the run is still going.
+    kyc_app_mcp_url = os.getenv("KYC_APP_MCP_URL")
+    if kyc_app_mcp_url:
+        extra_tools.append(
+            {
+                "type": "mcp",
+                "server_label": "kyc-tracking-app",
+                "server_url": kyc_app_mcp_url,
+                "require_approval": "never",
+            }
+        )
+
     deploy_hosted_agent(
         agent_name="hosted-agent-kyc",
         agent_endpoint=agent_endpoint,

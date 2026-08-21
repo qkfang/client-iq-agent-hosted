@@ -4,11 +4,18 @@
     if (!board) return;
 
     const customerId = board.dataset.customerId;
-    const ui = { stages: new Set(), categories: new Set(), group: null, filter: 'All' };
+    const ui = { stages: new Set(), categories: new Set(), group: null, filter: 'All', checkGroup: null };
 
     const feed = watch(`?handler=Feed&customerId=${encodeURIComponent(customerId)}`, render);
 
     const icon = status => ({ ok: '&#10003;', blocked: '!', active: '', muted: '&#8211;' }[statusClass(status)] ?? '');
+
+    const outcomeClass = outcome => ({
+        'Pass': 'ok',
+        'Attention': 'active',
+        'Fail': 'blocked',
+        'Not Applicable': 'muted'
+    }[outcome] ?? 'pending');
 
     function heroCard(c) {
         const stages = c.stages.map(s => {
@@ -147,6 +154,41 @@
         return section('CIP requirements', body);
     }
 
+    function checksCard(c) {
+        const checks = c.policyChecks ?? [];
+        if (!checks.length) {
+            return section('CIP rulebook', '<p class="empty-state">Rulebook loads when the KYC check is started.</p>');
+        }
+
+        const groups = [...new Set(checks.map(p => p.group))];
+        if (!groups.includes(ui.checkGroup)) {
+            ui.checkGroup = groups[0];
+        }
+
+        const tabs = groups.map(g => {
+            const inGroup = checks.filter(p => p.group === g);
+            const done = inGroup.filter(p => p.outcome !== 'Pending').length;
+            return `<button type="button" class="tab${g === ui.checkGroup ? ' is-active' : ''}" data-check-group="${esc(g)}">${esc(g)} <small>${done}/${inGroup.length}</small></button>`;
+        }).join('');
+
+        const rows = checks.filter(p => p.group === ui.checkGroup).map(p => `<li class="check-row is-${outcomeClass(p.outcome)}">
+                <span class="check-tick">${p.outcome === 'Pending' ? '' : icon(p.outcome === 'Fail' ? 'Blocked' : 'Completed')}</span>
+                <div class="check-body">
+                    <p class="check-title"><code>${esc(p.id)}</code> ${esc(p.title)}</p>
+                    <p class="muted">${esc(p.finding || p.question)}</p>
+                    <p class="check-meta"><span class="chip chip-muted">${esc(p.iq)}</span> ${esc(p.source || p.reference)}</p>
+                </div>
+                <span class="chip chip-${outcomeClass(p.outcome)}">${esc(p.outcome)}</span>
+            </li>`).join('');
+
+        const cleared = checks.filter(p => p.outcome !== 'Pending').length;
+        const body = `<div class="req-toolbar"><span class="tabs">${tabs}</span></div>
+            <ul class="check-list">${rows}</ul>
+            <p class="muted req-count">${cleared} of ${checks.length} ${esc(c.jurisdiction)} CIP rules checked</p>`;
+
+        return section('CIP rulebook', body);
+    }
+
     function activityCard(c) {
         const items = c.activity.map(a => `<li class="activity-row is-${statusClass(a.status)}">
                 <span class="activity-kind kind-${esc(a.kind)}">${esc(a.kind)}</span>
@@ -177,7 +219,7 @@
     function render(c) {
         board.innerHTML = `${heroCard(c)}
             <div class="case-columns">
-                <div class="case-col">${riskCard(c)}${cipCard(c)}</div>
+                <div class="case-col">${checksCard(c)}${riskCard(c)}${cipCard(c)}</div>
                 <div class="case-col">${activityCard(c)}</div>
             </div>
             ${requirementsCard(c)}`;
@@ -203,6 +245,14 @@
         const group = event.target.closest('[data-group]');
         if (group) {
             ui.group = group.dataset.group;
+            feed.invalidate();
+            feed.refresh();
+            return;
+        }
+
+        const checkGroup = event.target.closest('[data-check-group]');
+        if (checkGroup) {
+            ui.checkGroup = checkGroup.dataset.checkGroup;
             feed.invalidate();
             feed.refresh();
             return;

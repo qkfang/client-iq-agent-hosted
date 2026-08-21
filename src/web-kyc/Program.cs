@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Onboarding.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,7 +14,12 @@ if (authEnabled)
 {
     builder.Services
         .AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
-        .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"));
+        .AddMicrosoftIdentityWebApp(options =>
+        {
+            builder.Configuration.GetSection("AzureAd").Bind(options);
+            // Authorization code flow; implicit id_token is disabled on the app registration.
+            options.ResponseType = OpenIdConnectResponseType.Code;
+        });
     builder.Services.AddControllersWithViews().AddMicrosoftIdentityUI();
 }
 
@@ -27,6 +33,8 @@ builder.Services.AddRazorPages(options =>
 });
 
 builder.Services.AddSingleton<KycCaseService>();
+builder.Services.Configure<KycAgentOptions>(builder.Configuration.GetSection("KycAgent"));
+builder.Services.AddSingleton<KycAgentService>();
 
 builder.Services
     .AddMcpServer()

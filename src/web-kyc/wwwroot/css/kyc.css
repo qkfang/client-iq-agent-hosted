@@ -623,6 +623,46 @@ a.btn { text-decoration: none; display: inline-flex; align-items: center; }
 .req-actions { display: flex; gap: 6px; flex: none; }
 .req-count { margin-top: 14px; }
 
+/* ---------- CIP rulebook checks ---------- */
+.check-list { display: flex; flex-direction: column; gap: 8px; max-height: 560px; overflow-y: auto; }
+
+.check-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    border-left-width: 4px;
+    border-left-color: #cbd5e1;
+}
+
+.check-row.is-ok { border-left-color: var(--ok); background: #f9fefb; }
+.check-row.is-active { border-left-color: #d97706; }
+.check-row.is-blocked { border-left-color: var(--stop); }
+.check-row.is-pending { opacity: 0.7; }
+
+.check-tick {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    flex: none;
+    background: var(--mute-soft);
+    color: var(--ink-500);
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.check-row.is-ok .check-tick { background: var(--ok-soft); color: var(--ok); }
+.check-row.is-blocked .check-tick { background: var(--stop-soft); color: var(--stop); }
+
+.check-body { flex: 1; min-width: 0; }
+.check-title { margin: 0 0 2px; font-size: 0.9rem; font-weight: 600; }
+.check-title code { font-size: 0.74rem; color: var(--ink-500); margin-right: 6px; }
+.check-meta { margin: 6px 0 0; font-size: 0.74rem; color: var(--mute); display: flex; gap: 8px; align-items: center; }
+
 /* ---------- Activity ---------- */
 .activity-list { gap: 10px; max-height: 620px; overflow-y: auto; }
 

@@ -9,7 +9,8 @@ namespace Onboarding.Web.Mcp;
 /// <summary>
 /// MCP tools the Foundry agent calls to open and progress a customer's KYC/AML
 /// CIP check. Every call is keyed on the customer id and pushes straight into
-/// the tracking UI.
+/// the tracking UI. The rule ids in <see cref="CipRulebook"/> are the fixed
+/// contract between the agent and this app.
 /// </summary>
 [McpServerToolType]
 public class KycMcpTools
@@ -37,7 +38,16 @@ public class KycMcpTools
         c.LastUpdatedUtc
     }));
 
-    [McpServerTool(Name = "start_kyc_case"), Description("Open the KYC/AML CIP check for a customer. Creates the customer entry when the id is not yet tracked.")]
+    [McpServerTool(Name = "get_cip_rulebook"), Description("Get the fixed CIP/AML rulebook (Asia, Hong Kong rule set) the agent must work through: rule id, group, stage, question, and which connected IQ to use for each rule.")]
+    public string GetRulebook() => Json(new
+    {
+        region = CipRulebook.Region,
+        jurisdiction = CipRulebook.Jurisdiction,
+        groups = CipRulebook.Groups,
+        rules = CipRulebook.Rules
+    });
+
+    [McpServerTool(Name = "start_kyc_case"), Description("Open the KYC/AML CIP check for a customer and return the case plus the rulebook to work through. Creates the customer entry when the id is not yet tracked.")]
     public string StartCase(
         [Description("Tracking key for the customer, e.g. CUST-1001.")] string customerId,
         [Description("Client legal name.")] string? customerName = null,
@@ -45,7 +55,20 @@ public class KycMcpTools
         [Description("Entity type, e.g. Regulated Financial Institution, Public Listed Company, Fund, Pension Scheme, Partnership.")] string? entityType = null,
         [Description("Products in scope, e.g. Derivatives - OTC.")] string? productScope = null,
         [Description("Business contact requesting the onboarding.")] string? businessContact = null)
-        => Json(_cases.StartCase(customerId, customerName, jurisdiction, entityType, productScope, businessContact, AgentActor));
+        => Json(new
+        {
+            kycCase = _cases.StartCase(customerId, customerName, jurisdiction, entityType, productScope, businessContact, AgentActor),
+            rulebook = CipRulebook.Rules
+        });
+
+    [McpServerTool(Name = "submit_policy_check"), Description("Report the result of one rulebook rule back to the tracking app. Call this immediately after checking each rule so the UI ticks it off in real time.")]
+    public string SubmitPolicyCheck(
+        [Description("Tracking key for the customer.")] string customerId,
+        [Description("Rule id from the rulebook, e.g. ENR-01, REF-03, RSK-04, CIP-Q2, AML-03, REG-01, EVD-02.")] string ruleId,
+        [Description("Outcome: Pass, Attention, Fail or Not Applicable.")] string outcome,
+        [Description("One or two sentences stating what was found and why the outcome was chosen.")] string finding,
+        [Description("Connected IQ and document the finding came from, e.g. 'Foundry IQ - Approved Regulator list'.")] string? source = null)
+        => Result(_cases.SubmitPolicyCheck(customerId, ruleId, outcome, finding, source, AgentActor), customerId);
 
     [McpServerTool(Name = "get_kyc_case"), Description("Get the full KYC/AML case for a customer, including stages, risk assessment, CIP result and requirements.")]
     public string GetCase([Description("Tracking key for the customer, e.g. CUST-1001.")] string customerId)

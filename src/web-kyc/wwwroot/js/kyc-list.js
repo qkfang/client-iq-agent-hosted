@@ -40,6 +40,7 @@
                     <dl class="metrics">
                         ${metric('Current stage', started ? c.currentStage : '—')}
                         ${metric('Next step', started ? c.nextStepsRequired : 'Awaiting KYC start')}
+                        ${metric('CIP rules checked', c.rulesChecked)}
                         ${metric('Risk rating', c.riskRating)}
                         ${metric('CIP schedule', c.cipClause)}
                         ${metric('Open requirements', started && c.openRequirements ? String(c.openRequirements) : '')}

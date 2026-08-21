@@ -20,6 +20,7 @@ public class KycCase
     public string? FinalStatus { get; set; }
 
     public List<KycStage> Stages { get; set; } = [];
+    public List<KycPolicyCheck> PolicyChecks { get; set; } = [];
     public KycRiskAssessment? RiskAssessment { get; set; }
     public KycCipResult? CipResult { get; set; }
     public List<KycRequirement> Requirements { get; set; } = [];
@@ -41,7 +42,10 @@ public class KycCase
     public string NextStepsRequired { get; set; } = string.Empty;
     public string ActionableBy { get; set; } = "Agent";
 
-    /// <summary>Ready-to-trade percentage: stage progress plus requirement coverage.</summary>
+    /// <summary>Number of rulebook checks the agent has reported a result for.</summary>
+    public int PolicyChecksCleared => PolicyChecks.Count(p => p.Outcome != KycOutcome.Pending);
+
+    /// <summary>Ready-to-trade percentage: stages, rulebook checks and requirement coverage.</summary>
     public int ReadinessPercent
     {
         get
@@ -58,18 +62,46 @@ public class KycCase
                 _ => 0.0
             }) / Stages.Count;
 
-            if (Requirements.Count == 0)
+            var weighted = stageScore * 0.4;
+            var weight = 0.4;
+
+            if (PolicyChecks.Count > 0)
             {
-                return (int)Math.Round(stageScore * 100);
+                weighted += (double)PolicyChecksCleared / PolicyChecks.Count * 0.3;
+                weight += 0.3;
             }
 
-            var satisfied = Requirements.Count(r =>
-                r.Status is KycStatus.Satisfied or KycStatus.Waived or KycStatus.NotApplicable);
-            var requirementScore = (double)satisfied / Requirements.Count;
+            if (Requirements.Count > 0)
+            {
+                var satisfied = Requirements.Count(r =>
+                    r.Status is KycStatus.Satisfied or KycStatus.Waived or KycStatus.NotApplicable);
+                weighted += (double)satisfied / Requirements.Count * 0.3;
+                weight += 0.3;
+            }
 
-            return (int)Math.Round((stageScore * 0.6 + requirementScore * 0.4) * 100);
+            return (int)Math.Round(weighted / weight * 100);
         }
     }
+}
+
+/// <summary>
+/// One rule from the fixed CIP rulebook. Seeded Pending when the case opens and
+/// resolved by the agent through the submit_policy_check MCP tool.
+/// </summary>
+public class KycPolicyCheck
+{
+    public string Id { get; set; } = string.Empty;
+    public string Group { get; set; } = string.Empty;
+    public string Stage { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string Question { get; set; } = string.Empty;
+    public string Iq { get; set; } = string.Empty;
+    public string Reference { get; set; } = string.Empty;
+
+    public string Outcome { get; set; } = KycOutcome.Pending;
+    public string Finding { get; set; } = string.Empty;
+    public string Source { get; set; } = string.Empty;
+    public DateTimeOffset? CheckedUtc { get; set; }
 }
 
 public class KycStage
@@ -157,4 +189,19 @@ public static class KycStatus
     public const string Outstanding = "Outstanding";
     public const string Waived = "Waived";
     public const string NotApplicable = "Not Applicable";
+}
+
+/// <summary>Outcome vocabulary for a rulebook policy check.</summary>
+public static class KycOutcome
+{
+    public const string Pending = "Pending";
+    public const string Pass = "Pass";
+    public const string Attention = "Attention";
+    public const string Fail = "Fail";
+    public const string NotApplicable = "Not Applicable";
+
+    private static readonly string[] All = [Pending, Pass, Attention, Fail, NotApplicable];
+
+    public static string Normalize(string? value) =>
+        All.FirstOrDefault(o => string.Equals(o, value?.Trim(), StringComparison.OrdinalIgnoreCase)) ?? Attention;
 }

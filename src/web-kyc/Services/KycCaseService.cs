@@ -57,6 +57,7 @@ public class KycCaseService
         kycCase.CipResult = null;
         kycCase.Requirements = [];
         kycCase.Activity = [];
+        kycCase.PolicyChecks = BuildPolicyChecks();
         kycCase.Stages = BuildStages();
         kycCase.Stages[0].Status = KycStatus.Completed;
         kycCase.Stages[0].Detail = "Onboarding request raised; client, jurisdiction and product scope captured.";
@@ -71,10 +72,59 @@ public class KycCaseService
         {
             Step = "Case opened",
             Kind = "flow",
-            Message = $"KYC/AML case opened for {kycCase.CustomerName} ({kycCase.CustomerId}).",
+            Message = $"KYC/AML case opened for {kycCase.CustomerName} ({kycCase.CustomerId}). {kycCase.PolicyChecks.Count} {CipRulebook.Jurisdiction} CIP rules queued for checking.",
             Status = KycStatus.Completed,
             Actor = updatedBy
         });
+
+        Touch(kycCase, updatedBy);
+        return kycCase;
+    }
+
+    /// <summary>
+    /// Records the agent's result for one rulebook rule. This is what ticks the
+    /// rule off in the UI as the agent works through the CIP rule set.
+    /// </summary>
+    public KycCase? SubmitPolicyCheck(
+        string customerId,
+        string ruleId,
+        string outcome,
+        string finding,
+        string? source,
+        string updatedBy)
+    {
+        var kycCase = GetCase(customerId);
+        var check = kycCase?.PolicyChecks.FirstOrDefault(p => string.Equals(p.Id, ruleId, StringComparison.OrdinalIgnoreCase));
+        if (kycCase is null || check is null)
+        {
+            return null;
+        }
+
+        check.Outcome = KycOutcome.Normalize(outcome);
+        check.Finding = finding;
+        check.CheckedUtc = DateTimeOffset.UtcNow;
+        if (!string.IsNullOrWhiteSpace(source))
+        {
+            check.Source = source;
+        }
+
+        AddActivity(kycCase, new KycActivity
+        {
+            Step = $"{check.Id} {check.Title}",
+            Kind = "knowledge",
+            Message = $"{check.Outcome} - {finding}",
+            Status = check.Outcome == KycOutcome.Fail ? KycStatus.Blocked : KycStatus.Completed,
+            Actor = updatedBy
+        });
+
+        // A stage is done once every rule mapped to it has an outcome.
+        var stageRules = kycCase.PolicyChecks.Where(p => p.Stage == check.Stage).ToList();
+        if (stageRules.All(p => p.Outcome != KycOutcome.Pending))
+        {
+            var cleared = stageRules.Count(p => p.Outcome != KycOutcome.Fail);
+            UpdateStage(customerId, check.Stage, KycStatus.Completed,
+                $"{cleared} of {stageRules.Count} CIP rules cleared.", updatedBy);
+        }
 
         Touch(kycCase, updatedBy);
         return kycCase;
@@ -336,6 +386,18 @@ public class KycCaseService
         new() { Key = "gapAnalysis", Label = "Gap Analysis", Owner = "Agent" },
         new() { Key = "outreach", Label = "Client Outreach", Owner = "Analyst" },
     ];
+
+    private static List<KycPolicyCheck> BuildPolicyChecks() =>
+        CipRulebook.Rules.Select(r => new KycPolicyCheck
+        {
+            Id = r.Id,
+            Group = r.Group,
+            Stage = r.Stage,
+            Title = r.Title,
+            Question = r.Question,
+            Iq = r.Iq,
+            Reference = r.Reference
+        }).ToList();
 
     private static IEnumerable<KycCase> SeedCustomers() =>
     [
