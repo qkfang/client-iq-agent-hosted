@@ -11,6 +11,9 @@ param functionAppName string
 @description('The name of the Web App.')
 param webAppName string
 
+@description('The name of the KYC Web App.')
+param kycWebAppName string
+
 @description('The Azure region where resources will be deployed.')
 param location string
 
@@ -52,6 +55,9 @@ param foundryCrmAgentId string = ''
 
 @description('The Azure AI Foundry agent id for the Lego agent.')
 param foundryLegoAgentId string = ''
+
+@description('The Azure AI Foundry agent id for the KYC agent.')
+param foundryKycAgentId string = ''
 
 @description('The chat model deployment name used by the CRM Web App onboarding agent.')
 param foundryModelDeploymentName string = ''
@@ -168,6 +174,36 @@ resource webApp 'Microsoft.Web/sites@2023-12-01' = {
   }
 }
 
+resource kycWebApp 'Microsoft.Web/sites@2023-12-01' = {
+  name: kycWebAppName
+  location: location
+  tags: union(tags, { 'azd-service-name': 'kyc' })
+  kind: 'app'
+  identity: {
+    type: 'SystemAssigned'
+  }
+  properties: {
+    serverFarmId: appServicePlan.id
+    httpsOnly: true
+    siteConfig: {
+      netFrameworkVersion: 'v10.0'
+      use32BitWorkerProcess: false
+      appSettings: [
+        { name: 'Foundry__ProjectEndpoint', value: foundryProjectEndpoint }
+        { name: 'Foundry__KycAgentId', value: foundryKycAgentId }
+        { name: 'Foundry__ModelDeploymentName', value: foundryModelDeploymentName }
+        { name: 'Foundry__WebAppMcpUrl', value: 'https://${kycWebAppName}.azurewebsites.net/mcp' }
+        { name: 'AzureAd__Instance', value: azureAdInstance }
+        { name: 'AzureAd__TenantId', value: azureAdTenantId }
+        { name: 'AzureAd__ClientId', value: azureAdClientId }
+        { name: 'AzureAd__ClientSecret', value: azureAdClientSecret }
+        { name: 'AzureAd__CallbackPath', value: azureAdCallbackPath }
+        { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: applicationInsightsConnectionString }
+      ]
+    }
+  }
+}
+
 // ========== Role Assignments ========== //
 
 resource storageBlobDataContributor 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
@@ -233,6 +269,16 @@ resource webAppAzureAIUser 'Microsoft.Authorization/roleAssignments@2022-04-01' 
   }
 }
 
+resource kycWebAppAzureAIUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: aiServices
+  name: guid(aiServices.id, kycWebApp.id, azureAIUser.id)
+  properties: {
+    principalId: kycWebApp.identity.principalId
+    roleDefinitionId: azureAIUser.id
+    principalType: 'ServicePrincipal'
+  }
+}
+
 @description('The name of the App Service Plan.')
 output appServicePlanName string = appServicePlan.name
 
@@ -250,6 +296,15 @@ output webAppHostName string = webApp.properties.defaultHostName
 
 @description('The MCP endpoint exposed by the Web App for the Foundry onboarding agent to call.')
 output webAppMcpEndpoint string = 'https://${webApp.properties.defaultHostName}/mcp'
+
+@description('The name of the KYC Web App.')
+output kycWebAppName string = kycWebApp.name
+
+@description('The default host name of the KYC Web App.')
+output kycWebAppHostName string = kycWebApp.properties.defaultHostName
+
+@description('The MCP endpoint exposed by the KYC Web App.')
+output kycWebAppMcpEndpoint string = 'https://${kycWebApp.properties.defaultHostName}/mcp'
 
 @description('The name of the onboarding forms blob container.')
 output onboardingContainerName string = onboardingContainerName

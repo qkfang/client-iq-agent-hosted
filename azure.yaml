@@ -13,7 +13,11 @@ requiredVersions:
 
 services:
   web:
-    project: ./src/web
+    project: ./src/web-onboarding
+    host: appservice
+    language: dotnet
+  kyc:
+    project: ./src/web-kyc
     host: appservice
     language: dotnet
   func:

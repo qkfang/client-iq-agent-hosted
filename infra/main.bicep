@@ -62,6 +62,9 @@ param azureExistingAIProjectResourceId string = ''
 @description('Optional. The Azure AI Foundry agent id for the SalesCRMOnboarding agent used by the CRM Web App. When empty, the Web App onboards candidates locally.')
 param onboardingAgentId string = ''
 
+@description('Optional. The Azure AI Foundry agent id used by the KYC Web App.')
+param kycAgentId string = ''
+
 @description('Optional. The Microsoft Entra authority instance used by the CRM Web App sign-in.')
 param azureAdInstance string = environment().authentication.loginEndpoint
 
@@ -275,6 +278,7 @@ module appServices 'deploy_app_service.bicep' = {
     appServicePlanName: '${abbrs.compute.appServicePlan}${solutionSuffix}'
     functionAppName: '${abbrs.compute.functionApp}${solutionSuffix}'
     webAppName: '${abbrs.compute.webApp}${solutionSuffix}'
+    kycWebAppName: '${abbrs.compute.webApp}kyc-${solutionSuffix}'
     location: location
     storageAccountName: aifoundry.outputs.storageAccountName
     serviceBusNamespaceName: serviceBus.outputs.serviceBusNamespaceName
@@ -282,6 +286,7 @@ module appServices 'deploy_app_service.bicep' = {
     serviceBusQueueName: serviceBus.outputs.serviceBusQueueName
     foundryProjectEndpoint: aifoundry.outputs.projectEndpoint
     foundryOnboardingAgentId: onboardingAgentId
+    foundryKycAgentId: kycAgentId
     foundryModelDeploymentName: gptModelName
     azureAdInstance: azureAdInstance
     azureAdTenantId: azureAdTenantId
@@ -402,3 +407,9 @@ output AZURE_WEB_APP_NAME string = appServices.outputs.webAppName
 
 @description('MCP endpoint exposed by the CRM Web App for the Foundry onboarding agent')
 output AZURE_WEB_APP_MCP_ENDPOINT string = appServices.outputs.webAppMcpEndpoint
+
+@description('Name of the KYC Web App')
+output AZURE_KYC_WEB_APP_NAME string = appServices.outputs.kycWebAppName
+
+@description('MCP endpoint exposed by the KYC Web App')
+output AZURE_KYC_WEB_APP_MCP_ENDPOINT string = appServices.outputs.kycWebAppMcpEndpoint

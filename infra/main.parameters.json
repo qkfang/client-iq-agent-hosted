@@ -27,7 +27,10 @@
       "value": "${AZURE_EXISTING_AI_PROJECT_RESOURCE_ID=}"
     },
     "onboardingAgentId": {
-      "value": "${SALES_CRM_ONBOARDING_AGENT_ID=}"
+      "value": "${ONBOARDING_AGENT_ID=}"
+    },
+    "kycAgentId": {
+      "value": "${KYC_AGENT_ID=}"
     },
     "azureAdInstance": {
       "value": "${AZURE_AD_INSTANCE=https://login.microsoftonline.com/}"
