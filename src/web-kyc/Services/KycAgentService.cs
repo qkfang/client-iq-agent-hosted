@@ -1,5 +1,4 @@
 using System.ClientModel.Primitives;
-using Azure.AI.Extensions.OpenAI;
 using Azure.AI.Projects;
 using Azure.Identity;
 using Microsoft.Extensions.Options;
@@ -16,9 +15,6 @@ public class KycAgentOptions
 
     /// <summary>Hosted agent name, e.g. hosted-agent-kyc.</summary>
     public string AgentName { get; set; } = "hosted-agent-kyc";
-
-    /// <summary>Optional agent version to pin; the latest version is used when empty.</summary>
-    public string? AgentVersion { get; set; }
 
     /// <summary>Entra tenant id override for local development.</summary>
     public string? TenantId { get; set; }
@@ -121,8 +117,8 @@ public class KycAgentService
             NetworkTimeout = TimeSpan.FromMinutes(30)
         };
         var projectClient = new AIProjectClient(new Uri(_options.ProjectEndpoint), new DefaultAzureCredential(credentialOptions), clientOptions);
-        var responseClient = projectClient.ProjectOpenAIClient.GetProjectResponsesClientForAgent(
-            new AgentReference(_options.AgentName, _options.AgentVersion));
+        // Hosted agents are only reachable through their own agent endpoint.
+        var responseClient = projectClient.ProjectOpenAIClient.GetProjectResponsesClientForAgentEndpoint(_options.AgentName);
 
         CreateResponseOptions? next = new()
         {
