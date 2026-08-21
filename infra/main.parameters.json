@@ -30,7 +30,7 @@
       "value": "${ONBOARDING_AGENT_ID=}"
     },
     "kycAgentId": {
-      "value": "${KYC_AGENT_ID=}"
+      "value": "${KYC_AGENT_ID=hosted-agent-kyc}"
     },
     "azureAdInstance": {
       "value": "${AZURE_AD_INSTANCE=https://login.microsoftonline.com/}"

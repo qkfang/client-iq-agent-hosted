@@ -56,7 +56,11 @@
                 </div>
             </div>
             <ul class="stage-list">${stages}</ul>
-            <footer class="hero-outcome"><span class="outcome-icon">&#9678;</span><p>${outcome}</p></footer>
+            <footer class="hero-outcome">
+                <span class="outcome-icon">&#9678;</span>
+                <p>${outcome}</p>
+                <button type="button" class="btn btn-primary" data-run-agent>${c.caseStatus === 'Not started' ? 'Start KYC check' : 'Re-run agent'}</button>
+            </footer>
         </article>`;
     }
 
@@ -226,6 +230,18 @@
     }
 
     board.addEventListener('click', async event => {
+        const run = event.target.closest('[data-run-agent]');
+        if (run) {
+            run.disabled = true;
+            run.textContent = 'Starting…';
+            try {
+                render(await post('Start', { customerId }));
+            } finally {
+                feed.invalidate();
+            }
+            return;
+        }
+
         const stage = event.target.closest('[data-stage]');
         if (stage) {
             const key = stage.dataset.stage;

@@ -1,4 +1,5 @@
 using System.ClientModel.Primitives;
+using Azure.AI.Extensions.OpenAI;
 using Azure.AI.Projects;
 using Azure.Identity;
 using Microsoft.Extensions.Options;
@@ -13,8 +14,11 @@ public class KycAgentOptions
     /// <summary>Foundry project endpoint, e.g. https://{service}.services.ai.azure.com/api/projects/{name}.</summary>
     public string ProjectEndpoint { get; set; } = string.Empty;
 
-    /// <summary>Hosted agent name, or "name:version" to pin a specific version.</summary>
+    /// <summary>Hosted agent name, e.g. hosted-agent-kyc.</summary>
     public string AgentName { get; set; } = "hosted-agent-kyc";
+
+    /// <summary>Optional agent version to pin; the latest version is used when empty.</summary>
+    public string? AgentVersion { get; set; }
 
     /// <summary>Entra tenant id override for local development.</summary>
     public string? TenantId { get; set; }
@@ -48,14 +52,40 @@ public class KycAgentService
         if (!_options.Enabled)
         {
             _logger.LogInformation("Foundry is not configured; {CustomerId} stays in manual mode.", kycCase.CustomerId);
+            _cases.LogActivity(kycCase.CustomerId, new KycActivity
+            {
+                Step = "Agent run",
+                Kind = "flow",
+                Message = "Foundry is not configured (KycAgent:ProjectEndpoint is empty); the case stays in manual mode.",
+                Status = KycStatus.Blocked,
+                Actor = "System"
+            });
             return;
         }
+
+        _logger.LogInformation("Starting {AgentName} for {CustomerId}", _options.AgentName, kycCase.CustomerId);
+        _cases.LogActivity(kycCase.CustomerId, new KycActivity
+        {
+            Step = "Agent run",
+            Kind = "flow",
+            Message = $"Handed off to hosted agent '{_options.AgentName}' to work the {kycCase.Jurisdiction} CIP rulebook.",
+            Status = KycStatus.InProgress,
+            Actor = "System"
+        });
 
         _ = Task.Run(async () =>
         {
             try
             {
                 await RunAsync(kycCase, CancellationToken.None);
+                _cases.LogActivity(kycCase.CustomerId, new KycActivity
+                {
+                    Step = "Agent run",
+                    Kind = "flow",
+                    Message = "Hosted agent run finished.",
+                    Status = KycStatus.Completed,
+                    Actor = "Foundry KYC agent"
+                });
             }
             catch (Exception ex)
             {
@@ -74,14 +104,25 @@ public class KycAgentService
 
     private async Task RunAsync(KycCase kycCase, CancellationToken cancellationToken)
     {
-        var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions { TenantId = _options.TenantId });
+        var credentialOptions = new DefaultAzureCredentialOptions();
+        if (!string.IsNullOrWhiteSpace(_options.TenantId))
+        {
+            credentialOptions.TenantId = _options.TenantId;
+        }
+
+        // Use the managed identity on App Service; locally use developer
+        // credentials and skip the managed identity probe.
+        var onAppService = !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("WEBSITE_INSTANCE_ID"));
+        credentialOptions.ExcludeManagedIdentityCredential = !onAppService;
+
         var clientOptions = new AIProjectClientOptions
         {
             RetryPolicy = new ClientRetryPolicy(maxRetries: 0),
             NetworkTimeout = TimeSpan.FromMinutes(30)
         };
-        var projectClient = new AIProjectClient(new Uri(_options.ProjectEndpoint), credential, clientOptions);
-        var responseClient = projectClient.ProjectOpenAIClient.GetProjectResponsesClientForAgent(_options.AgentName);
+        var projectClient = new AIProjectClient(new Uri(_options.ProjectEndpoint), new DefaultAzureCredential(credentialOptions), clientOptions);
+        var responseClient = projectClient.ProjectOpenAIClient.GetProjectResponsesClientForAgent(
+            new AgentReference(_options.AgentName, _options.AgentVersion));
 
         CreateResponseOptions? next = new()
         {

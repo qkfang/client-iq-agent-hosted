@@ -56,8 +56,8 @@ param foundryCrmAgentId string = ''
 @description('The Azure AI Foundry agent id for the Lego agent.')
 param foundryLegoAgentId string = ''
 
-@description('The Azure AI Foundry agent id for the KYC agent.')
-param foundryKycAgentId string = ''
+@description('The hosted Azure AI Foundry agent name the KYC Web App invokes.')
+param foundryKycAgentId string = 'hosted-agent-kyc'
 
 @description('The chat model deployment name used by the CRM Web App onboarding agent.')
 param foundryModelDeploymentName string = ''
@@ -80,6 +80,12 @@ param azureAdCallbackPath string = '/signin-oidc'
 
 @description('The name of the Azure AI Services account to grant the Function App access to.')
 param aiServicesName string
+
+@description('The name of the AI project under the AI Services account.')
+param aiProjectName string
+
+@description('The name of the project connection registering the KYC Web App MCP endpoint.')
+param kycMcpConnectionName string = 'kyc-tracking-app'
 
 @description('The Application Insights connection string used for monitoring the Function App and Web App.')
 param applicationInsightsConnectionString string = ''
@@ -189,10 +195,8 @@ resource kycWebApp 'Microsoft.Web/sites@2023-12-01' = {
       netFrameworkVersion: 'v10.0'
       use32BitWorkerProcess: false
       appSettings: [
-        { name: 'Foundry__ProjectEndpoint', value: foundryProjectEndpoint }
-        { name: 'Foundry__KycAgentId', value: foundryKycAgentId }
-        { name: 'Foundry__ModelDeploymentName', value: foundryModelDeploymentName }
-        { name: 'Foundry__WebAppMcpUrl', value: 'https://${kycWebAppName}.azurewebsites.net/mcp' }
+        { name: 'KycAgent__ProjectEndpoint', value: foundryProjectEndpoint }
+        { name: 'KycAgent__AgentName', value: foundryKycAgentId }
         { name: 'AzureAd__Instance', value: azureAdInstance }
         { name: 'AzureAd__TenantId', value: azureAdTenantId }
         { name: 'AzureAd__ClientId', value: azureAdClientId }
@@ -247,6 +251,28 @@ resource functionAppServiceBusDataOwner 'Microsoft.Authorization/roleAssignments
 
 resource aiServices 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' existing = {
   name: aiServicesName
+}
+
+resource aiProject 'Microsoft.CognitiveServices/accounts/projects@2025-04-01-preview' existing = {
+  parent: aiServices
+  name: aiProjectName
+}
+
+// Registers the KYC Web App MCP endpoint as a project connection so the hosted
+// KYC agent's toolbox can call back into the tracking app while it runs.
+resource kycMcpConnection 'Microsoft.CognitiveServices/accounts/projects/connections@2025-04-01-preview' = {
+  parent: aiProject
+  name: kycMcpConnectionName
+  properties: {
+    category: 'RemoteTool'
+    target: 'https://${kycWebApp.properties.defaultHostName}/mcp'
+    authType: 'None'
+    isSharedToAll: true
+    metadata: {
+      ApiType: 'Azure'
+      type: 'custom_MCP'
+    }
+  }
 }
 
 resource functionAppAzureAIUser 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
@@ -305,6 +331,9 @@ output kycWebAppHostName string = kycWebApp.properties.defaultHostName
 
 @description('The MCP endpoint exposed by the KYC Web App.')
 output kycWebAppMcpEndpoint string = 'https://${kycWebApp.properties.defaultHostName}/mcp'
+
+@description('The Foundry project connection name for the KYC Web App MCP endpoint.')
+output kycMcpConnectionName string = kycMcpConnection.name
 
 @description('The name of the onboarding forms blob container.')
 output onboardingContainerName string = onboardingContainerName

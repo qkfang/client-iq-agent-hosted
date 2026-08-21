@@ -96,14 +96,16 @@ def main() -> None:
     # result so the UI ticks off while the run is still going.
     kyc_app_mcp_url = os.getenv("KYC_APP_MCP_URL")
     if kyc_app_mcp_url:
-        extra_tools.append(
-            {
-                "type": "mcp",
-                "server_label": "kyc-tracking-app",
-                "server_url": kyc_app_mcp_url,
-                "require_approval": "never",
-            }
-        )
+        kyc_app_tool = {
+            "type": "mcp",
+            "server_label": "kyc-tracking-app",
+            "server_url": kyc_app_mcp_url,
+            "require_approval": "never",
+        }
+        kyc_app_connection = os.getenv("KYC_APP_MCP_CONNECTION_NAME")
+        if kyc_app_connection:
+            kyc_app_tool["project_connection_id"] = kyc_app_connection
+        extra_tools.append(kyc_app_tool)
 
     deploy_hosted_agent(
         agent_name="hosted-agent-kyc",
