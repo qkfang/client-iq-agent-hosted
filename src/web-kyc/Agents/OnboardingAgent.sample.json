@@ -1,0 +1,45 @@
+{
+  "customer": {
+    "candidateId": "cand-001",
+    "companyName": "Northwind Trading Partners",
+    "legalEntityType": "Private Limited Company",
+    "country": "United Kingdom",
+    "industry": "Wholesale Distribution",
+    "contactName": "Alex Morgan",
+    "contactEmail": "alex.morgan@example.com",
+    "website": "https://www.example.com"
+  },
+  "enrichment": {
+    "conversations": [
+      { "date": "2026-05-12", "summary": "Discovery call covering trade volumes and settlement terms." }
+    ],
+    "meetings": [
+      { "date": "2026-06-03", "subject": "Onboarding kickoff", "summary": "Reviewed required KYC documents and timelines." }
+    ],
+    "emails": [
+      { "date": "2026-06-10", "subject": "Signed NDA", "summary": "Contact returned the signed NDA and requested next steps." }
+    ]
+  },
+  "onboardingChecklist": [
+    { "requirement": "Verify legal entity registration", "source": "KYC Procedure v3", "completed": true },
+    { "requirement": "Collect proof of address", "source": "KYC Procedure v3", "completed": true },
+    { "requirement": "Screen against sanctions lists", "source": "AML Checklist", "completed": true },
+    { "requirement": "Assign relationship manager", "source": "Onboarding Guide", "completed": false }
+  ],
+  "summary": {
+    "overview": "Established wholesale distributor with steady trade volumes and a clean compliance profile suitable for standard onboarding.",
+    "keyFindings": [
+      "Operating for over 10 years with regional distribution coverage.",
+      "No adverse media or sanctions matches identified."
+    ],
+    "ontologyInsights": [
+      "Linked to two existing supplier accounts in the customer network.",
+      "Industry classification aligns with low-risk wholesale segment."
+    ],
+    "sources": [
+      "Bing web search",
+      "Fabric IQ ontology"
+    ]
+  },
+  "kycRiskRating": "Low"
+}

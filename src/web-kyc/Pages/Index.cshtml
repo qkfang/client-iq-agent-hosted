@@ -1,0 +1,49 @@
+@page
+@using Onboarding.Web.Services
+@model IndexModel
+@{
+    ViewData["Title"] = "Customers";
+}
+
+<h1>@ViewData["Title"]</h1>
+<p class="page-intro">Your customer accounts in one place. When a new customer is onboarded, the AI onboarding assistant researches the company and creates or updates the record here automatically — no manual data entry required.</p>
+
+<div class="entity-grid">
+    <table class="entity-table">
+        <thead>
+            <tr>
+                <th>Customer Id</th>
+                <th>Name</th>
+                <th>Entity Type</th>
+                <th>Industry</th>
+                <th>Country</th>
+                <th>Account Owner</th>
+                <th>Onboarding Status</th>
+                <th>KYC Risk Rating</th>
+                <th>Last Updated</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var record in Model.Records)
+            {
+                <tr>
+                    <td><a asp-page="/Details" asp-route-customerId="@record.CustomerId">@record.CustomerId</a></td>
+                    <td>@record.CustomerName</td>
+                    <td>@record.LegalEntityType</td>
+                    <td>@record.Industry</td>
+                    <td>@record.Country</td>
+                    <td>@record.AccountOwner</td>
+                    <td><span class="badge">@record.OnboardingStatus</span></td>
+                    <td>@record.KycRiskRating</td>
+                    <td>@record.LastUpdatedUtc.ToString("u") (@record.LastUpdatedBy)</td>
+                    <td>
+                        <form method="post" asp-page-handler="Delete" asp-route-customerId="@record.CustomerId">
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

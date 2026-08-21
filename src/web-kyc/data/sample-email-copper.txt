@@ -1,0 +1,68 @@
+From: Jordan Lee <jordan.lee@sample-trading.example>
+To: Alex Morgan <alex.morgan@contoso.example>
+Cc: Procurement Desk <procurement@sample-trading.example>
+Subject: RE: RE: Copper spot pricing for Q2 shipments
+Date: Tue, 15 Apr 2025 09:42:11 +1000
+
+Hi Alex,
+
+Thanks for the quick turnaround. We're comfortable locking in the first
+two containers at the quoted level. If LME copper holds above the current
+support, we'll look to add a third before month end.
+
+One thing on our side - onboarding is still showing "In progress", so I
+want to make sure that doesn't hold up settlement on the first shipment.
+Let me know if you need anything else from us to close that out.
+
+Regards,
+Jordan Lee
+Sample Trading Pty Ltd
+Wholesale Trade | Sydney, Australia
++61 2 5550 1001 | https://sample-trading.example
+
+-----Original Message-----
+From: Alex Morgan <alex.morgan@contoso.example>
+Sent: Tuesday, 15 April 2025 8:58 AM
+To: Jordan Lee <jordan.lee@sample-trading.example>
+Subject: RE: Copper spot pricing for Q2 shipments
+
+Morning Jordan,
+
+No problem. Spot has been choppy this week - warehouse stocks drew down
+again and the market is pricing in tighter Chinese supply into Q2. My
+read is we hold the range for now, but I wouldn't wait too long if you
+want the current level.
+
+I've flagged your account internally to fast-track the remaining
+onboarding steps. Once your KYC review clears we can settle same-day.
+
+Cheers,
+Alex
+
+-----Original Message-----
+From: Jordan Lee <jordan.lee@sample-trading.example>
+Sent: Tuesday, 15 April 2025 8:31 AM
+To: Alex Morgan <alex.morgan@contoso.example>
+Subject: Copper spot pricing for Q2 shipments
+
+Hi Alex,
+
+Following up from yesterday's call - can you send through indicative
+pricing on grade A copper cathode for two 25t containers, delivery into
+Port Botany? We're watching the copper market closely and would like to
+move while the premium is still reasonable.
+
+For reference, our details on file:
+  Customer:      Sample Trading Pty Ltd (CUST-1001)
+  Entity type:   Private Company
+  Industry:      Wholesale Trade
+  Country:       Australia
+  Account owner: Alex Morgan
+  Contact:       Jordan Lee, jordan.lee@sample-trading.example
+  Phone:         +61 2 5550 1001
+
+Appreciate it.
+
+Thanks,
+Jordan Lee
+Sample Trading Pty Ltd

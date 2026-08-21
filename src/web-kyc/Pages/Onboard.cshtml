@@ -1,0 +1,272 @@
+@page
+@model OnboardModel
+@{
+    ViewData["Title"] = "Onboard Customers";
+}
+
+<h1>@ViewData["Title"]</h1>
+<p>Prospective customers ready to onboard. When you start onboarding, a Microsoft IQ agent automatically researches the company, gathers the details it needs, and creates a complete customer record for you—no manual data entry required.</p>
+
+@Html.AntiForgeryToken()
+
+<div class="grid-toolbar">
+    <button type="button" class="btn btn-primary" data-onboard-freeform>New onboarding prompt</button>
+</div>
+
+<div class="entity-grid">
+    <table class="entity-table">
+        <thead>
+            <tr>
+                <th>Candidate Id</th>
+                <th>Company</th>
+                <th>Entity Type</th>
+                <th>Industry</th>
+                <th>Country</th>
+                <th>Contact</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var candidate in Model.Candidates)
+            {
+                <tr data-candidate-row="@candidate.CandidateId">
+                    <td>@candidate.CandidateId</td>
+                    <td>@candidate.CompanyName</td>
+                    <td>@candidate.LegalEntityType</td>
+                    <td>@candidate.Industry</td>
+                    <td>@candidate.Country</td>
+                    <td>@candidate.ContactName (@candidate.ContactEmail)</td>
+                    <td data-status-cell>
+                        <span class="badge">@candidate.Status</span>
+                        @if (!string.IsNullOrEmpty(candidate.CreatedCustomerId))
+                        {
+                            <a asp-page="/Details" asp-route-customerId="@candidate.CreatedCustomerId">@candidate.CreatedCustomerId</a>
+                        }
+                    </td>
+                    <td data-action-cell>
+                        @if (candidate.Status != "Onboarded")
+                        {
+                            <button type="button" class="btn btn-primary" data-onboard="@candidate.CandidateId">Onboard</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div id="onboard-modal" class="modal-overlay" hidden>
+    <div class="modal-card modal-card-lg" role="dialog" aria-modal="true" aria-labelledby="onboard-modal-title">
+        <h2 id="onboard-modal-title" class="modal-title">Onboarding</h2>
+
+        <div class="modal-tabs" role="tablist">
+            <button type="button" class="modal-tab is-active" data-tab="message" role="tab">Message</button>
+            <button type="button" class="modal-tab" data-tab="result" role="tab" disabled>Result</button>
+            <button type="button" class="modal-tab" data-tab="json" role="tab" disabled>JSON</button>
+            <button type="button" class="modal-tab" data-tab="sample" role="tab">Sample</button>
+        </div>
+
+        <div class="modal-tabpanel" data-panel="message">
+            <select id="onboard-sample" class="modal-select">
+                <option value="">Sample prompts…</option>
+                <option value='please onboard: "Contoso Solutions" as a Private Company'>Onboard Contoso Solutions (Private Company)</option>
+                <option value="give me details about customer Tsehayetu">Customer details lookup</option>
+                <option value="what is the standard onboarding steps">Standard onboarding steps</option>
+            </select>
+            <textarea id="onboard-message" class="modal-textarea" rows="12" spellcheck="false"></textarea>
+        </div>
+        <div class="modal-tabpanel" data-panel="result" hidden>
+            <p id="onboard-result" class="modal-message"></p>
+            <a id="onboard-modal-link" class="btn btn-primary" href="/" hidden>View in Customers</a>
+        </div>
+        <div class="modal-tabpanel" data-panel="json" hidden>
+            <pre id="onboard-json" class="modal-json"></pre>
+        </div>
+        <div class="modal-tabpanel" data-panel="sample" hidden>
+            <div class="modal-chat">
+                <div class="chat-row chat-row-user">
+                    <div class="chat-bubble chat-bubble-user">
+                        <div class="chat-label">Onboarding Prompt</div>
+                        <p>please onboard: "Contoso Solutions" as a Private Company</p>
+                    </div>
+                </div>
+                <div class="chat-row chat-row-agent">
+                    <div class="chat-bubble chat-bubble-agent">
+                        <div class="chat-label">Onboarding Response</div>
+                        <ul>
+                            <li><strong>CRM Customer ID:</strong> <code>CUST-2002</code></li>
+                            <li><strong>Customer:</strong> Contoso Solutions</li>
+                            <li><strong>Entity type:</strong> Private Company</li>
+                            <li><strong>Status:</strong> <strong>Ready to trade</strong></li>
+                            <li><strong>KYC/AML risk:</strong> <strong>High</strong></li>
+                        </ul>
+                        <p>Internal records identified a March 12, 2025 email concerning copper-cathode pricing, tonnage, account paperwork, and delivery terms. No related meetings, chats, or Fabric IQ customer record were found.</p>
+                        <p><strong>Important:</strong> Country, contact details, website, incorporation evidence, ownership/UBO information, and conclusive sanctions/PEP screening remain unavailable. These are normally mandatory before certification. 【8:0†document_collection_validation_checklist.pdf】 【8:4†onboarding_case_stage_definitions.pdf】 【8:8†ready_to_trade_certification_criteria.pdf】</p>
+                        <p>Public identity matching was also inconclusive, and Microsoft commonly uses "Contoso" as a fictional sample-company name. (<a href="https://learn.microsoft.com/en-us/microsoft-365/enterprise/contoso-case-study?view=o365-worldwide" target="_blank" rel="noopener">learn.microsoft.com</a>) <strong>Manual compliance escalation is strongly recommended.</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="onboard-progress" class="modal-progress" hidden>
+            <div class="modal-progress-bar"></div>
+        </div>
+
+        <div class="modal-actions">
+            <button type="button" id="onboard-submit" class="btn btn-primary">Submit</button>
+            <button type="button" class="btn btn-secondary" data-modal-close>Close</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            const modal = document.getElementById('onboard-modal');
+            const title = document.getElementById('onboard-modal-title');
+            const messageBox = document.getElementById('onboard-message');
+            const sampleSelect = document.getElementById('onboard-sample');
+            const resultBox = document.getElementById('onboard-result');
+            const jsonBox = document.getElementById('onboard-json');
+            const link = document.getElementById('onboard-modal-link');
+            const submitBtn = document.getElementById('onboard-submit');
+            const progress = document.getElementById('onboard-progress');
+            const tabs = modal.querySelectorAll('.modal-tab');
+            const panels = modal.querySelectorAll('.modal-tabpanel');
+
+            let currentCandidateId = null;
+            let currentRowBtn = null;
+
+            function selectTab(name) {
+                tabs.forEach(t => t.classList.toggle('is-active', t.dataset.tab === name));
+                panels.forEach(p => { p.hidden = p.dataset.panel !== name; });
+            }
+
+            function formatJson(data) {
+                const clone = Object.assign({}, data);
+                if (typeof clone.message === 'string') {
+                    try { clone.message = JSON.parse(clone.message); } catch { /* keep as text */ }
+                }
+                return JSON.stringify(clone, null, 2);
+            }
+
+            function setResultTabsEnabled(enabled) {
+                tabs.forEach(t => {
+                    if (t.dataset.tab === 'result' || t.dataset.tab === 'json') {
+                        t.disabled = !enabled;
+                    }
+                });
+            }
+
+            tabs.forEach(t => t.addEventListener('click', function () {
+                if (!t.disabled) selectTab(t.dataset.tab);
+            }));
+
+            sampleSelect.addEventListener('change', function () {
+                if (sampleSelect.value) messageBox.value = sampleSelect.value;
+            });
+
+            function openModal(titleText, message, candidateId, rowBtn) {
+                title.textContent = titleText;
+                messageBox.value = message || '';
+                sampleSelect.value = '';
+                resultBox.textContent = '';
+                jsonBox.textContent = '';
+                link.hidden = true;
+                progress.hidden = true;
+                submitBtn.disabled = false;
+                submitBtn.hidden = false;
+                setResultTabsEnabled(false);
+                selectTab('message');
+                currentCandidateId = candidateId || null;
+                currentRowBtn = rowBtn || null;
+                modal.hidden = false;
+            }
+
+            function closeModal() { modal.hidden = true; }
+
+            modal.querySelector('[data-modal-close]').addEventListener('click', closeModal);
+            modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+
+            submitBtn.addEventListener('click', async function () {
+                const body = new URLSearchParams({ message: messageBox.value });
+                if (currentCandidateId) body.set('candidateId', currentCandidateId);
+
+                submitBtn.disabled = true;
+                progress.hidden = false;
+
+                try {
+                    const res = await fetch('?handler=Onboard', {
+                        method: 'POST',
+                        headers: { 'RequestVerificationToken': token },
+                        body
+                    });
+                    const data = await res.json();
+
+                    if (data.reauth) {
+                        // Token cache was lost (e.g. app restart); reload to
+                        // silently re-authenticate via the on-open check.
+                        window.location.reload();
+                        return;
+                    }
+
+                    resultBox.textContent = data.message || '';
+                    jsonBox.textContent = formatJson(data);
+                    setResultTabsEnabled(true);
+                    selectTab('result');
+                    submitBtn.hidden = true;
+
+                    if (data.success && data.customerId) {
+                        title.textContent = 'Onboarding complete';
+                        link.href = '/Details?customerId=' + encodeURIComponent(data.customerId);
+                        link.hidden = false;
+
+                        const row = document.querySelector('[data-candidate-row="' + currentCandidateId + '"]');
+                        if (row) {
+                            row.querySelector('[data-status-cell]').innerHTML =
+                                '<span class="badge">Onboarded</span> ' +
+                                '<a href="/Details?customerId=' + encodeURIComponent(data.customerId) + '">' +
+                                data.customerId + '</a>';
+                            row.querySelector('[data-action-cell]').innerHTML = '';
+                        }
+                    } else if (currentRowBtn) {
+                        currentRowBtn.disabled = false;
+                        currentRowBtn.textContent = 'Onboard';
+                    }
+                } catch (err) {
+                    resultBox.textContent = 'Onboarding request failed: ' + err.message;
+                    jsonBox.textContent = '';
+                    setResultTabsEnabled(true);
+                    selectTab('result');
+                    submitBtn.disabled = false;
+                } finally {
+                    progress.hidden = true;
+                }
+            });
+
+            document.querySelector('[data-onboard-freeform]').addEventListener('click', function () {
+                openModal('New onboarding prompt', '', null, null);
+            });
+
+            document.querySelectorAll('[data-onboard]').forEach(function (btn) {
+                btn.addEventListener('click', async function () {
+                    const candidateId = btn.getAttribute('data-onboard');
+                    btn.disabled = true;
+                    btn.textContent = 'Loading…';
+                    try {
+                        const res = await fetch('?handler=Message&candidateId=' + encodeURIComponent(candidateId));
+                        const data = await res.json();
+                        openModal('Onboarding', data.message, candidateId, btn);
+                    } catch (err) {
+                        openModal('Onboarding', '', candidateId, btn);
+                    } finally {
+                        btn.disabled = false;
+                        btn.textContent = 'Onboard';
+                    }
+                });
+            });
+        })();
+    </script>
+}
